@@ -1,1 +1,1 @@
-# my-claudecode
+# Claude Code configs
