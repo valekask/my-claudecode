@@ -4,12 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FNA-UI is an Angular 17 monorepo built with Nx workspace. It provides a financial network analysis platform with multiple applications and shared libraries.
-The codebase uses **Angular 17 WITHOUT Signals** - do not use signal-based APIs.
+FNA-UI is an Angular 17 monorepo built with Nx workspace. It provides a financial network analysis platform with multiple applications and shared libraries. The codebase uses **Angular 17 WITHOUT Signals** - do not use signal-based APIs.
+
+## Git Restrictions (MANDATORY)
+
+**NEVER perform git write operations.** The user prefers to manually review all changes before committing.
+
+Forbidden operations:
+- `git commit` - NEVER commit changes
+- `git add` - NEVER stage files
+- `git push` - NEVER push to remote
+- `git checkout` - NEVER switch branches or discard changes
+- `git reset` - NEVER reset commits
+- `git revert` - NEVER revert commits
+- `git merge` - NEVER merge branches
+- `git rebase` - NEVER rebase branches
+- `git stash` - NEVER stash changes
+
+**Allowed git operations** (read-only):
+- `git status`, `git log`, `git diff`, `git branch`, `git show`, `git ls-tree`, `git merge-base`, `git rev-parse`
+
+If a skill or plugin requests a commit, **refuse and inform the user** that manual review is required first.
+
+## WIP (Work In Progress)
+
+`.claude/WIP.md` tracks the current large task being worked on. It helps restore context at session start and handoff work between sessions or team members.
+
+**Commands:**
+- "wip" / "load wip" → Read `.claude/WIP.md` and summarize current status and next steps
+- "save wip" → Update `.claude/WIP.md` with current progress summary so work can continue later
 
 ## Core Technologies
 
-- **Angular 17.3.9**
+- **Angular 17.3.9** (NO Signals)
 - **Nx 19.0.5** for monorepo management
 - **NgRx 17** for state management (Store, Effects, Entity, Component Store)
 - **TypeScript 5.4.5**
@@ -18,6 +45,34 @@ The codebase uses **Angular 17 WITHOUT Signals** - do not use signal-based APIs.
 - **AG-Grid 32** for data tables
 - **D3.js 7** for visualizations
 - **Karma + Jasmine** for testing
+
+## Commands
+
+### Development
+```bash
+# Serve applications
+nx serve fna-ui              # Main platform app on http://localhost:4200
+nx serve ilo-monitoring      # ILO monitoring app
+```
+
+### Build and test commands
+- Check `tsconfig.base.json` file and path section to see project names and locations.
+- Check `README.md` for other build and test commands.
+
+Main commands:
+```bash
+# Run single project tests
+nx test <project> --no-watch --reporters=dots
+
+# Run specific test
+nx test <project> --no-watch --reporters=dots --include='**/filename.spec.ts'
+
+# Run a specific test suite or test case (within a file)
+nx test <project> --no-watch --reporters=dots --grep='outlier indicators'
+
+# Check TypeScript compilation
+npx tsc --noEmit -p path/tsconfig.lib.json
+```
 
 <!-- OPENSPEC:START -->
 ## OpenSpec Instructions
@@ -38,20 +93,34 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
-## Analysis vs Implementation
+## Code Foundations Skills
 
-**Analysis mode** - When my prompt focuses on understanding (questions, investigation), provide analysis and recommendations WITHOUT editing files. Wait for explicit approval.
+Use code-foundations skills proactively when working on features. These skills provide structured workflows that improve code quality.
 
-Analysis triggers:
-- Questions: prompts ending with `?`
-- Keywords: analyze, investigate, understand, explain, review, check, what's wrong, root cause, how does, why does
+### When to Use Each Skill
 
-**Implementation mode** - Proceed with code changes when I use action words:
-- fix, implement, apply, update, add, remove, refactor, change, create
+| Trigger | Skill | Purpose |
+|---------|-------|---------|
+| Starting a new feature or complex task | `/code-foundations:whiteboarding` | Plan implementation before coding |
+| Implementing a whiteboard plan | `/code-foundations:building` | Execute plans with checklist tracking |
+| Quick proof-of-concept needed | `/code-foundations:prototype` | Validate ideas with minimal code |
+| TDD workflow | `/code-foundations:hack` | Write test → pass → refactor → repeat |
+| Debugging any bug or error | `/code-foundations:cc-debugging` | Systematic debugging approach |
+| Refactoring existing code | `/code-foundations:cc-refactoring-guidance` | Safe refactoring patterns |
+| Performance issues | `/code-foundations:cc-performance-tuning` | Measure-first optimization |
+| Reviewing changes before commit | `/code-foundations:review-commit` | Quick sanity check |
+| Reviewing PR or larger changes | `/code-foundations:review-pr` | Comprehensive review |
 
-**Mixed prompts** - If both analysis and action words appear, ask which I want first.
+### Mandatory Usage
 
-**Override** - I can always say "just analyze" or "just fix it" to clarify intent.
+**Always use code-foundations skills when:**
+- Implementing new features (use whiteboarding → building)
+- Fixing non-trivial bugs (use cc-debugging)
+- Refactoring code (use cc-refactoring-guidance)
+- Optimizing performance (use cc-performance-tuning)
+- Creating PRs (use review-pr or review-changes)
+
+**Do NOT skip these skills** - they ensure consistent quality and prevent rework.
 
 ## Architecture
 
@@ -155,6 +224,7 @@ libs/feature-widgets/
 
 ### Language & Conventions
 - **US English only**: `color` not `colour`, `initialize` not `initialise`
+- **No Angular Signals**: This project uses Angular 17 without signals
 - Use RxJS observables for reactive patterns
 - **End of line**: Use `LF` (Unix-style line endings) as specified in `.editorconfig`
 
@@ -194,34 +264,6 @@ Methods must be ordered as follows (callers above callees):
 - **Member ordering**: Static before instance, public before private
 - **Module boundaries**: `@nrwl/nx/enforce-module-boundaries` enforced
 
-## Commands
-
-### Development
-```bash
-# Serve applications
-nx serve fna-ui              # Platform to manage workspaces, dashboards, users, account settings, etc
-nx serve ilo-monitoring      # ILO monitoring dashboard to visualise data in widgets
-```
-
-### Build and test commands
-- Check `tsconfig.base.json` file and path section to see project names and locations.
-- Check `README.md` for other build and test commands.
-
-Main commands:
-```bash
-# Run single project tests
-nx test <project> --no-watch --reporters=dots
-
-# Run specific test
-nx test <project> --no-watch --reporters=dots --include='**/filename.spec.ts'
-
-# Run a specific test suite or test case (within a file)
-nx test <project> --no-watch --reporters=dots --grep='outlier indicators'
-
-# Check TypeScript compilation
-npx tsc --noEmit -p path/tsconfig.lib.json
-```
-
 ## Development Constraints
 
 ### What NOT to Change (without explicit request)
@@ -248,19 +290,25 @@ npx tsc --noEmit -p path/tsconfig.lib.json
 - Do not add unnecessary abstractions, error handling for impossible scenarios, or feature flags
 - Remove unused code completely (no `_vars`, `// removed` comments)
 
-## Before Submitting
+## Pre-Review Checklist
 
-Before proposing changes for review, verify:
+Before proposing changes to human review, verify:
 
 - **Scope contained**: Only intended feature/module changed; no drive-by edits.
 - **No hardcoded secrets**: Use `environment.ts` or `EnvironmentConfigService`.
-- **Tests included**: Non-trivial functionality covered (>=1 happy path + 1 fail path; numbered).
-- **Tests green**: `nx test <project> --no-watch --reporters=dots` passes (yours + existing).
+- **Tests included**: Non-trivial functionality covered (≥1 happy path + 1 fail path; numbered).
 - **Dead code removed**: Unused vars, commented blocks, temp logging.
 - **Build passes**: `nx build <project>` succeeds.
-- **Backward compatibility**: Public exports, interfaces, routes, inputs unchanged or intentionally versioned.
 
-If any check fails, revise before human review.
+## Regression Prevention
+
+After making changes, verify no existing functionality broken:
+
+- **Tests green**: `nx test <project> --no-watch --reporters=dots` passes (yours + existing).
+- **Backward compatibility**: Public exports, interfaces, routes, inputs unchanged or intentionally versioned.
+- **Critical paths functional**: Verify key flows outside change scope remain operational (login, navigation, data loading).
+
+If any check fails → revise before human review.
 
 ## Git Workflow
 
