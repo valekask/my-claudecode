@@ -27,11 +27,23 @@ Before implementation, apply these project-specific rules.
 - Subscribe to store/services
 - Transform data to view models
 - Handle business logic orchestration
+- Use **ComponentStore** to manage and **update** state
 
 **Presentational (ui):**
 - `@Input()` for data, `@Output()` for events
 - No NgRx, no business services
-- Local UI state only
+- **Read state only** - never update state directly, emit events instead
+
+## Reactive Patterns
+
+- **Avoid `ngOnChanges`** - Use RxJS observables with `setter + subject` pattern instead:
+  ```typescript
+  private readonly inputValue$ = new BehaviorSubject<string>('');
+  @Input() set value(v: string) { this.inputValue$.next(v); }
+  ```
+- **Use ComponentStore** for complex component state instead of manual state management
+- Prefer declarative streams over imperative lifecycle hooks
+- **Avoid getters in templates** - runs on every change detection. Use component state or pipes instead (simple getters are acceptable)
 
 ## Naming Conventions
 
