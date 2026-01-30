@@ -50,6 +50,24 @@ Apply these project-specific checks during review.
 - [ ] No injection flaws
 - [ ] Input validation at system boundaries
 
+## Code Quality
+
+- [ ] **Cyclomatic complexity ≤ 15** - Functions not overly complex
+
+## Branch Naming
+
+Format: `(<type>/)<TICKET-NUMBER>(-<scope>)-subject`
+Examples: `FNA-1234-simulator-feat`, `hotfix/FNA-1234-editor-bug`
+
+## License Headers
+
+- [ ] New `.ts` files have license headers
+- Run `mvn license:update-file-header` if needed
+
+## Additional Documentation
+
+For detailed guidance, consult: `docs/ARCHITECTURE.md`, `docs/NAMING.md`, `docs/STYLING.md`, `docs/CLEAN_CODE.md`
+
 ## Execute
 
 Now proceed with `/code-foundations:review-changes`, applying all checks above.

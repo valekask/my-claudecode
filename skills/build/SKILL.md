@@ -54,12 +54,21 @@ Place in `+state/` directory within `data-access-*` libs:
 - `*.selectors.ts`
 - `*.effects.ts`
 
+## File Organization
+
+- **Flat structure** until folder reaches 7+ files
+- Then create subdirectories: `models/`, `services/`, `components/`
+
 ## Testing
 
 - Number test sections: `describe('1. user load', ...)`
 - Number test cases: `it('1.1 should load user', ...)`
 - Minimum: 1 happy path + 1 failure path for non-trivial logic
 - Add tests in batches of 7-8 per iteration
+
+## Code Quality
+
+- **Max cyclomatic complexity: 15** - Keep functions simple, extract if needed
 
 ## Execute
 

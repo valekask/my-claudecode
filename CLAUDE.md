@@ -54,6 +54,8 @@ Analysis triggers:
 
 **Override** - I can always say "just analyze" or "just fix it" to clarify intent.
 
+**Clarification** - When uncertain, use AskUserQuestion to interview me and clarify intent before acting.
+
 ## Core Technologies
 
 - **Angular 17.3.9** (NO Signals) with **NgRx 17** for state management
