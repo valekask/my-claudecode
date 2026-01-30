@@ -12,29 +12,47 @@ FNA-UI is an Angular 17 monorepo built with Nx workspace. It provides a financia
 
 Use these wrapper skills that include project-specific conventions:
 
-| Workflow | Command | Purpose |
-|----------|---------|---------|
-| Planning | `/whiteboard` | Plan features with FNA-UI architecture patterns |
-| Implementation | `/build` | Implement with project conventions |
-| Review | `/review` | Review changes before PR |
+| Workflow       | Command       | Purpose                                         |
+| -------------- | ------------- | ----------------------------------------------- |
+| Planning       | `/whiteboard` | Plan features with FNA-UI architecture patterns |
+| Implementation | `/build`      | Implement with project conventions              |
+| Review         | `/review`     | Review changes before PR                        |
 
 For other workflows, use code-foundations skills directly:
 
-| Trigger | Skill |
-|---------|-------|
-| Quick proof-of-concept | `/code-foundations:prototype` |
-| TDD workflow | `/code-foundations:hack` |
-| Debugging | `/code-foundations:cc-debugging` |
-| Refactoring | `/code-foundations:cc-refactoring-guidance` |
-| Performance issues | `/code-foundations:cc-performance-tuning` |
+| Trigger                | Skill                                       |
+| ---------------------- | ------------------------------------------- |
+| Quick proof-of-concept | `/code-foundations:prototype`               |
+| TDD workflow           | `/code-foundations:hack`                    |
+| Debugging              | `/code-foundations:cc-debugging`            |
+| Refactoring            | `/code-foundations:cc-refactoring-guidance` |
+| Performance issues     | `/code-foundations:cc-performance-tuning`   |
 
 ## WIP (Work In Progress)
 
 `.claude/WIP.md` tracks the current large task being worked on. It helps restore context at session start and handoff work between sessions or team members.
 
 **Commands:**
+
 - "wip" / "load wip" → Read `.claude/WIP.md` and summarize current status and next steps
 - "save wip" → Update `.claude/WIP.md` with current progress summary so work can continue later
+
+## Analysis vs Implementation
+
+**Analysis mode** - When my prompt focuses on understanding (questions, investigation), provide analysis and recommendations WITHOUT editing files. Wait for explicit approval.
+
+Analysis triggers:
+
+- Questions: prompts ending with `?`
+- Keywords: analyze, investigate, understand, explain, review, check, what's wrong, root cause, how does, why does
+
+**Implementation mode** - Proceed with code changes when I use action words:
+
+- fix, implement, apply, update, add, remove, refactor, change, create
+
+**Mixed prompts** - If both analysis and action words appear, ask which I want first.
+
+**Override** - I can always say "just analyze" or "just fix it" to clarify intent.
 
 ## Core Technologies
 
@@ -62,16 +80,19 @@ npx tsc --noEmit -p path/tsconfig.lib.json
 Check `tsconfig.base.json` paths section for project names and locations.
 
 <!-- OPENSPEC:START -->
+
 ## OpenSpec Instructions
 
 These instructions are for AI assistants working in this project.
 
 Always open `@/openspec/AGENTS.md` when the request:
+
 - Mentions planning or proposals (words like proposal, spec, change, plan)
 - Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
 - Sounds ambiguous and you need the authoritative spec before coding
 
 Use `@/openspec/AGENTS.md` to learn:
+
 - How to create and apply change proposals
 - Spec format and conventions
 - Project structure and guidelines
@@ -83,6 +104,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## Protected Files
 
 **Do NOT change** (without explicit request):
+
 - `package.json`
 - `nx.json`
 - `environment.prod.ts`
@@ -93,6 +115,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 **NEVER perform git write operations.** The user prefers to manually review all changes before committing.
 
 Forbidden operations:
+
 - `git commit`, `git add`, `git push`, `git checkout`
 - `git reset`, `git revert`, `git merge`, `git rebase`, `git stash`
 
