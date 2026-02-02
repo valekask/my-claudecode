@@ -31,6 +31,40 @@ Apply these project-specific checks during review.
 - [ ] **NgRx in +state/** - State management in correct directory
 - [ ] **Layering respected** - No upward dependencies
 
+## Data Flow (Data-Driven Approach)
+
+Verify clear data flow: `DataService → Store → Container → Presentational`
+
+- [ ] **Data source traceable** - Can identify which DataService fetches the data
+- [ ] **Appropriate state management** - ComponentStore for feature state (preferred), Global Store only for cross-feature
+- [ ] **Single source of truth** - No duplicate state across components
+- [ ] **Unidirectional flow** - Data down via @Input, events up via @Output
+
+**ComponentStore Quality** (if applicable):
+
+- [ ] Explicit state class with all properties at top
+- [ ] Selectors for each state slice
+- [ ] Derived state computed in selectors (not template logic)
+- [ ] Effects handle API calls with loading/error state
+- [ ] Proper error handling in effects
+
+**Anti-patterns to Flag:**
+
+| Pattern | Severity | Fix |
+|---------|----------|-----|
+| State in presentational component | High | Move to container/store |
+| Direct API call in component | High | Use DataService + Store |
+| Manual subscription without cleanup | High | Use async pipe or takeUntilDestroyed |
+| Complex logic in template | Medium | Move to selector |
+| ngOnChanges for derived state | Medium | Use reactive selector |
+| Multiple sources of truth | High | Consolidate to single store |
+
+Reference: `docs/ARCHITECTURE.md` Section 4, example: `libs/dashboard/feature-graph/src/lib/graphs/sorted-list/services/graph-sorted-list.store.ts`
+
+## Styling
+
+- [ ] **CSS variables preferred** - Using `var(--*)` instead of SCSS `$variables` for colors, spacing, typography
+
 ## Naming Conventions
 
 - [ ] **Subscriptions** - `subscribeOn...Changes` pattern
@@ -70,6 +104,4 @@ For detailed guidance, consult: `docs/ARCHITECTURE.md`, `docs/NAMING.md`, `docs/
 
 ## Execute
 
-Now proceed with `/code-foundations:review-changes`, applying all checks above.
-
-For comprehensive PR review, use `/code-foundations:review-pr` instead.
+Now proceed with `/code-foundations:review`, applying all checks above.

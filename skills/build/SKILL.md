@@ -34,6 +34,38 @@ Before implementation, apply these project-specific rules.
 - No NgRx, no business services
 - **Read state only** - never update state directly, emit events instead
 
+## Data Flow (Data-Driven Approach)
+
+Follow this flow - code should work around the data:
+
+```
+DataService (fetch) → Store (state) → Container (orchestrate) → Presentational (display)
+```
+
+**State Management Selection:**
+
+| Scope | Solution | When |
+|-------|----------|------|
+| Feature/Component | ComponentStore | Default choice (preferred) |
+| Cross-feature | Global NgRx Store | Shared state across unrelated features |
+| Trivial | Plain service | Single observable, no complex transitions |
+
+**ComponentStore Pattern** (see `libs/dashboard/feature-graph/src/lib/graphs/sorted-list/services/graph-sorted-list.store.ts`):
+
+1. Explicit state class at top with all properties
+2. Selectors for each state slice (`readonly data$ = this.select(...)`)
+3. Derived selectors for complex UI logic (`emptyState$`, `isValid$`)
+4. Updaters for state mutations
+5. Effects for side effects (API calls with loading/error handling)
+
+**Data Transformation Location:**
+
+| Transform | Where |
+|-----------|-------|
+| API response → domain model | Effect or DataService |
+| Domain model → view model | Selector |
+| User input → API request | Container or Updater |
+
 ## Reactive Patterns
 
 - **Avoid `ngOnChanges`** - Use RxJS observables with `setter + subject` pattern instead:
@@ -44,6 +76,10 @@ Before implementation, apply these project-specific rules.
 - **Use ComponentStore** for complex component state instead of manual state management
 - Prefer declarative streams over imperative lifecycle hooks
 - **Avoid getters in templates** - runs on every change detection. Use component state or pipes instead (simple getters are acceptable)
+
+## Styling
+
+- **Prefer CSS variables** over SCSS variables for colors, spacing, typography (see `docs/STYLING.md`)
 
 ## Naming Conventions
 

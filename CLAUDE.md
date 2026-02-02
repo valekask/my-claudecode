@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FNA-UI is an Angular 17 monorepo built with Nx workspace. It provides a financial network analysis platform with multiple applications and shared libraries.
+**FNA-UI** is an Angular 17 monorepo for **Intraday Liquidity Optimization (ILO)** - a real-time payment monitoring and liquidity analysis platform. The ILO application (`apps/ilo-monitoring`, `libs/dashboard`) ingests payment data and provides grouped aggregations (totals by business unit, currency, time period) and payment-level search. Data is visualized in configurable dashboards with widgets (time-series charts, sorted lists, big numbers, grids).
 
 **Critical**: The codebase uses **Angular 17 WITHOUT Signals** - do not use signal-based APIs. Use RxJS observables.
 
