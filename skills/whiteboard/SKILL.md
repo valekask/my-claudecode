@@ -53,13 +53,33 @@ Plan with **container/presentational split**:
 - No NgRx, no business services
 - May have local UI-only state
 
-## State Management (NgRx)
+**Data Flow:**
+```
+DataService (fetch) → Store (state) → Container (orchestrate) → Presentational (display)
+```
 
-Plan state in `data-access-*` libs with `+state/` directory:
+Planning questions:
+- What data sources are needed? (APIs, local storage, user input)
+- What transformations are needed? (API → domain → view model)
+
+## State Management
+
+**Selection Guide:**
+
+| Scope | Solution | When |
+|-------|----------|------|
+| Feature/Component | ComponentStore | Default choice (preferred) |
+| Cross-feature | Global NgRx Store | Shared state across unrelated features |
+| Trivial | Plain service | Single observable, no complex transitions |
+
+**NgRx Global Store** - Use `data-access-*` libs with `+state/` directory:
 - Actions → what happened
 - Reducers → how state changes
 - Selectors → derived state
 - Effects → side effects (HTTP, etc.)
+
+**ComponentStore** - Use within feature components for local state.
+Reference: `libs/dashboard/feature-graph/src/lib/graphs/sorted-list/services/graph-sorted-list.store.ts`
 
 ## Layering (Top to Bottom)
 
@@ -69,7 +89,7 @@ Plan state in `data-access-*` libs with `+state/` directory:
 4. **Data Access** - HTTP services, API clients
 5. **Core** - Auth, security, interceptors
 
-Higher layers depend on lower layers, not vice versa.
+Higher layers depend on lower layers, not vice versa. Data flows up through these layers.
 
 ## Execute
 

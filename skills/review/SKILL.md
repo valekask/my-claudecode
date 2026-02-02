@@ -47,6 +47,7 @@ Verify clear data flow: `DataService → Store → Container → Presentational`
 - [ ] Derived state computed in selectors (not template logic)
 - [ ] Effects handle API calls with loading/error state
 - [ ] Proper error handling in effects
+- [ ] All UI states handled: loading, empty, error, data
 
 **Anti-patterns to Flag:**
 

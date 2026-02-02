@@ -57,6 +57,7 @@ DataService (fetch) → Store (state) → Container (orchestrate) → Presentati
 3. Derived selectors for complex UI logic (`emptyState$`, `isValid$`)
 4. Updaters for state mutations
 5. Effects for side effects (API calls with loading/error handling)
+6. Handle all UI states: loading, empty (no data), error, data
 
 **Data Transformation Location:**
 
@@ -86,6 +87,10 @@ DataService (fetch) → Store (state) → Container (orchestrate) → Presentati
 - Subscriptions: `subscribeOn...Changes` (e.g., `subscribeOnFilterChanges`)
 - Booleans: `is`, `has`, `can`, `should` prefix (positive form)
 - Actions: `get`, `set`, `fetch`, `remove`, `delete`, `reset`
+
+## Control Flow
+
+- **Guard clauses** - Fail fast with early returns to reduce nesting
 
 ## Method Ordering in Components
 
