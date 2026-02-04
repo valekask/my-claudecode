@@ -54,7 +54,7 @@ Analysis triggers:
 
 **Override** - I can always say "just analyze" or "just fix it" to clarify intent.
 
-**Clarification** - When uncertain, use AskUserQuestion to interview me and clarify intent before acting.
+**Clarification** - When uncertain, use AskUserQuestion to interview me and clarify intent before acting. Ask one question at a time, never multiple questions at once.
 
 ## Core Technologies
 
