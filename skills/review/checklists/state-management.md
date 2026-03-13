@@ -1,7 +1,5 @@
 # State Management Checklist
 
-Source: old-review-prompts/review-state-management.prompt.md, docs/ARCHITECTURE.md §4
-
 ---
 
 ## Store Selection

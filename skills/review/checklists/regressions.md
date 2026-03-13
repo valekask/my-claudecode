@@ -1,7 +1,5 @@
 # Regressions Checklist
 
-Source: old-review-prompts/find-regressions.prompt.md, docs/CONTRIBUTING.md
-
 ---
 
 ## Breaking Changes

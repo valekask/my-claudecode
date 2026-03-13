@@ -1,7 +1,5 @@
 # Security Checklist
 
-Source: docs/CLAUDE.md, OWASP Top 10, code-foundations cc-defensive-programming
-
 ---
 
 ## Secrets & Configuration

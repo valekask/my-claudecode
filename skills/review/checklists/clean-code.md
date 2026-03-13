@@ -1,7 +1,5 @@
 # Clean Code & Smells Checklist
 
-Source: docs/CLEAN_CODE.md, docs/ARCHITECTURE.md
-
 ---
 
 ## Functions

@@ -1,7 +1,5 @@
 # Styling Checklist
 
-Source: docs/STYLING.md, .coderabbit.yaml
-
 ---
 
 ## Design System Usage

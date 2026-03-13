@@ -1,6 +1,5 @@
 # Test Quality Checklist
 
-Source: Code Complete ch.22 (Test Cases), cc-quality-practices, project conventions
 
 This checklist is used by Agent 5: TEST QUALITY. Unlike other agents that review only the diff,
 this agent reads BOTH the implementation file and its spec file to verify logic-test alignment.

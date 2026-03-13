@@ -1,7 +1,5 @@
 # Naming Checklist
 
-Source: docs/NAMING.md, docs/CLEAN_CODE.md §3
-
 ---
 
 ## Clarity & Intent

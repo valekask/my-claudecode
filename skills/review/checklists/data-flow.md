@@ -1,7 +1,5 @@
 # Data Flow Checklist
 
-Source: docs/ARCHITECTURE.md §4
-
 ---
 
 ## Data Flow Direction

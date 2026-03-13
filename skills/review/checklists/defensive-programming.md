@@ -1,7 +1,5 @@
 # Defensive Programming Checklist
 
-Source: Code Complete ch.8, code-foundations cc-defensive-programming, OWASP
-
 ---
 
 ## Null & Undefined Safety

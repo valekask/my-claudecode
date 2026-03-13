@@ -1,7 +1,5 @@
 # Architecture Checklist
 
-Source: docs/ARCHITECTURE.md, docs/STRUCTURE.md, docs/CLAUDE.md
-
 ---
 
 ## Component Split
