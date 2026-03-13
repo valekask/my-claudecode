@@ -34,21 +34,21 @@
   → Check: Components use `changeDetection: ChangeDetectionStrategy.OnPush`.
   → FAIL: Component uses default change detection without justification.
 
-- [ ] **DF-9**: "Is `ngOnChanges` avoided — using RxJS setter + subject pattern instead?"
+- [ ] **DF-8**: "Is `ngOnChanges` avoided — using RxJS setter + subject pattern instead?"
   → Check: Component does not implement `ngOnChanges` for reacting to input changes.
   → FAIL: `ngOnChanges` used to detect input changes. Use `@Input() set value(v) { this.value$.next(v); }` with a `Subject` or `BehaviorSubject` instead.
 
-- [ ] **DF-10**: "Are getters avoided in templates (or trivially simple)?"
+- [ ] **DF-9**: "Are getters avoided in templates (or trivially simple)?"
   → Check: Template-bound getters are either simple property returns (1 line, no computation) or replaced with stored values / pipes.
   → FAIL: Template calls a getter that computes a value, filters an array, or calls a method — runs on every change detection cycle causing performance issues.
 
 ## Subscription Cleanup
 
-- [ ] **DF-12**: "Are all manual subscriptions cleaned up?"
+- [ ] **DF-10**: "Are all manual subscriptions cleaned up?"
   → Check: Manual `.subscribe()` calls use `takeUntilDestroyed()`, or are added to a `Subscription` aggregate and unsubscribed in `ngOnDestroy()`.
   → FAIL: A `.subscribe()` without cleanup mechanism — will cause memory leaks when component destroys.
 
-- [ ] **DF-13**: "Are variables used for a single purpose only (not reused for different data)?"
+- [ ] **DF-11**: "Are variables used for a single purpose only (not reused for different data)?"
   → Check: Each variable holds one kind of data throughout its lifetime.
   → FAIL: A variable is assigned different types of data at different points (`temp` used for user, then for response, then for error).
 

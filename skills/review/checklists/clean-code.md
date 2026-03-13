@@ -72,28 +72,28 @@
   → Check: No assignments or mutations inside `if`, `while`, or ternary conditions.
   → FAIL: `if (x = getValue())` or `while (items.pop())` — separate assignment from test.
 
-- [ ] **CC-26**: "Are functions below complexity threshold? (cyclomatic complexity ≤15)"
+- [ ] **CC-16**: "Are functions below complexity threshold? (cyclomatic complexity ≤15)"
   → Check: Count branches (`if`, `else if`, `case`, `&&`, `||`, `?.`, ternary) in a function. Functions with many branches are hard to understand and test.
   → FAIL: Function has >15 branches/conditions. Split into smaller functions, use early returns, or extract complex conditions into named booleans.
   → NOTE: Aligns with project ESLint `complexity` rule (max 15).
 
 ## Dead Code & Hygiene
 
-- [ ] **CC-16**: "Is there dead code? (unused imports, commented blocks, temp logs)"
+- [ ] **CC-17**: "Is there dead code? (unused imports, commented blocks, temp logs)"
   → Check: No unused imports, no commented-out code blocks, no `console.log` / `debugger` statements.
   → FAIL: Any of these found in the diff.
 
-- [ ] **CC-17**: "Is there duplicated logic across methods or files?"
+- [ ] **CC-18**: "Is there duplicated logic across methods or files?"
   → Search: Look for similar code patterns in the changed files and their neighbors.
   → FAIL: Same logic (>3 lines) appears in multiple places. Extract to a shared function or service.
 
 ## RxJS Patterns
 
-- [ ] **CC-18**: "Are `.subscribe()` bodies empty except adding to subs aggregate?"
+- [ ] **CC-19**: "Are `.subscribe()` bodies empty except adding to subs aggregate?"
   → Check: Logic lives in `.pipe()` operators (`tap`, `map`, etc.), not in the subscribe callback.
   → FAIL: `.subscribe(data => { /* 10+ lines of logic */ })` — move logic to pipe operators.
 
-- [ ] **CC-19**: "Are error extraction patterns centralized (shared service, not ad-hoc catchError)?"
+- [ ] **CC-20**: "Are error extraction patterns centralized (shared service, not ad-hoc catchError)?"
   → Check: Error handling uses a shared error extractor or interceptor, not custom `catchError` in every effect/subscription.
   → FAIL: Each effect/subscription has its own error parsing logic duplicated across files.
 
@@ -107,22 +107,22 @@
   → Check: Every `*ngFor` that iterates over data (not static small arrays) has a `trackBy` function.
   → FAIL: `*ngFor="let item of items"` without `trackBy` — Angular re-renders the entire list on any change, causing performance issues and losing DOM state.
 
-- [ ] **CC-27**: "Are impure pipes avoided in templates?"
+- [ ] **CC-23**: "Are impure pipes avoided in templates?"
   → Check: Custom pipes used in templates are pure (default). No pipes marked with `pure: false` that run on every change detection cycle.
   → FAIL: Impure pipe (`@Pipe({ pure: false })`) used in a template binding — re-executes on every change detection cycle even when input hasn't changed. Use a pure pipe, move logic to a selector, or pre-compute the value in the component.
 
 ## Type Safety
 
-- [ ] **CC-23**: "Are generic containers avoided when a specific type exists?"
+- [ ] **CC-24**: "Are generic containers avoided when a specific type exists?"
   → Check: No `any`, `Pair<X,Y>`, `Record<string, any>`, or untyped objects where a named interface would clarify intent.
   → FAIL: Using `any` without justification, or `{ [key: string]: any }` instead of a typed interface.
 
-- [ ] **CC-24**: "Do functions have explicit return types?"
+- [ ] **CC-25**: "Do functions have explicit return types?"
   → Check: Named functions and methods declare their return type. Catches bugs at the declaration site instead of distant call sites.
   → FAIL: `function getData() { ... }` instead of `function getData(): Observable<Item[]> { ... }`.
   → EXCEPTION: Trivial inline arrow callbacks (e.g., `.map(x => x.id)`, `.pipe(tap(() => this.refresh()))`) where the type is obvious from context.
 
-- [ ] **CC-25**: "Do all code paths return a value when a return type is declared?"
+- [ ] **CC-26**: "Do all code paths return a value when a return type is declared?"
   → Check: Functions with a non-void return type return a value on every branch (if/else, switch, early returns, try/catch).
   → FAIL: `function getLabel(type: string): string { if (type === 'A') return 'Alpha'; }` — falls off end returning `undefined` for other types.
 

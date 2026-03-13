@@ -66,7 +66,7 @@
 
 ## Protected Files
 
-- [ ] **SE-15**: "Do new `.ts` files include the required license header?"
+- [ ] **SE-14**: "Do new `.ts` files include the required license header?"
   → Check: New TypeScript files have the project's license header at the top of the file.
   → FAIL: New `.ts` file missing license header.
 

@@ -32,26 +32,26 @@
 
 ## Critical Path Verification
 
-- [ ] **RG-10**: "Are critical paths unaffected (login, navigation, data loading)?"
+- [ ] **RG-7**: "Are critical paths unaffected (login, navigation, data loading)?"
   → Check: If the change touches shared services, routing, or auth — verify these core flows still work.
   → FAIL: Change in a shared module could break login, navigation, or primary data loading flows.
 
 ## Test Coverage
 
-- [ ] **RG-11**: "Does every new/changed non-component `.ts` file have a corresponding `.spec.ts` file?"
+- [ ] **RG-8**: "Does every new/changed non-component `.ts` file have a corresponding `.spec.ts` file?"
   → Check: For each changed `.service.ts`, `.store.ts`, `.utils.ts`, `.pipe.ts`, `.guard.ts`, `.interceptor.ts`, `.directive.ts`, `.model.ts` — verify a matching `.spec.ts` exists.
   → SKIP: `.component.ts` files (containers/presenters — logic belongs in services/stores), `.module.ts`, `.interface.ts`, barrel `index.ts`.
   → FAIL: A service, store, or utility was added or changed with no corresponding spec file.
 
-- [ ] **RG-12**: "Is new non-trivial logic covered by ≥1 happy path + 1 failure path test?"
+- [ ] **RG-9**: "Is new non-trivial logic covered by ≥1 happy path + 1 failure path test?"
   → Check: For each new function/branch with business logic, find corresponding test cases.
   → FAIL: New logic has no tests, or only has happy path without error/edge cases.
 
-- [ ] **RG-13**: "Are boundary values tested (empty input, single item, max size)?"
+- [ ] **RG-10**: "Are boundary values tested (empty input, single item, max size)?"
   → Check: Tests include empty arrays, null/undefined inputs, single-element cases, and maximum expected sizes.
   → FAIL: Tests only cover the "middle of the road" case, missing boundaries.
 
-- [ ] **RG-14**: "Are tests numbered with `describe('1. ...')`, `it('1.1 ...')` pattern?"
+- [ ] **RG-11**: "Are tests numbered with `describe('1. ...')`, `it('1.1 ...')` pattern?"
   → Check: New test files follow the project's numbered test convention.
   → FAIL: Tests use unnumbered descriptions.
 

@@ -551,7 +551,7 @@ When merging findings into the summary report, expand the checklist ID prefix to
 **Format:** `{number}. [{FULL CATEGORY}: {ID}] title`
 
 Examples:
-- `1. [CLEAN CODE: CC-16] console.log left in production code`
+- `1. [CLEAN CODE: CC-17] console.log left in production code`
 - `2. [REGRESSION: RG-2] Removed properties break drill-down modal`
 - `3. [DEFENSIVE: DP-3] NaN input causes runtime RangeError`
 - `4. [TRACE] Daily mode detection broken for multi-currency`
