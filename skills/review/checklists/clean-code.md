@@ -4,9 +4,10 @@
 
 ## Functions
 
-- [ ] **CC-1**: "Does each function have 0–2 parameters? If >2, is a single options object used?"
+- [ ] **CC-1**: "Does each function have 0–3 parameters? If >3, is a single options object used?"
   → Check: Count function parameters.
-  → FAIL: Function has >2 parameters without using an options/config object.
+  → FAIL: Function has >3 parameters without using an options/config object.
+  → NOTE: 3 parameters are acceptable when types are distinct and the call site reads naturally (e.g., `computeRange(from, to, currencies)`). Flag 3-param functions only when multiple params share the same type and could be swapped silently.
 
 - [ ] **CC-2**: "Is each function body at a single abstraction level?"
   → Check: Read the function — does it mix HTTP calls, data mapping, DOM manipulation, or analytics tracking in one body?
@@ -79,9 +80,9 @@
 
 ## Dead Code & Hygiene
 
-- [ ] **CC-17**: "Is there dead code? (unused imports, commented blocks, temp logs)"
-  → Check: No unused imports, no commented-out code blocks, no `console.log` / `debugger` statements.
-  → FAIL: Any of these found in the diff.
+- [ ] **CC-17**: "Is there dead code? (unused imports, unused inputs/outputs, commented blocks, HTML comments, temp logs)"
+  → Check: No unused imports, no unused `@Input()`/`@Output()` declarations, no commented-out code blocks, no HTML comments (`<!-- -->`), no `console.log` / `debugger` statements.
+  → FAIL: Any of these found in the diff. An `@Input()` declared but never referenced in the component's class or template. An HTML comment in a template (code should be self-explanatory).
 
 - [ ] **CC-18**: "Is there duplicated logic across methods or files?"
   → Search: Look for similar code patterns in the changed files and their neighbors.
@@ -102,6 +103,7 @@
 - [ ] **CC-21**: "Are template expressions simple? No method calls in bindings, no complex logic in `*ngIf`/`*ngFor`?"
   → Check: Template conditions are single booleans or simple comparisons. No method calls like `{{ getTotal() }}`, `[class.active]="isActive()"`, or `*ngIf="hasPermission()"` — these execute on every change detection cycle and degrade performance. Use properties, pre-computed values, selectors, or pipes instead.
   → FAIL: `*ngIf="items.length > 0 && !loading && !error && hasPermission"` or `[class.active]="a && (b || c) && !d"` — extract to a named boolean or selector. Method calls in bindings like `{{ calculateTotal() }}` or `[value]="getFormattedDate()"` — replace with a property set in the component class or a pipe.
+  → FAIL (redundant binding): `[class.loading]="loading"` inside `*ngIf="loading"` — the condition is always true since the structural directive already guards it. Use static `class="loading"` instead.
 
 - [ ] **CC-22**: "Is `trackBy` used in `*ngFor` for lists?"
   → Check: Every `*ngFor` that iterates over data (not static small arrays) has a `trackBy` function.
@@ -122,9 +124,11 @@
   → FAIL: `function getData() { ... }` instead of `function getData(): Observable<Item[]> { ... }`.
   → EXCEPTION: Trivial inline arrow callbacks (e.g., `.map(x => x.id)`, `.pipe(tap(() => this.refresh()))`) where the type is obvious from context.
 
-- [ ] **CC-26**: "Do all code paths return a value when a return type is declared?"
-  → Check: Functions with a non-void return type return a value on every branch (if/else, switch, early returns, try/catch).
-  → FAIL: `function getLabel(type: string): string { if (type === 'A') return 'Alpha'; }` — falls off end returning `undefined` for other types.
+- [ ] **CC-26**: "Do all code paths return a value matching the declared return type?"
+  → Check: Functions with a non-void return type return a value on every branch, AND the returned values match the declared type.
+  → FAIL (missing return): `function getLabel(type: string): string { if (type === 'A') return 'Alpha'; }` — falls off end returning `undefined`.
+  → FAIL (type mismatch): Function declares `{ dateFrom: number; dateTo: number }` but a branch returns `{ dateFrom: null, dateTo: null }`. The return type should be `{ dateFrom: number | null; dateTo: number | null }` or the function should throw instead of returning null fields.
+  → WHY: Callers trust the declared return type. Returning null where number is declared causes runtime errors at distant call sites (e.g., `result.dateFrom.toFixed(2)` throws). TypeScript strict mode catches this, but `as` casts and incomplete `strictNullChecks` configs let it through.
 
 ---
 

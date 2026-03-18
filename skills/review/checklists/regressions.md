@@ -51,9 +51,12 @@
   → Check: Tests include empty arrays, null/undefined inputs, single-element cases, and maximum expected sizes.
   → FAIL: Tests only cover the "middle of the road" case, missing boundaries.
 
-- [ ] **RG-11**: "Are tests numbered with `describe('1. ...')`, `it('1.1 ...')` pattern?"
-  → Check: New test files follow the project's numbered test convention.
-  → FAIL: Tests use unnumbered descriptions.
+- [ ] **RG-11**: "Are tests numbered sequentially with `describe('1. ...')`, `it('1.1 ...')` pattern?"
+  → Check: New and modified test files follow the project's numbered test convention. Numbers must be sequential — no gaps, no out-of-order sections.
+  → FAIL (missing numbers): Tests use unnumbered descriptions.
+  → FAIL (out of order): Section "7. getBrowserTimezone" appears after section "9. toMidnightUTC" — numbering is not sequential.
+  → FAIL (gaps): Sections jump from 3 to 5 with no section 4.
+  → WHY: Numbered tests exist for readability and quick navigation. Out-of-order or gapped numbers defeat this purpose and suggest sections were moved or deleted without renumbering.
 
 ---
 

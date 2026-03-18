@@ -20,9 +20,15 @@
   → Check: Presentational components receive data through @Input and communicate back via @Output events only.
   → FAIL: Child component directly mutates parent data, calls parent methods via injected reference, or uses two-way binding for state (not form controls).
 
-- [ ] **DF-5**: "Are presentational components free of local data mutations?"
-  → Check: Presentational components do not modify @Input data. They emit events and let the container/store handle the update.
-  → FAIL: Presentational component does `this.items.push(...)` or `this.data.property = newValue` on an @Input.
+- [ ] **DF-5**: "Is code free of mutations on borrowed references (objects it doesn't own)?"
+  → Check: Code does not mutate objects obtained from external sources. These are references to shared state — mutating them causes side effects in the owner.
+  → Borrowed references include:
+    - `@Input()` values from parent components
+    - `FormGroup.value` or `getRawValue()` results (live reference to form internal state)
+    - Store selector snapshot values
+    - Return values from shared services
+  → FAIL: `this.items.push(...)` on an @Input. `templateValue.currencyCodes = currencies` on a form value reference. `selectorResult.items.splice(...)` on a store snapshot.
+  → WHY: Mutating form value references silently changes the form's internal state without triggering validation, `valueChanges`, or dirty tracking. Mutating store snapshots can corrupt shared state. Mutating @Input values breaks unidirectional data flow.
 
 ## Reactive Patterns
 
@@ -52,6 +58,25 @@
   → Check: Each variable holds one kind of data throughout its lifetime.
   → FAIL: A variable is assigned different types of data at different points (`temp` used for user, then for response, then for error).
 
+## RxJS Safety Patterns
+
+- [ ] **DF-12**: "Is `takeUntil` the last operator before `subscribe`?"
+  → Check: When `takeUntil` is used for subscription cleanup, it must be the last operator in the pipe (before `subscribe`). Operators placed after `takeUntil` can still process and emit values after the source completes.
+  → FAIL: `.pipe(takeUntil(this.destroy$), map(x => transform(x))).subscribe(...)` — the `map` after `takeUntil` can still execute during teardown.
+  → PASS: `.pipe(map(x => transform(x)), takeUntil(this.destroy$)).subscribe(...)`
+  → WHY: Operators after `takeUntil` may process values emitted synchronously during unsubscription, leading to logic executing after the component is destroyed (null references, state updates on destroyed components).
+
+- [ ] **DF-13**: "Are there nested subscribes (subscribe inside subscribe)?"
+  → Check: No `.subscribe()` call appears inside another `.subscribe()` callback.
+  → FAIL: `obs1$.subscribe(a => { obs2$.subscribe(b => { ... }) })` — creates a new inner subscription on every outer emission without cleanup. Use `switchMap`, `concatMap`, `mergeMap`, or `combineLatest` instead.
+  → WHY: Nested subscribes cause memory leaks (inner subscriptions are never cleaned up), make error handling difficult (inner errors don't propagate to outer), and defeat RxJS's compositional design. This is the RxJS equivalent of callback hell.
+
+- [ ] **DF-14**: "Does `shareReplay` include `{ refCount: true }` when used for caching?"
+  → Check: `shareReplay` calls use the config object form with `refCount: true`, unless the source is intentionally kept alive regardless of subscribers.
+  → FAIL: `shareReplay(1)` — the legacy shorthand keeps the source subscription alive forever, even after all subscribers unsubscribe. This causes memory leaks and prevents cleanup of HTTP connections or timers.
+  → PASS: `shareReplay({ bufferSize: 1, refCount: true })` — source unsubscribes when subscriber count drops to zero.
+  → EXCEPTION: `shareReplay(1)` is acceptable for application-lifetime observables that should never unsubscribe (e.g., root-level config/auth streams).
+
 ---
 
-Total items: 11
+Total items: 14

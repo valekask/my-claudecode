@@ -60,6 +60,36 @@
   → Check: When a value is expected to be one of a known set (status codes, type discriminators), is there a default/fallback case?
   → FAIL: `switch(status)` without `default` case — new status values from API silently fall through.
 
+## Date & Time Safety
+
+- [ ] **DP-13**: "Are UTC-created dates accessed with UTC methods (and vice versa)?"
+  → Check: When a Date is created with `Date.UTC()`, `new Date('...Z')`, or any UTC source, all property access uses UTC methods (`getUTCFullYear()`, `getUTCMonth()`, `getUTCDate()`, `getUTCHours()`). Conversely, dates created with local constructors use local methods.
+  → FAIL: `const d = new Date(Date.UTC(2024, 0, 1)); d.getFullYear()` — uses local `getFullYear()` on a UTC date. In UTC+X timezones this returns the wrong year/month/day (off-by-one at midnight boundaries).
+  → FAIL: `const d = convertToBusinessDayByCurrency(...); new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))` — if `convertToBusinessDayByCurrency` returns a UTC-based date, mixing in local accessors causes timezone-dependent bugs.
+  → WHY: This is one of the most common date bugs in timezone-aware code. The mismatch is silent — no error, no NaN — just wrong values that only manifest in certain timezones.
+
+- [ ] **DP-14**: "Does date arithmetic handle calendar boundaries (month/year rollover)?"
+  → Check: Date calculations that compare or subtract date components (day, hour, minute) also account for month and year differences. Comparing only partial components (e.g., day + hour) fails when dates span different months.
+  → FAIL: `targetDay * 24 * 60 + targetHour * 60 - utcDay * 24 * 60 - utcHour * 60` — if UTC is Feb 1 00:30 and target timezone is Jan 31 19:30, the day difference wraps incorrectly because month is ignored.
+  → FIX: Build full Date objects from all components (year, month, day, hour, minute) and subtract, or use a single numeric representation (epoch millis) for comparison.
+  → WHY: Date component math that ignores higher-order components (month, year) silently produces wrong results at calendar boundaries.
+
+## Output Validity
+
+- [ ] **DP-15**: "Do recursive or filtering operations avoid producing structurally invalid output (empty containers, orphaned groups)?"
+  → Check: When code recursively filters, prunes, or transforms nested structures (tree nodes, filter groups, menu hierarchies), verify that the result doesn't contain empty parent containers that downstream consumers treat as invalid.
+  → FAIL: `filterOutExcludedColumns` removes all children from a group but keeps the parent with `filters: []`. The empty group serializes to the backend as an invalid/ambiguous filter structure.
+  → FIX: After recursing into children, check if the result is empty and remove the parent too: filter/prune bottom-up (recurse first, then filter), not top-down.
+  → WHY: Recursive operations that only check the current level miss structural invariants. An empty `[]` is valid as a value but invalid as a "group with no members" in domain-specific structures. This class of bug survives unit tests because tests rarely construct deeply nested inputs.
+
+## Framework-Specific Safety
+
+- [ ] **DP-16**: "Are Angular form validators correct for the control's value type?"
+  → Check: Form control validators match the data type of the control's value.
+  → FAIL: `fb.control([] as string[], [Validators.required])` — `Validators.required` checks for truthy values, but an empty array `[]` is truthy. Validation passes with zero selections. Use `Validators.minLength(1)` for array controls.
+  → FAIL: `fb.control('', [Validators.min(0)])` — `Validators.min` expects a number, not a string. The validator silently passes or behaves unexpectedly on string values.
+  → WHY: Angular validators have type assumptions that aren't enforced by TypeScript. `Validators.required` is the most common trap — it works for strings and null but not for empty arrays or objects.
+
 ---
 
-Total items: 12
+Total items: 16

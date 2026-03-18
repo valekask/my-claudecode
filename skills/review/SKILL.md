@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with FNA-UI quali
 
 # Code Review
 
-Checklist-driven review with parallel agents. 136 checks across 10 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling) plus end-to-end data flow tracing.
+Checklist-driven review with parallel agents. 146 checks across 10 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling) plus end-to-end data flow tracing.
 
 **Workflow:** Scope → Plan → Check (flag broadly) → Investigate (verify with full context) → Summary
 
@@ -132,9 +132,9 @@ All checking agents use this mindset:
 
 ### Agent 3: DEFENSIVE PROGRAMMING
 
-**Checklist:** `defensive-programming.md` (12) = **12 checks**
+**Checklist:** `defensive-programming.md` (16) = **16 checks**
 
-**Focus:** Null/NaN guards, input validation, error handling, boundary conditions.
+**Focus:** Null/NaN guards, input validation, error handling, boundary conditions, date/time safety, output validity of recursive operations, Angular form validator correctness.
 
 **Input:** Diff of all changed `.ts` files + checklist contents.
 
@@ -148,9 +148,9 @@ All checking agents use this mindset:
 
 ### Agent 5: DATA FLOW
 
-**Checklist:** `data-flow.md` (11) = **11 checks**
+**Checklist:** `data-flow.md` (14) = **14 checks**
 
-**Focus:** Unidirectional data flow, reactive patterns, subscription cleanup.
+**Focus:** Unidirectional data flow, reactive patterns, subscription cleanup, RxJS safety patterns.
 
 **Input:** Diff of component, service, store, module, infra files + checklist contents.
 
@@ -219,6 +219,7 @@ At each step, check:
 - Is loading state managed?
 - Are there race conditions (e.g., user triggers action while previous is in flight)?
 - Is cleanup handled (unsubscribe, cancel in-flight requests)?
+- If the same API call or data operation appears in multiple code paths (e.g., single-item fetch vs batch refresh, initial load vs retry), is the error handling consistent? Flag when one path shows user-facing error feedback (notification, error state) and another silently swallows or skips.
 
 ### Step 3: Report
 
@@ -242,7 +243,7 @@ No gaps found in {N} traced flows: {list flow names}
 
 ### Agent 9: TEST QUALITY
 
-**Checklist:** `test-quality.md` (12) = **12 checks**
+**Checklist:** `test-quality.md` (14) = **14 checks**
 
 **Focus:** Logic-test alignment. Reads both implementation AND spec files to verify tests actually cover the logic. Skips components.
 
@@ -299,7 +300,7 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 ### Agent 10: STYLING
 
-**Checklist:** `styling.md` (11) = **11 checks**
+**Checklist:** `styling.md` (12) = **12 checks**
 
 **Focus:** Design system usage, CSS variables, Bootstrap utilities, selector specificity, property ordering.
 
@@ -505,14 +506,14 @@ Merge CONFIRMED findings that describe the same underlying problem:
 |-------|--------|--------|--------|-------|
 | NAMING | 12 | X | X | {brief summary or "All passed"} |
 | CLEAN CODE | 26 | X | X | {brief summary or "All passed"} |
-| DEFENSIVE | 12 | X | X | {brief summary or "All passed"} |
+| DEFENSIVE | 15 | X | X | {brief summary or "All passed"} |
 | ARCHITECTURE | 13 | X | X | {brief summary or "All passed"} |
-| DATA FLOW | 11 | X | X | {brief summary or "All passed"} |
+| DATA FLOW | 14 | X | X | {brief summary or "All passed"} |
 | STATE MGMT | 14 | X | X | {brief summary or "All passed"} |
 | SAFETY | 25 | X | X | {brief summary or "All passed"} |
 | TRACING | {N flows} | {clean flows} | {gaps + questions} | {brief summary} |
-| TEST QUALITY | 12 | X | X | {brief summary or "All passed"} |
-| STYLING | 11 | X | X | {brief summary or "All passed"} |
+| TEST QUALITY | 13 | X | X | {brief summary or "All passed"} |
+| STYLING | 12 | X | X | {brief summary or "All passed"} |
 
 {Only include rows for activated agents. "Failed" = confirmed findings, not raw flags.}
 
@@ -564,13 +565,13 @@ Examples:
 |---|---|---|---|---|
 | 1: NAMING | Check | naming | 12 | Any `.ts` file |
 | 2: CLEAN CODE | Check | clean-code | 26 | Any `.ts` file |
-| 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 12 | Any `.ts` file |
+| 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 16 | Any `.ts` file |
 | 4: ARCHITECTURE | Check | architecture | 13 | Component/service/store/module/directive/infra files |
-| 5: DATA FLOW | Check | data-flow | 11 | Component/service/store/module/infra files |
+| 5: DATA FLOW | Check | data-flow | 14 | Component/service/store/module/infra files |
 | 6: STATE MANAGEMENT | Check | state-management | 14 | Store files or `@ngrx` imports |
 | 7: SAFETY | Check | regressions + security | 25 | Always |
 | 8: TRACING | Check | (trace-based, no checklist) | — | Service/store + component in same diff, or effects/HTTP touched |
-| 9: TEST QUALITY | Check | test-quality | 12 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
-| 10: STYLING | Check | styling | 11 | Any `.scss` or `.html` file changed |
+| 9: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
+| 10: STYLING | Check | styling | 12 | Any `.scss` or `.html` file changed |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 10 checklists | **136** | |
+| **Total** | | 10 checklists | **146** | |

@@ -68,6 +68,23 @@ this agent reads BOTH the implementation file and its spec file to verify logic-
   → Output: List each untested branch as: `file:line — branch description — no test found`.
   → This is the most important check. Be thorough.
 
+## Assertion Integrity
+
+- [ ] **TQ-13**: "Are test assertions unconditional — no `if` guards that silently skip expects?"
+  → Check: Inside `it()` blocks and `subscribe` callbacks, assertions (`expect(...)`) are NOT wrapped in `if` conditions that can be falsy.
+  → FAIL: `if (criteria.post_query_filter) { expect(json.includes('Custom Ratio')).toBeFalse(); }` — when `post_query_filter` is undefined, the entire assertion is skipped and the test passes silently, masking a real failure.
+  → FIX: Assert the precondition first (`expect(criteria.post_query_filter).toBeDefined()`), then assert the value unconditionally. If two scenarios are possible, write two separate `it()` blocks.
+  → WHY: Conditional assertions are one of the most dangerous test smells — the test appears green but validates nothing. The `if` guard converts a test failure into a silent pass.
+
+## Environment Independence
+
+- [ ] **TQ-14**: "Are test assertions free of locale-dependent or timezone-dependent values?"
+  → Check: Test expectations do not depend on the runtime's locale, timezone, or date formatting defaults.
+  → FAIL: `expect(result).toBe('15/06/2020')` — assumes `dd/MM/yyyy` locale formatting. Will fail on machines with `MM/dd/yyyy` or other locale.
+  → FAIL: `expect(date.getHours()).toBe(10)` — depends on the machine's timezone. Use UTC methods or mock the timezone.
+  → FIX: Use explicit format functions with a fixed locale, or assert on epoch timestamps / ISO strings instead of locale-formatted output. For timezone-dependent tests, use UTC or explicitly set the timezone in the test.
+  → WHY: Tests that pass locally but fail on CI (or on a colleague's machine) due to locale/timezone differences waste debugging time and erode trust in the test suite.
+
 ---
 
-Total items: 12
+Total items: 14

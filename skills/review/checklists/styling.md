@@ -87,6 +87,16 @@
   → Check: Layout classes use standard names: `container`, `header`, `footer`, `content`, `sidebar`. Long class names may indicate the element should be its own component.
   → FAIL: `.div1`, `.blue-box`, `.style2` — use names that describe meaning, not appearance.
 
+## Angular View Encapsulation
+
+- [ ] **ST-12**: "Is `::ng-deep` always scoped inside a parent selector?"
+  → Check: Every `::ng-deep` rule is nested inside a parent selector (`:host`, a class, or any component-scoped selector). Unscoped `::ng-deep` completely disables view encapsulation and the style becomes global, bleeding into all components in the application.
+  → FAIL (unscoped — global leak): `::ng-deep .child-class { color: red; }` — no parent selector. This style applies globally to ALL `.child-class` elements in the entire application.
+  → PASS: `:host ::ng-deep .child-class { color: red; }` — scoped to this component and its descendants.
+  → PASS: `.wrapper ::ng-deep .child-class { color: red; }` — scoped to `.wrapper` descendants within this component.
+  → FAIL (overly generic target): `:host ::ng-deep div { ... }` or `:host ::ng-deep .active { ... }` — targets a generic selector that will match far more descendants than intended. Use a specific selector that targets only the intended third-party component (e.g., `:host ::ng-deep .p-dropdown .p-dropdown-label { ... }`).
+  → NOTE: `::ng-deep` is deprecated but sometimes necessary for styling encapsulated third-party components (PrimeNG, etc.). The key safety requirements are: (1) always use a parent selector, (2) target specific child selectors, not generic ones.
+
 ---
 
-Total items: 11
+Total items: 12
