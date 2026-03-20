@@ -26,6 +26,9 @@ Agent tool (general-purpose):
     | Scope | Focused enough for a single implementation cycle — not covering multiple independent subsystems |
     | Architecture | Units with clear boundaries, well-defined interfaces, independently understandable and testable |
     | Testability | Can each requirement be verified? Are acceptance criteria clear? |
+    | Phase count | No more than 7 phases — if exceeded, must be split into separate specs |
+    | What vs How | Spec should define goals/constraints/architecture, NOT pseudocode, function signatures, exact file paths, or implementation steps |
+    | Convention alignment | Proposed approach follows existing codebase patterns. Any deviation has explicit rationale and is justified by a concrete defect. |
 
     ## CRITICAL
 
@@ -36,6 +39,8 @@ Agent tool (general-purpose):
     - Units that lack clear boundaries or interfaces
     - Requirements that can't be tested or verified
     - Assumptions not stated explicitly
+    - Implementation details masquerading as spec requirements (pseudocode, function signatures, exact file paths)
+    - New patterns or approaches introduced without justification against existing codebase conventions
 
     ## Output Format
 
