@@ -19,13 +19,13 @@ Every task goes through this process. A config change, a single-component fix, a
 
 ## Working Directory Convention
 
-All brainstorming artifacts live in a ticket directory:
+All brainstorming artifacts live in a task directory:
 
 ```
-.claude/temp/<TICKET_ID>-short-description/
-  ├── <TICKET_ID>-short-description-proposal.md   # input (user provides)
-  ├── assets/                                       # mockups, screenshots, diagrams, references (optional)
-  └── <TICKET_ID>-short-description-spec.md        # output (this skill produces)
+.claude/temp/<task>/
+  ├── <task>-proposal.md   # input (user provides)
+  ├── assets/               # mockups, screenshots, diagrams, references (optional)
+  └── <task>-spec.md        # output (this skill produces)
 ```
 
 - The `assets/` directory may contain images, mockups, Figma exports, PDFs, or any reference material. Check it early — these assets often answer questions before you need to ask them.
@@ -61,7 +61,7 @@ You MUST create a task for each of these items and complete them in order:
 7. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
 8. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
 9. **Present design** — in sections scaled to complexity, get user approval after each section
-10. **Write spec file** — save to `<TICKET_ID>-short-description-spec.md` in the same ticket directory. Max 7 phases — if more are needed, split into multiple specs.
+10. **Write spec file** — save to `<task>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 11. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
 12. **User reviews written spec** — ask user to review the spec file before proceeding
 
@@ -184,7 +184,7 @@ After the user approves the spec, suggest the next step:
 
 **Writing the spec:**
 
-- Write the validated design to `<TICKET_ID>-short-description-spec.md` in the ticket directory
+- Write the validated design to `<task>-spec.md` in the task directory
 - The spec should be self-contained: someone reading only this file should understand what to build and why
 - **Max 7 phases.** If more are needed, split into multiple specs — each gets its own brainstorming cycle.
 - Do NOT commit the file — the user manages git operations manually
@@ -214,7 +214,7 @@ After writing the spec file:
 
 After the spec review loop passes, ask the user to review the written spec:
 
-> "Spec written to `.claude/temp/<TICKET_ID>-short-description/<TICKET_ID>-short-description-spec.md`. Please review it and let me know if you want any changes before we move to implementation."
+> "Spec written to `.claude/temp/<task>/<task>-spec.md`. Please review it and let me know if you want any changes before we move to implementation."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only consider the spec done once the user approves.
 
