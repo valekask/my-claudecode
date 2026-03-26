@@ -29,6 +29,7 @@ Agent tool (general-purpose):
     | Phase count | No more than 7 phases — if exceeded, must be split into separate specs |
     | What vs How | Spec should define goals/constraints/architecture, NOT pseudocode, function signatures, exact file paths, or implementation steps |
     | Convention alignment | Proposed approach follows existing codebase patterns. Any deviation has explicit rationale and is justified by a concrete defect. |
+    | Validation placement | If the spec includes forms or user input validation: does it specify which rules are domain-owned (shared validator/service — rules that would need to be enforced from a second entry point) vs presentation-only (component — rules that are only about this form's UX)? |
 
     ## CRITICAL
 

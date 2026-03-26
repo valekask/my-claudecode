@@ -138,6 +138,7 @@ After the user approves the spec, suggest the next step:
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message
 - Focus on: purpose, constraints, success criteria, edge cases
+- If the feature involves forms or user input, ask about validation: what are the rules, and would any need to be enforced from a second entry point? If yes, those belong in shared validators/services — clarify this early so the spec places them correctly.
 - Skip questions already answered by the proposal, visible in the assets, or discoverable in the codebase
 
 **Research before proposing (Medium/Complex only):**

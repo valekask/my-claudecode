@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with FNA-UI quali
 
 # Code Review
 
-Checklist-driven review with parallel agents. 146 checks across 10 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling) plus end-to-end data flow tracing.
+Checklist-driven review with parallel agents. 159 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms) plus end-to-end data flow tracing.
 
 **Workflow:** Scope → Plan → Check (flag broadly) → Investigate (verify with full context) → Summary
 
@@ -92,6 +92,7 @@ Determine which agents to activate based on changed files. Use a fast model (hai
 | Agent 8: TRACING | Diff includes both a service/store AND a component, OR diff modifies an effect/reducer/selector, OR diff touches HTTP calls |
 | Agent 9: TEST QUALITY | Any `.service.ts`, `.store.ts`, `.utils.ts`, `.pipe.ts`, `.directive.ts`, `.guard.ts`, or `.interceptor.ts` changed — OR any `.spec.ts` changed |
 | Agent 10: STYLING | Any `.scss` or `.html` file changed |
+| Agent 11: FORMS | Any changed `.ts` file imports `FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, or `ControlValueAccessor` |
 
 ### Lightweight mode
 
@@ -99,6 +100,7 @@ If ≤3 files changed AND no store/service files:
 - **Always:** Agent 1+2+3 (if any `.ts` file) + Agent 7 (safety)
 - **Add Agent 9** if any `.spec.ts` file changed
 - **Add Agent 10** if any `.scss` or `.html` file changed
+- **Add Agent 11** if any changed `.ts` file imports form APIs
 - **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management), Agent 8 (tracing)
 
 ---
@@ -132,9 +134,9 @@ All checking agents use this mindset:
 
 ### Agent 3: DEFENSIVE PROGRAMMING
 
-**Checklist:** `defensive-programming.md` (16) = **16 checks**
+**Checklist:** `defensive-programming.md` (15) = **15 checks**
 
-**Focus:** Null/NaN guards, input validation, error handling, boundary conditions, date/time safety, output validity of recursive operations, Angular form validator correctness.
+**Focus:** Null/NaN guards, input validation, error handling, boundary conditions, date/time safety, output validity of recursive operations.
 
 **Input:** Diff of all changed `.ts` files + checklist contents.
 
@@ -300,13 +302,21 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 ### Agent 10: STYLING
 
-**Checklist:** `styling.md` (12) = **12 checks**
+**Checklist:** `styling.md` (13) = **13 checks**
 
-**Focus:** Design system usage, CSS variables, Bootstrap utilities, selector specificity, property ordering.
+**Focus:** Design system usage, CSS variables, Bootstrap utilities, selector specificity, property ordering, template–SCSS class matching.
 
-**Input:** Diff of all changed `.scss` and `.html` files + checklist contents. Read `libs/ui/src/assets/scss/` variable files when checking if a hardcoded value exists in the design system. For ST-11 (Bootstrap deprecations), check both `.scss` class references and `.html` template class attributes.
+**Input:** Diff of all changed `.scss` and `.html` files + checklist contents. Read `libs/ui/src/assets/scss/` variable files when checking if a hardcoded value exists in the design system. For ST-8 (Bootstrap deprecations), check both `.scss` class references and `.html` template class attributes.
 
-### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 10)
+### Agent 11: FORMS
+
+**Checklist:** `forms.md` (13) = **13 checks**
+
+**Focus:** Form setup correctness, validation layer separation (domain vs presentation), data extraction safety, form lifecycle, submission flow.
+
+**Input:** Diff of all changed `.ts` files that import form-related APIs (`FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, `ControlValueAccessor`) + their corresponding `.html` templates + checklist contents. Read full source files to trace the form lifecycle: setup → validation → data extraction → submission.
+
+### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 10, 11)
 
 ```
 You are a checking agent reviewing code changes for the FNA-UI Angular project.
@@ -507,13 +517,14 @@ Merge CONFIRMED findings that describe the same underlying problem:
 | NAMING | 12 | X | X | {brief summary or "All passed"} |
 | CLEAN CODE | 26 | X | X | {brief summary or "All passed"} |
 | DEFENSIVE | 15 | X | X | {brief summary or "All passed"} |
+| FORMS | 13 | X | X | {brief summary or "All passed"} |
 | ARCHITECTURE | 13 | X | X | {brief summary or "All passed"} |
 | DATA FLOW | 14 | X | X | {brief summary or "All passed"} |
 | STATE MGMT | 14 | X | X | {brief summary or "All passed"} |
 | SAFETY | 25 | X | X | {brief summary or "All passed"} |
 | TRACING | {N flows} | {clean flows} | {gaps + questions} | {brief summary} |
 | TEST QUALITY | 13 | X | X | {brief summary or "All passed"} |
-| STYLING | 12 | X | X | {brief summary or "All passed"} |
+| STYLING | 13 | X | X | {brief summary or "All passed"} |
 
 {Only include rows for activated agents. "Failed" = confirmed findings, not raw flags.}
 
@@ -524,11 +535,11 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 ## Summary
 
-| # | Type | Issue | Severity |
-|---|------|-------|----------|
-| 1 | {CATEGORY or TRACE} | {short description} | Critical/High/Medium/Low |
-| 2 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low |
-| ... | | | |
+| # | Type | Issue | Severity | Status |
+|---|------|-------|----------|--------|
+| 1 | {CATEGORY or TRACE} | {short description} | Critical/High/Medium/Low | Open |
+| 2 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low | Open |
+| ... | | | | |
 
 **Ready to merge?** [Yes / No / With fixes]
 
@@ -555,7 +566,8 @@ Examples:
 - `1. [CLEAN CODE: CC-17] console.log left in production code`
 - `2. [REGRESSION: RG-2] Removed properties break drill-down modal`
 - `3. [DEFENSIVE: DP-3] NaN input causes runtime RangeError`
-- `4. [TRACE] Daily mode detection broken for multi-currency`
+- `4. [FORMS: FM-1] Custom validator registered after initial validation pass`
+- `5. [TRACE] Daily mode detection broken for multi-currency`
 
 ---
 
@@ -565,13 +577,14 @@ Examples:
 |---|---|---|---|---|
 | 1: NAMING | Check | naming | 12 | Any `.ts` file |
 | 2: CLEAN CODE | Check | clean-code | 26 | Any `.ts` file |
-| 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 16 | Any `.ts` file |
+| 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 15 | Any `.ts` file |
 | 4: ARCHITECTURE | Check | architecture | 13 | Component/service/store/module/directive/infra files |
 | 5: DATA FLOW | Check | data-flow | 14 | Component/service/store/module/infra files |
 | 6: STATE MANAGEMENT | Check | state-management | 14 | Store files or `@ngrx` imports |
 | 7: SAFETY | Check | regressions + security | 25 | Always |
 | 8: TRACING | Check | (trace-based, no checklist) | — | Service/store + component in same diff, or effects/HTTP touched |
 | 9: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
-| 10: STYLING | Check | styling | 12 | Any `.scss` or `.html` file changed |
+| 10: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
+| 11: FORMS | Check | forms | 13 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 10 checklists | **146** | |
+| **Total** | | 11 checklists | **159** | |

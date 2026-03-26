@@ -87,9 +87,17 @@
   → Check: Layout classes use standard names: `container`, `header`, `footer`, `content`, `sidebar`. Long class names may indicate the element should be its own component.
   → FAIL: `.div1`, `.blue-box`, `.style2` — use names that describe meaning, not appearance.
 
+## Template–SCSS Consistency
+
+- [ ] **ST-12**: "Do CSS class selectors in SCSS match the classes used in the corresponding template?"
+  → Check: For each class selector defined in a component's `.scss` file, verify that the same class name appears in the component's `.html` template (or is applied dynamically via `[class]`/`[ngClass]`). Also check the reverse — classes used in the template that are expected to be styled by the component's SCSS.
+  → FAIL: SCSS defines `.setting-container { ... }` but the template uses `class="settings-container"` — styles never apply due to the typo.
+  → FAIL: Template uses `class="panel-header"` but SCSS has `.panelHeader { ... }` — naming convention mismatch (kebab-case vs camelCase).
+  → NOTE: Some classes come from Bootstrap, parent components, or global styles — only flag mismatches for selectors that appear to be component-specific (not utility/framework classes). When uncertain, flag with LOW confidence.
+
 ## Angular View Encapsulation
 
-- [ ] **ST-12**: "Is `::ng-deep` always scoped inside a parent selector?"
+- [ ] **ST-13**: "Is `::ng-deep` always scoped inside a parent selector?"
   → Check: Every `::ng-deep` rule is nested inside a parent selector (`:host`, a class, or any component-scoped selector). Unscoped `::ng-deep` completely disables view encapsulation and the style becomes global, bleeding into all components in the application.
   → FAIL (unscoped — global leak): `::ng-deep .child-class { color: red; }` — no parent selector. This style applies globally to ALL `.child-class` elements in the entire application.
   → PASS: `:host ::ng-deep .child-class { color: red; }` — scoped to this component and its descendants.
@@ -99,4 +107,4 @@
 
 ---
 
-Total items: 12
+Total items: 13

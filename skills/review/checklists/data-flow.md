@@ -24,11 +24,11 @@
   → Check: Code does not mutate objects obtained from external sources. These are references to shared state — mutating them causes side effects in the owner.
   → Borrowed references include:
     - `@Input()` values from parent components
-    - `FormGroup.value` or `getRawValue()` results (live reference to form internal state)
     - Store selector snapshot values
     - Return values from shared services
-  → FAIL: `this.items.push(...)` on an @Input. `templateValue.currencyCodes = currencies` on a form value reference. `selectorResult.items.splice(...)` on a store snapshot.
-  → WHY: Mutating form value references silently changes the form's internal state without triggering validation, `valueChanges`, or dirty tracking. Mutating store snapshots can corrupt shared state. Mutating @Input values breaks unidirectional data flow.
+  → FAIL: `this.items.push(...)` on an @Input. `selectorResult.items.splice(...)` on a store snapshot.
+  → WHY: Mutating store snapshots can corrupt shared state. Mutating @Input values breaks unidirectional data flow.
+  → NOTE: Form value reference mutations (`FormGroup.value`, `getRawValue()`) are covered by the Forms checklist (FM-8).
 
 ## Reactive Patterns
 

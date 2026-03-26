@@ -8,9 +8,14 @@
   → Check: Any variable from external source (API response, selector, function parameter) accessed with `.property` or `[index]` without null guard.
   → FAIL: `response.data.items.map(...)` without checking `response.data` exists. Use optional chaining (`?.`) or explicit guard.
 
-- [ ] **DP-2**: "Are optional parameters handled with defaults or guards?"
-  → Check: Function parameters that could be undefined/null are either given defaults or checked before use.
-  → FAIL: `function format(value) { return value.toFixed(2) }` — crashes if `value` is undefined. Add default or guard.
+- [ ] **DP-2**: "Are function parameters guarded against nullish values they could receive at runtime?"
+  → Check: Any function parameter that could receive `null` or `undefined` at runtime — regardless of its TypeScript type — is either given a default or checked before use. Three categories to watch:
+    1. **Explicitly optional**: Parameters typed with `?` or `| null | undefined` — obvious, but still need guards before `.property` access.
+    2. **Implicitly nullable from framework**: Angular pipe `transform` arguments, `@Input()` values, and async pipe results can be `null`/`undefined` at runtime even when TypeScript says otherwise (e.g., template passes `null` before data loads).
+    3. **Non-optional but callers pass null**: The function signature says `items: Item[]` but the consumer has `null` and passes it. TypeScript may not catch this across template bindings or loose types.
+  → FAIL: `transform(properties: Property[], excludeValues: string[]) { return properties.filter(...) }` — pipe crashes when template passes `null` before async data resolves.
+  → FAIL: `function format(value) { return value.toFixed(2) }` — crashes if caller passes `undefined`.
+  → FAIL: `@Input() items: Item[]; ngOnInit() { this.items.forEach(...) }` — crashes if parent hasn't set the input yet.
 
 ## Numeric Safety
 
@@ -82,14 +87,6 @@
   → FIX: After recursing into children, check if the result is empty and remove the parent too: filter/prune bottom-up (recurse first, then filter), not top-down.
   → WHY: Recursive operations that only check the current level miss structural invariants. An empty `[]` is valid as a value but invalid as a "group with no members" in domain-specific structures. This class of bug survives unit tests because tests rarely construct deeply nested inputs.
 
-## Framework-Specific Safety
-
-- [ ] **DP-16**: "Are Angular form validators correct for the control's value type?"
-  → Check: Form control validators match the data type of the control's value.
-  → FAIL: `fb.control([] as string[], [Validators.required])` — `Validators.required` checks for truthy values, but an empty array `[]` is truthy. Validation passes with zero selections. Use `Validators.minLength(1)` for array controls.
-  → FAIL: `fb.control('', [Validators.min(0)])` — `Validators.min` expects a number, not a string. The validator silently passes or behaves unexpectedly on string values.
-  → WHY: Angular validators have type assumptions that aren't enforced by TypeScript. `Validators.required` is the most common trap — it works for strings and null but not for empty arrays or objects.
-
 ---
 
-Total items: 16
+Total items: 15

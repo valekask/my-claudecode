@@ -10,7 +10,7 @@ Custom skills and configuration for Claude Code, designed around a structured de
 | **writing-plans** | After spec is approved | Creates bite-sized implementation plans from specs (TDD, DRY, YAGNI) |
 | **executing-plans** | After plan is written | Executes plan inline, step-by-step in current session |
 | **subagent-driven-development** | After plan is written | Executes plan via fresh subagent per task with two-stage review |
-| **review** | Before PR | Checklist-driven code review with 10 specialized agents (146 checks) |
+| **review** | Before PR | Checklist-driven code review with 11 specialized agents (159 checks) |
 | **debug** | Bug or unexpected behavior | Root-cause-first investigation before attempting fixes |
 | **formatting** | Before PR | Prettier + import/member ordering for changed files |
 
@@ -54,5 +54,5 @@ All artifacts live in `.claude/temp/<task>/` where `<task>` is a short descripti
 These skills are used independently at any point in the workflow:
 
 - **debug** — Use when encountering bugs or unexpected behavior. Enforces "no fixes without root cause" — investigates through evidence before proposing changes.
-- **review** — 10 parallel checking agents covering naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, and styling.
+- **review** — 11 parallel checking agents covering naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, and forms.
 - **formatting** — Detects modified files and applies Prettier formatting, import sorting (6 groups), and class member ordering.
