@@ -75,6 +75,18 @@
   → Check: When the backend returns field-level validation errors, they are mapped to the corresponding form control via `control.setErrors()` — not just shown as a generic toast or alert.
   → FAIL: Backend returns `{ errors: { amount: 'exceeds limit' } }` but the component shows `showToast('Submission failed')` — the user doesn't know which field to fix.
 
+## Custom Validator Coverage
+
+- [ ] **FM-14**: "Does the custom validator handle the full value domain of the control?"
+  → Check: Verify the validator's condition logic against edge values the control type can actually produce.
+  → Common traps by type:
+    - **Number controls**: negative values, `0`, `NaN` (empty input parsed), decimals, `Infinity`
+    - **String controls**: empty string `''`, whitespace-only `'  '`, special characters
+    - **Boolean-like checks on numbers**: `!!value` or truthiness checks — `0` is falsy, negative numbers are truthy
+  → FAIL: Validator uses `value > threshold` assuming positive input, but the control accepts negative numbers — negative values bypass the intended range.
+  → FAIL: Validator uses `!!control.value` as a "has value" check on a number control — `0` is treated as "no value."
+  → WHY: Custom validators often encode implicit assumptions about the input domain that aren't enforced by the control type. These pass code review because the logic looks correct for the "happy path" but breaks on edge values the input can actually produce.
+
 ---
 
-Total items: 13
+Total items: 14

@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with FNA-UI quali
 
 # Code Review
 
-Checklist-driven review with parallel agents. 159 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms) plus end-to-end data flow tracing.
+Checklist-driven review with parallel agents. 160 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms) plus end-to-end data flow tracing.
 
 **Workflow:** Scope → Plan → Check (flag broadly) → Investigate (verify with full context) → Summary
 
@@ -334,7 +334,7 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 ### Agent 11: FORMS
 
-**Checklist:** `forms.md` (13) = **13 checks**
+**Checklist:** `forms.md` (14) = **14 checks**
 
 **Focus:** Form setup correctness, validation layer separation (domain vs presentation), data extraction safety, form lifecycle, submission flow.
 
@@ -609,6 +609,6 @@ Examples:
 | 8: TRACING | Check | (trace-based, no checklist) | — | Service/store + component in same diff, or effects/HTTP touched |
 | 9: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
 | 10: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
-| 11: FORMS | Check | forms | 13 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
+| 11: FORMS | Check | forms | 14 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 11 checklists | **159** | |
+| **Total** | | 11 checklists | **160** | |
