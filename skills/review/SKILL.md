@@ -47,11 +47,11 @@ All phases and agents MUST prefer built-in tools over Bash equivalents:
 Create all phase tasks upfront using TaskCreate. This shows progress in the terminal.
 
 ```python
-TaskCreate(subject="Phase 1: Scope", description="Get diff, collect changed files", activeForm="Collecting changes")
+TaskCreate(subject="Phase 1: Scope", description="Get diff, collect changed files, check for previous review", activeForm="Collecting changes")
 TaskCreate(subject="Phase 2: Plan", description="Determine which agents to activate", activeForm="Planning review")
 TaskCreate(subject="Phase 3: Check", description="Flag findings broadly with checking agents", activeForm="Running checking agents")
 TaskCreate(subject="Phase 4: Investigate", description="Verify raw findings with full context", activeForm="Investigating findings")
-TaskCreate(subject="Phase 5: Summary", description="Deduplicate, generate report", activeForm="Generating report")
+TaskCreate(subject="Phase 5: Summary", description="Merge with previous, deduplicate, generate report, save to disk", activeForm="Generating report")
 ```
 
 **Each phase MUST:**
@@ -61,9 +61,52 @@ TaskCreate(subject="Phase 5: Summary", description="Deduplicate, generate report
 
 ---
 
+## Review Persistence
+
+Review reports are saved to `.claude/temp/<task>/<task>-review.md` so that subsequent reviews can track item status across iterations.
+
+### Task directory
+
+If the user is working within a task (a `.claude/temp/<task>/` directory exists), save the review report there. If no task directory exists, ask the user for a short task name (e.g., `add-currency-filter`) and create the directory.
+
+### Previous report handling
+
+At the start of each review, check for an existing `<task>-review.md`. If found:
+
+1. **Read it** and extract the Summary table (the `| # | Type | Issue | Severity | Status |` table at the bottom)
+2. **Carry forward resolved items.** Items with status `Fixed`, `Skipped`, or `Wontfix` are NOT re-checked. They appear in a **Previously Resolved** section of the new report with their original status.
+3. **Re-check open items.** Items with status `Open` from the previous report are checked again. If the issue is gone from the diff, mark as `Fixed`. If still present, keep as `Open`.
+4. **New findings** get status `Open`.
+
+### Status values
+
+| Status | Meaning |
+|--------|---------|
+| `Open` | Issue found, not yet addressed |
+| `Fixed` | Issue was present in previous review, now resolved in code |
+| `Skipped` | User explicitly decided to skip this item |
+| `Wontfix` | User explicitly decided this is not worth fixing |
+
+Users set `Skipped` / `Wontfix` by editing the report file manually or telling the reviewer in conversation.
+
+---
+
 ## Phase 1: SCOPE
 
 Determine what to review.
+
+### Step 1.0: Check for previous review
+
+Look for an existing review report:
+
+1. Check if the user specified a task name, or if there's an active task directory under `.claude/temp/`
+2. If a task directory exists, check for `<task>-review.md` inside it
+3. If found, read the file and extract:
+   - The **Summary table** (items with their statuses)
+   - The **Scope** section (to compare what was reviewed before)
+4. Store the previous items for use in Phase 5
+
+If no previous report exists, this is a fresh review — proceed normally.
 
 ### Step 1.1: Get the diff
 
@@ -466,7 +509,18 @@ Gather all investigation results. The output of this phase is:
 
 ## Phase 5: SUMMARY
 
-Merge all agent outputs into a single report.
+Merge all agent outputs into a single report. Save to disk for future review iterations.
+
+### Step 5.0: Merge with previous review
+
+If a previous review report was loaded in Phase 1:
+
+1. **Resolved items** (status `Fixed`, `Skipped`, `Wontfix`) — collect into a **Previously Resolved** list. Do not re-check.
+2. **Previously Open items** — check each against current findings:
+   - If the same issue (same file + same checklist ID or similar description) appears in current findings → keep as `Open`, use the current finding's details
+   - If the issue is no longer in the diff → mark as `Fixed`
+   - If the issue is still in the code but was not flagged (e.g., agent wasn't activated) → keep as `Open` with a note
+3. **New findings** from current review → add as `Open`
 
 ### Step 5.1: Deduplicate
 
@@ -481,6 +535,11 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 ```markdown
 # Code Review Report
+
+## Meta
+- **Task**: {task name}
+- **Review**: #{N} ({date})
+- **Previous**: #{N-1} ({date}) — {X open, Y fixed, Z skipped} | or "None (first review)"
 
 ## Scope
 - **Target**: {what was reviewed}
@@ -557,18 +616,42 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 - **[CHECK-ID]** {what was flagged} — **Reason:** {why it's not an issue, referencing full context}
 
+## Previously Resolved
+{Only include if this is review #2 or later. List items from prior reviews that are no longer open.}
+
+| # | Type | Issue | Severity | Status | Resolved in |
+|---|------|-------|----------|--------|-------------|
+| {original #} | {CATEGORY: ID} | {short description} | {severity} | Fixed/Skipped/Wontfix | Review #{N} |
+
+{If no previously resolved items, omit this section.}
+
 ## Summary
 
 | # | Type | Issue | Severity | Status |
 |---|------|-------|----------|--------|
 | 1 | {CATEGORY or TRACE} | {short description} | Critical/High/Medium/Low | Open |
 | 2 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low | Open |
+| 3 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low | Fixed |
 | ... | | | | |
+
+{Status values: Open, Fixed, Skipped, Wontfix. Items carried from previous reviews keep their original number. New items get the next available number.}
 
 **Ready to merge?** [Yes / No / With fixes]
 
-**Reasoning:** {1-2 sentence technical assessment}
+**Reasoning:** {1-2 sentence technical assessment — only consider `Open` items for merge readiness}
 ```
+
+### Step 5.3: Save report to disk
+
+After generating the report:
+
+1. Write the full report to `.claude/temp/<task>/<task>-review.md` using the Write tool
+2. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
+3. Tell the user: `Review saved to .claude/temp/<task>/<task>-review.md`
+
+**Tip for users:** To mark items as `Skipped` or `Wontfix`, either:
+- Edit the status in the Summary table of `<task>-review.md` directly
+- Tell the reviewer in conversation (e.g., "skip item #3, wontfix #5") before running the next review
 
 ### Decision criteria for merge readiness
 
