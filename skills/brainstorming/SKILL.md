@@ -151,7 +151,11 @@ After the user approves the spec, suggest the next step:
 
 **Exploring approaches:**
 
-- **Medium/Complex:** Propose 2-3 structurally different approaches with trade-offs. Present options conversationally with your recommendation and reasoning. Lead with your recommended option and explain why.
+- **Medium/Complex:** Propose 2-3 structurally different approaches with trade-offs. Present options conversationally with your recommendation and reasoning. Lead with your recommended option and explain why. For each approach, include:
+  - **Scope** — what areas/components it touches
+  - **Hardest part** — the single riskiest or most complex piece
+
+  This helps the user gauge relative effort and compare options without needing deep technical knowledge.
 - **Simple:** State the single obvious approach that follows existing conventions. No comparison needed.
 
 **Pre-mortem (Complex only):**
