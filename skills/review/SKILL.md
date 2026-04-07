@@ -15,6 +15,30 @@ Checklist-driven review with parallel agents. 159 checks across 11 checklists (n
 2. **Execute phases in order.** Scope → Plan → Check → Investigate → Summary.
 3. **Every finding needs evidence.** File:line reference, what's wrong, impact.
 4. **No false positives.** If unsure whether something is a real issue, mark it as a **Question** not a finding.
+5. **Use built-in tools instead of Bash for file operations.** This avoids unnecessary permission prompts and lets the review run unattended.
+6. **Output text directly.** Never use Bash (`cat <<EOF`, `echo`, `printf`) to print summaries, reports, or checklists — write them directly in your response instead.
+
+## Tool Usage (MANDATORY)
+
+All phases and agents MUST prefer built-in tools over Bash equivalents:
+
+| Instead of (Bash) | Use (built-in) | Why |
+|---|---|---|
+| `cat`, `head`, `tail` | **Read** tool | Never needs permission |
+| `grep`, `rg`, `awk` | **Grep** tool | Never needs permission |
+| `find`, `ls` | **Glob** tool | Never needs permission |
+
+**Bash is ONLY allowed for:**
+- `git diff`, `git log`, `git show`, `git status` and other git read commands
+- Commands that have no built-in equivalent
+
+**Specifically NEVER use Bash for:**
+- Reading file contents (use Read)
+- Searching file contents (use Grep)
+- Finding files by pattern (use Glob)
+- Piped commands like `cat file | grep pattern` (use Grep with path parameter)
+- Loop patterns like `for f in $(git diff ...) do ... done` to read/search files — instead, get the file list from git via Bash, then use Read/Grep/Glob on each file
+- Compound commands combining multiple read operations
 
 ---
 
