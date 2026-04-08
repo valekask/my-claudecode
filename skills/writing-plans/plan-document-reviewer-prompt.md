@@ -21,6 +21,9 @@ Task tool (general-purpose):
     |----------|------------------|
     | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
+    | Test Traceability | Every test scenario in the spec's Testing Approach maps to a concrete plan step with test code |
+    | Replacement Cleanup | When a function/method is replaced by a new one, there's a step to check remaining callers of the old one and remove it if unused |
+    | Impact Completeness | When a function's signature or behavior is modified, are ALL callers (including indirect through shared services) accounted for in the plan? When new state depends on existing state, are all triggers that change the source state covered? |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
 

@@ -34,6 +34,7 @@ Before defining tasks, map out which files will be created or modified and what 
 - You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
 - Files that change together should live together. Split by responsibility, not by technical layer.
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+- **Impact tracing** — when modifying a function's signature or behavior, grep for ALL callers to build the complete file list. Include indirect callers through shared services and utilities, not just direct callers in the target area. When adding state that depends on another piece of state, trace ALL triggers that can change the source state, not just the primary use case.
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
@@ -105,6 +106,8 @@ Expected: PASS
 - Exact commands with expected output
 - DRY, YAGNI, TDD
 - No git operations — the user manages all commits manually
+- **Spec test traceability** — every test scenario in the spec's Testing Approach section must map to a concrete plan step with test code. If the spec says "verify X receives Y", the plan must have a step that writes that test.
+- **Cleanup after replacement** — when a plan replaces a function call with a new one, add a cleanup step: check if the old function has remaining callers; if not, remove it and update exports. Don't leave dead code behind.
 
 ## Plan Review Loop
 
