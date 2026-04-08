@@ -47,11 +47,11 @@ All phases and agents MUST prefer built-in tools over Bash equivalents:
 Create all phase tasks upfront using TaskCreate. This shows progress in the terminal.
 
 ```python
-TaskCreate(subject="Phase 1: Scope", description="Get diff, collect changed files, check for previous review", activeForm="Collecting changes")
+TaskCreate(subject="Phase 1: Scope", description="Get diff, collect changed files, check for previous review if task dir exists", activeForm="Collecting changes")
 TaskCreate(subject="Phase 2: Plan", description="Determine which agents to activate", activeForm="Planning review")
 TaskCreate(subject="Phase 3: Check", description="Flag findings broadly with checking agents", activeForm="Running checking agents")
 TaskCreate(subject="Phase 4: Investigate", description="Verify raw findings with full context", activeForm="Investigating findings")
-TaskCreate(subject="Phase 5: Summary", description="Merge with previous, deduplicate, generate report, save to disk", activeForm="Generating report")
+TaskCreate(subject="Phase 5: Summary", description="Merge with previous, deduplicate, generate report, save if persistence active", activeForm="Generating report")
 ```
 
 **Each phase MUST:**
@@ -63,15 +63,22 @@ TaskCreate(subject="Phase 5: Summary", description="Merge with previous, dedupli
 
 ## Review Persistence
 
-Review reports are saved to `.claude/temp/<task>/<task>-review.md` so that subsequent reviews can track item status across iterations.
+Review reports **can** be saved to `.claude/temp/<task>/<task>-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
+
+### When persistence is active
+
+Persistence is active when **any** of these are true:
+- The user passes `--save` (e.g., `/review --save`)
+- The user says "save the review" (before or after the review)
+- A previous report already exists for this task (sticky — once you save the first report, subsequent reviews in the same task auto-save)
 
 ### Task directory
 
-If the user is working within a task (a `.claude/temp/<task>/` directory exists), save the review report there. If no task directory exists, ask the user for a short task name (e.g., `add-currency-filter`) and create the directory.
+When persistence is active and no `.claude/temp/<task>/` directory exists, ask the user for a short task name (e.g., `add-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
 
 ### Previous report handling
 
-At the start of each review, check for an existing `<task>-review.md`. If found:
+At the start of each review, if a task directory exists, check for an existing `<task>-review.md`. If found (this also activates persistence):
 
 1. **Read it** and extract the Summary table (the `| # | Type | Issue | Severity | Status |` table at the bottom)
 2. **Carry forward resolved items.** Items with status `Fixed`, `Skipped`, or `Wontfix` are NOT re-checked. They appear in a **Previously Resolved** section of the new report with their original status.
@@ -97,16 +104,16 @@ Determine what to review.
 
 ### Step 1.0: Check for previous review
 
-Look for an existing review report:
+Look for an existing review report **only if** a task directory is already known (user specified a task name, or an active task directory exists under `.claude/temp/`):
 
-1. Check if the user specified a task name, or if there's an active task directory under `.claude/temp/`
-2. If a task directory exists, check for `<task>-review.md` inside it
-3. If found, read the file and extract:
+1. If a task directory exists, check for `<task>-review.md` inside it
+2. If found, read the file and extract:
    - The **Summary table** (items with their statuses)
    - The **Scope** section (to compare what was reviewed before)
-4. Store the previous items for use in Phase 5
+3. Store the previous items for use in Phase 5
+4. Mark persistence as active (previous report found → sticky auto-save)
 
-If no previous report exists, this is a fresh review — proceed normally.
+If no task directory exists, skip this step entirely — do not ask for a task name. This is a fresh review with no persistence.
 
 ### Step 1.1: Get the diff
 
@@ -509,7 +516,7 @@ Gather all investigation results. The output of this phase is:
 
 ## Phase 5: SUMMARY
 
-Merge all agent outputs into a single report. Save to disk for future review iterations.
+Merge all agent outputs into a single report. Optionally save to disk for future review iterations.
 
 ### Step 5.0: Merge with previous review
 
@@ -641,13 +648,18 @@ Merge CONFIRMED findings that describe the same underlying problem:
 **Reasoning:** {1-2 sentence technical assessment — only consider `Open` items for merge readiness}
 ```
 
-### Step 5.3: Save report to disk
+### Step 5.3: Save report to disk (conditional)
 
-After generating the report:
+**Only save when persistence is active** (user passed `--save`, said "save the review", or a previous report was loaded in Phase 1).
 
-1. Write the full report to `.claude/temp/<task>/<task>-review.md` using the Write tool
-2. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
-3. Tell the user: `Review saved to .claude/temp/<task>/<task>-review.md`
+When saving:
+
+1. If no task directory exists yet, ask the user for a short task name (e.g., `add-currency-filter`) and create `.claude/temp/<task>/`
+2. Write the full report to `.claude/temp/<task>/<task>-review.md` using the Write tool
+3. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
+4. Tell the user: `Review saved to .claude/temp/<task>/<task>-review.md`
+
+When **not** saving: skip this step silently. The report is already displayed in the conversation.
 
 **Tip for users:** To mark items as `Skipped` or `Wontfix`, either:
 - Edit the status in the Summary table of `<task>-review.md` directly
