@@ -80,6 +80,7 @@ All artifacts live in `.claude/temp/<task>/` where `<task>` is a short descripti
 | **Spec** | `<task>-spec.md` | `brainstorming` | Approved specification: goals, constraints, architecture, scope (what + why, not how) |
 | **Plan** | `<task>-plan.md` | `writing-plans` | Implementation plan: file structure, bite-sized tasks, code snippets, test commands |
 | **Result** | `<task>-result.md` | `executing-plans` | Summary of implementation: files changed, decisions made, test results |
+| **Review** | `<task>-review.md` | `review` | Review report with item status tracking (Open/Fixed/Skipped/Wontfix) across iterations. Opt-in — only saved when requested or a prior report exists |
 
 ## Supporting Skills
 
