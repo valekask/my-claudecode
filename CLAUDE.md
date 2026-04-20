@@ -4,112 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**FNA-UI** is an Angular 17 monorepo for **Intraday Liquidity Optimization (ILO)** - a real-time payment monitoring and liquidity analysis platform. The ILO application (`apps/ilo-monitoring`, `libs/dashboard`) ingests payment data and provides grouped aggregations (totals by business unit, currency, time period) and payment-level search. Data is visualized in configurable dashboards with widgets (time-series charts, sorted lists, big numbers, grids).
-
-**Critical**: The codebase uses **Angular 17 WITHOUT Signals** - do not use signal-based APIs. Use RxJS observables.
-
-## Skills
-
-Use these wrapper skills that include project-specific conventions:
-
-| Workflow       | Command       | Purpose                                         |
-| -------------- | ------------- | ----------------------------------------------- |
-| Planning       | `/whiteboard` | Plan features with FNA-UI architecture patterns |
-| Implementation | `/build`      | Implement with project conventions              |
-| Review         | `/review`     | Review changes before PR                        |
-
-For other workflows, use code-foundations skills directly:
-
-| Trigger                | Skill                                       |
-| ---------------------- | ------------------------------------------- |
-| Quick proof-of-concept | `/code-foundations:prototype`               |
-| TDD workflow           | `/code-foundations:hack`                    |
-| Debugging              | `/code-foundations:cc-debugging`            |
-| Refactoring            | `/code-foundations:cc-refactoring-guidance` |
-| Performance issues     | `/code-foundations:cc-performance-tuning`   |
-
-## WIP (Work In Progress)
-
-`.claude/WIP.md` tracks the current large task being worked on. It helps restore context at session start and handoff work between sessions or team members.
-
-**Commands:**
-
-- "wip" / "load wip" → Read `.claude/WIP.md` and summarize current status and next steps
-- "save wip" → Update `.claude/WIP.md` with current progress summary so work can continue later
+<One-paragraph description: what the project does, main applications, and any key technical constraint that shapes how code must be written.>
 
 ## Analysis vs Implementation
 
-**Analysis mode** - When my prompt focuses on understanding (questions, investigation), provide analysis and recommendations WITHOUT editing files. Wait for explicit approval.
+**Analysis mode** — When the prompt focuses on understanding (questions, investigation), provide analysis and recommendations WITHOUT editing files. Wait for explicit approval.
 
 Analysis triggers:
-
 - Questions: prompts ending with `?`
 - Keywords: analyze, investigate, understand, explain, review, check, what's wrong, root cause, how does, why does
 
-**Implementation mode** - Proceed with code changes when I use action words:
-
+**Implementation mode** — Proceed with code changes when using action words:
 - fix, implement, apply, update, add, remove, refactor, change, create
 
-**Mixed prompts** - If both analysis and action words appear, ask which I want first.
+**Mixed prompts** — If both analysis and action words appear, ask which mode first.
 
-**Override** - I can always say "just analyze" or "just fix it" to clarify intent.
+**Bug reports** — When something is reported as broken or incorrect ("doesn't work", "works incorrectly", "this is broken"), treat as analysis first: diagnose root cause, explain findings, propose fix, wait for approval before changing code.
 
-**Clarification** - When uncertain, use AskUserQuestion to interview me and clarify intent before acting. Ask one question at a time, never multiple questions at once.
+**Override** — "just analyze" or "just fix it" to clarify intent.
+
+**Clarification** — When uncertain, use AskUserQuestion to interview me and clarify intent before acting. Ask one question at a time, never multiple questions at once.
 
 ## Core Technologies
 
-- **Angular 17.3.9** (NO Signals) with **NgRx 17** for state management
-- **Nx 19.0.5** monorepo, **TypeScript 5.4.5**, **RxJS 7.8.1**
-- **Bootstrap 5.3.3**, **AG-Grid 32**, **D3.js 7**
-- **Karma + Jasmine** for testing
+<List key frameworks, languages, libraries, and testing tools with major versions. Call out constraints like "NO Signals" or "no async/await" that must be respected.>
 
 ## Commands
 
 ```bash
-# Serve applications
-nx serve fna-ui              # Main platform app on http://localhost:4200
-nx serve ilo-monitoring      # ILO monitoring app
-
-# Run tests
-nx test <project> --no-watch --reporters=dots
-nx test <project> --no-watch --reporters=dots --include='**/filename.spec.ts'
-nx test <project> --no-watch --reporters=dots --grep='test description'
-
-# Check TypeScript compilation
-npx tsc --noEmit -p path/tsconfig.lib.json
+# <Run tests>
+# <Run a single test file>
+# <Type-check / compile>
+# <Lint / format>
 ```
 
-Check `tsconfig.base.json` paths section for project names and locations.
+<Note where to find project names, paths, or tooling config (e.g., `tsconfig.base.json`, `nx.json`, `pyproject.toml`).>
 
-<!-- OPENSPEC:START -->
+## Code Conventions
 
-## OpenSpec Instructions
+<Project-specific rules for code style, architecture patterns, naming, file organization, state management, testing, and styling. Keep each rule short; link to `docs/` for longer explanations.>
 
-These instructions are for AI assistants working in this project.
+## Memory
 
-Always open `@/openspec/AGENTS.md` when the request:
-
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
+Do not save to memory without explicit approval. Ask first.
 
 ## Protected Files
 
 **Do NOT change** (without explicit request):
-
-- `package.json`
-- `nx.json`
-- `environment.prod.ts`
+- <dependency manifests, e.g., `package.json`, `requirements.txt`>
+- <build/monorepo config, e.g., `nx.json`, `tsconfig.base.json`>
+- <production environment files, e.g., `environment.prod.ts`>
 - Git config or hooks
 
 ## Git Restrictions (MANDATORY)
@@ -117,7 +61,6 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 **NEVER perform git write operations.** The user prefers to manually review all changes before committing.
 
 Forbidden operations:
-
 - `git commit`, `git add`, `git push`, `git checkout`
 - `git reset`, `git revert`, `git merge`, `git rebase`, `git stash`
 

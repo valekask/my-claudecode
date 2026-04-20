@@ -14,6 +14,38 @@ Custom skills and configuration for Claude Code, designed around a structured de
 | **debug** | Bug or unexpected behavior | Root-cause-first investigation before attempting fixes |
 | **formatting** | Before PR | Prettier + import/member ordering for changed files |
 
+## Based on superpowers
+
+Our skills are based on [obra/superpowers](https://github.com/obra/superpowers), with these additions tuned to our workflow (some ideas also drawn from [ryanthedev/code-foundations](https://github.com/ryanthedev/code-foundations)):
+
+#### `brainstorming`
+
+| Addition | Why it matters |
+|---|---|
+| **Codebase exploration first** | Explore the relevant code before asking questions — understand patterns and conventions so the spec is grounded in how things actually work. |
+| **Complexity classification (Simple / Medium / Complex)** | Measures each approach by files touched, patterns involved, and cross-cutting concerns. An elegant approach that forces broad refactoring often loses to a good-enough one that fits the current code. |
+| **Convention Wins Rule** | Codebase consistency beats "best practice" unless there's a concrete defect. Deviations must be justified in the spec. |
+| **Scope + hardest-part bullets per approach** | Each approach declares *what it touches* and *the riskiest piece* — comparable at a glance. |
+| **Pre-mortem for Complex tasks** | Per approach: 3-5 failure modes — "what would make us regret this in 3 months?" |
+| **Spec content boundary** | Specs define **what + why** (goals, constraints, architecture), never pseudocode, signatures, or step-by-step how — those belong in the plan. |
+| **Spec reviewer subagent (iteration cap)** | Before user review, a reviewer subagent checks for gaps, placeholders, and contradictions (max 5 iterations). |
+
+#### `writing-plans`
+
+| Addition | Why it matters |
+|---|---|
+| **Trace callers** | Before changing a function, list every caller (direct and indirect) and confirm they still work. Prevents silent breakage in untouched dependent code. |
+| **Better test coverage** | Every scenario in the spec's Testing Approach gets a concrete plan step with test code — edge cases, error paths, and constraint violations, not just the happy path. |
+| **Dead code cleanup** | When a plan replaces a function or component, it must check remaining callers and remove what's no longer used. Prevents drift from half-finished migrations. |
+
+#### `executing-plans`
+
+| Addition | Why it matters |
+|---|---|
+| **Per-task user checkpoint** | After each task: pause, report what changed, wait for approval before the next. Execution becomes a dialogue, not a black box. |
+| **Spec cross-check during plan review** | Executor reads both plan and spec, checks for drift (does the plan actually implement the spec?), and raises concerns before writing any code. |
+| **Result summary artifact** | Concise record of what was built, decisions made during implementation, and test results — handoff material for review. |
+
 ## Development Workflow
 
 ```
