@@ -125,24 +125,32 @@ After writing the complete plan:
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, announce: "Plan saved to `.claude/temp/<task>/<task>-plan.md`."
 
-**"Plan complete and saved to `.claude/temp/<task>/<task>-plan.md`. Two execution options:**
+Then use the AskUserQuestion tool to offer next steps. Include a recommendation based on complexity from the spec in the question text:
+- **Simple** (1-3 files, 1 pattern) → recommend Inline
+- **Medium/Complex** (4+ files, multiple patterns) → recommend Subagent-Driven
 
-**1. Subagent-Driven** - I dispatch a fresh subagent per task with two-stage review (spec + quality), pausing after each task for your approval
+```json
+{
+  "questions": [{
+    "question": "Plan ready. What's next?",
+    "header": "Next step",
+    "options": [
+      {"label": "Subagent-Driven", "description": "Fresh subagent per task with two-stage review, checkpoint after each task"},
+      {"label": "Inline", "description": "Execute tasks step-by-step in this session, no subagents"},
+      {"label": "Edit", "description": "Revise the plan before executing — tell me what to change"},
+      {"label": "Done", "description": "Stop here, no execution"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
 
-**2. Inline Execution** - Execute tasks in this session step-by-step, no subagents
+**If Subagent-Driven:** Use subagent-driven-development skill — fresh subagent per task, two-stage review, checkpoint after each task.
 
-**Recommendation based on complexity (from spec):**
-- **Simple** (1-3 files, 1 pattern) → Inline Execution is sufficient
-- **Medium/Complex** (4+ files, multiple patterns) → Subagent-Driven recommended
+**If Inline:** Use executing-plans skill — step-by-step execution in this session.
 
-**Which approach?"**
+**If Edit:** Ask the user what to change, apply the edits to the plan file, then re-offer this same question. Edit can be selected repeatedly until the user picks a terminal option.
 
-**If Subagent-Driven chosen:**
-- Use subagent-driven-development skill
-- Fresh subagent per task + two-stage review + checkpoint after each task
-
-**If Inline Execution chosen:**
-- Use executing-plans skill
-- Step-by-step execution in current session
+**If Done:** Stop. Plan stays at its path for later use.

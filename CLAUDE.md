@@ -44,6 +44,8 @@ Analysis triggers:
 
 <Project-specific rules for code style, architecture patterns, naming, file organization, state management, testing, and styling. Keep each rule short; link to `docs/` for longer explanations.>
 
+**Debug logging.** When asked to add logs, use `console.log` with `JSON.stringify(value, null, 2)` for any non-primitive value so nested objects print in full.
+
 ## Memory
 
 Do not save to memory without explicit approval. Ask first.
