@@ -5,17 +5,13 @@ description: "You MUST use this before any creative work - creating features, bu
 
 # Brainstorming Proposals Into Specs
 
-Help turn proposals into fully formed specs through natural collaborative dialogue.
+Pipeline: **Read → Clarify Intent → Discover → Classify → Explore → Design → Spec**
 
-Start by reading the proposal and any provided assets, search the codebase for relevant patterns, classify complexity, then ask questions one at a time to clarify gaps. Once you understand what you're building, present the design and get user approval, then write the spec file.
+The spec is a contract between brainstorming and building. It specifies WHAT and WHY at the strategic level — goals, constraints, architecture, scope. Implementation details (the HOW) are discovered during plan writing and execution.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have written a spec and the user has approved it. This applies to EVERY task regardless of perceived simplicity.
 </HARD-GATE>
-
-## Anti-Pattern: "This Is Too Simple To Need A Spec"
-
-Every task goes through this process. A config change, a single-component fix, a utility function — all of them. "Simple" tasks are where unexamined assumptions cause the most wasted work. The spec can be short (a few sentences for truly simple tasks), but you MUST present it and get approval.
 
 ## Working Directory Convention
 
@@ -53,24 +49,27 @@ State the classification and reasoning to the user before proceeding.
 You MUST create a task for each of these items and complete them in order:
 
 1. **Read proposal and assets** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided
-2. **Search codebase first** — search for existing patterns, conventions, and similar implementations related to the proposal. Patterns exist that users may not know about — find them before asking questions.
-3. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
-4. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
-5. **Ask clarifying questions** — one at a time, fill gaps not covered by the proposal, assets, or codebase. Minimum question count depends on track.
-6. **Research before proposing (Medium/Complex only)** — use WebSearch/WebFetch when technology choices, new integrations, or unfamiliar patterns are involved. Apply the Convention Wins Rule (see Key Principles).
-7. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
-8. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
-9. **Present design** — in sections scaled to complexity, get user approval after each section
-10. **Write spec file** — save to `<task>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
-11. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
-12. **User reviews written spec** — ask user to review the spec file before proceeding
+2. **Clarify intent** — confirm you understand the problem the proposal is trying to solve. If the proposal is clear, skip. If not, ask one focused question via AskUserQuestion. Goal: a confirmed problem statement before any codebase exploration.
+3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time).
+4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
+5. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
+6. **Ask clarifying questions** — one at a time, fill gaps not covered by the proposal, assets, or codebase. Minimum question count depends on track.
+7. **Research before proposing (Medium/Complex only)** — use WebSearch/WebFetch when technology choices, new integrations, or unfamiliar patterns are involved. Apply the Convention Wins Rule (see Key Principles).
+8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
+9. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
+10. **Present design** — in sections scaled to complexity, get user approval after each section
+11. **Write spec file** — save to `<task>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
+12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
+13. **User reviews written spec** — ask user to review the spec file before proceeding
 
 ## Process Flow
 
 ```
 Read proposal + assets
         │
-   Search codebase for patterns
+   Clarify intent (confirm problem statement)
+        │
+   Search codebase (targeted: area being touched)
         │
    Classify complexity (Simple / Medium / Complex)
         │
@@ -119,12 +118,19 @@ After the user approves the spec, suggest the next step:
 - Assets often contain crucial visual context. A mockup can answer dozens of questions. Study them carefully before asking the user anything.
 - Note what the proposal covers well and where it has gaps
 
-**Searching the codebase:**
+**Clarifying intent:**
 
-- Before asking the user anything, search for existing patterns, conventions, and similar implementations
-- Look at: relevant source files, docs, recent commits related to the proposal area
-- Identify what conventions already exist — these are the baseline for any design
-- Skip questions that the codebase already answers
+- Before exploring the codebase, confirm you understand the problem the proposal is trying to solve
+- If the proposal is clear and unambiguous, skip this step
+- If anything is unclear, ask one focused question via AskUserQuestion (single question, multiple choice when possible)
+- Goal: a confirmed problem statement so the codebase search is targeted, not generic
+
+**Searching the codebase (targeted):**
+
+- Explore the area the change will touch — the functionality you'll create or update
+- Goal: understand how it currently works, not catalogue patterns or conventions (those matter at plan-writing time)
+- Look at: the files involved, their callers, recent commits in that area
+- Skip questions that the code already answers
 
 **Assessing scope:**
 
