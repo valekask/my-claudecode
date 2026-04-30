@@ -4,6 +4,20 @@
 
 Custom skills and configuration for Claude Code, designed around a structured development workflow that takes features from idea to implementation through collaborative planning.
 
+## Philosophy
+
+Each skill operates at one level of abstraction and defends its boundary:
+
+- **Brainstorm** - _what & why_: goals, constraints, architecture at a high level
+- **Plan** - _structural how_: files, callers, reuse, where new code lands
+- **Execute** - _coding how_: conventions, exact code, verification
+
+A few principles fall out of this:
+
+- **Value compounds upstream.** Pinning down _what & why_ early makes planning and execution cheap; most collaboration happens during brainstorming.
+- **Skills hand off explicitly** rather than leaking concerns - "that belongs to planning" is a feature, not a deferral.
+- **The user is the integrator.** Skills don't try to be end-to-end; the human carries intent across phases and catches reuse, scope, and architecture issues at the right level.
+
 ## Development Workflow
 
 1. **Proposal** (manual) - create a proposal file with the task description. Drop reference assets (mockups, screenshots, diagrams) if any
@@ -43,9 +57,15 @@ Turns a proposal into an approved spec - a contract specifying **what + why** (g
 - Present in sections, get approval after each
 - Cover architecture, data flow, error handling, testing approach
 
+**Final review (before handoff):**
+
+- **Size-aware digest** - skim-able sectioned summary grouped by natural seams (1-5 sections depending on spec size)
+- Five-option menu: walk by section / show full digest / approve / save / discuss
+- Approve hands off to `writing-plans` (fresh session recommended for clean context)
+
 #### `writing-plans`
 
-Translates a spec into an implementation plan - the **how** for the spec's _what + why_. Bite-sized steps with exact file paths, complete code, and verification commands.
+Translates a spec into an implementation plan - the **how** for the spec's _what + why_. Bite-sized steps with exact file paths, complete code, and verification commands. Best invoked in a **fresh session** so the spec + proposal + assets are the only inputs.
 
 **Understanding the spec:**
 
@@ -57,10 +77,23 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 - Map which files to create or modify; each file has one clear responsibility
 - **Trace callers** - when changing a function's signature or behavior, grep for every caller (direct and indirect) and add them to the file list
 
+**Surfacing decisions (before writing tasks):**
+
+- **Reuse check** - before planning new code, grep for existing similar functionality; ask before creating new
+- **Spec gaps** - surface structural ambiguities the plan would otherwise resolve by guessing
+- **Scope concerns** - flag phases that look bigger than the spec implies; ask split/defer/keep
+- 1-3 highest-leverage items max via AskUserQuestion; skip if nothing material is flagged
+
 **Writing the tasks:**
 
 - Each step is bite-sized (2-5 min) with exact file paths, complete code, and verification commands
 - **Comprehensive test coverage** - every scenario in the spec's Testing Approach maps to a concrete plan step
+
+**Final review (before execution):**
+
+- Same size-aware digest pattern as brainstorm - sectioned summary grouped by natural seams
+- Five-option menu: walk by section / show full digest / approve / save / discuss
+- **Approve auto-routes** to `subagent-driven-development` (Medium/Complex) or `executing-plans` (Simple) - no second menu, with `switch to inline`/`switch to subagent` override
 
 #### `executing-plans`
 

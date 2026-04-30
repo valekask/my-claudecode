@@ -20,7 +20,9 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Step 1: Read the Spec
 
-Read the spec file (`.claude/temp/<task>/<task>-spec.md`) and the proposal file before doing anything else. Understand the goals, constraints, architecture, and complexity classification before decomposing into tasks.
+Read the spec file (`.claude/temp/<task>/<task>-spec.md`), the proposal file, and any files in `assets/` before doing anything else. Understand the goals, constraints, architecture, and complexity classification before decomposing into tasks.
+
+**Fresh context preferred.** This skill works best when invoked in a new Claude Code session — the spec + proposal + assets are the only inputs the planner needs. Inheriting brainstorm dialogue carries forward rejected paths, hedged framings, and conversational baggage that bias decomposition. If the spec leaves something ambiguous in a fresh session, that's a spec gap worth surfacing back to brainstorming, not papering over with remembered context.
 
 ## Scope Check
 
@@ -38,6 +40,31 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Surface Decisions Before Writing Tasks
+
+Pause between mapping files and writing tasks. Scan for high-leverage decisions the plan would otherwise resolve silently — these are the moments where sub-optimal choices get baked in and only caught at Final Review (or worse, after execution).
+
+**Scan for:**
+
+- **Reuse candidates** — before planning any new file/function/service, grep for existing similar functionality. If matches exist, ask: extend the existing one, or create new? (This is the most common source of sub-optimal plans — Claude proposes new code where extension would be cleaner.)
+- **Structural ambiguities** — spec gaps the plan would resolve by guessing (where a new utility lives, whether to split a service, how to wire two pieces together). Ask rather than guess.
+- **Scope concerns** — phases that look bigger than the spec implies, or implementations that pull in items adjacent to but not in the spec. Flag and ask: split, defer, or keep together?
+- **Convention deviation** — when the obvious implementation would break an existing codebase pattern. Surface the choice rather than silently follow either path.
+
+**How to surface:**
+
+1. Compile 1-3 highest-leverage items across the four categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
+2. Use AskUserQuestion (one question at a time). Multiple-choice when there's a clear set of options, open-ended when not.
+3. If nothing material is flagged across all four categories, say "no surface decisions needed" and proceed straight to task writing.
+
+**What not to ask:**
+
+- Implementation-detail choices (variable names, exact function signatures) — those belong at execution time
+- Anything the spec already answers — re-read the spec first
+- Style preferences not relevant to plan structure
+
+Apply user answers when writing tasks. Bake the decision into the relevant phase's rationale where it materially shapes the plan.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
@@ -53,7 +80,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** Use subagent-driven-development (recommended) or executing-plans skill to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Implemented via `subagent-driven-development` or `executing-plans`, auto-routed by spec complexity. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -123,34 +150,69 @@ After writing the complete plan:
 - If loop exceeds 3 iterations, surface to human for guidance
 - Reviewers are advisory — explain disagreements if you believe feedback is incorrect
 
-## Execution Handoff
+## Final Review
 
-After saving the plan, announce: "Plan saved to `.claude/temp/<task>/<task>-plan.md`."
+After the plan review loop passes, the plan is on disk. Walk the user through a size-aware digest before the execution handoff. The goal is skim-able, sectioned review — not re-reading the full plan file.
 
-Then use the AskUserQuestion tool to offer next steps. Include a recommendation based on complexity from the spec in the question text:
-- **Simple** (1-3 files, 1 pattern) → recommend Inline
-- **Medium/Complex** (4+ files, multiple patterns) → recommend Subagent-Driven
+**Step 1 — Size assessment.** Estimate digest size based on phase count and task density:
+
+| Tier   | Plan scope                       | Digest                          |
+|--------|----------------------------------|---------------------------------|
+| Tiny   | 1-2 phases / trivial             | Single block, no menu           |
+| Small  | 3-5 phases                       | 1-2 sections                    |
+| Medium | 6-10 phases                      | 3-5 sections                    |
+| Large  | 10-20 phases (multi-subsystem)   | 5-10 sections                   |
+| Mega   | 20+ phases                       | 10-15 sections + suggest split  |
+
+(Adjust slightly based on density — a focused 8-phase plan with thin tasks may digest as Small.)
+
+**Step 2 — Build the digest.** Summarize the saved plan into sections grouped by **natural seams** — model picks the seams each time. Examples: Setup & foundations / Core feature work / Migration & cleanup / Tests. Each section names the phases it covers, the goal of that group (1-2 lines), and the files or subsystems touched. Headlines + Goal + Architecture from the plan header are the spine; phase details live in the file.
+
+**Step 3 — Tiny tier flow.** Show the full digest as one block, then ask via AskUserQuestion:
+- **Approve** — proceed to Execution Handoff
+- **Save** — exit cleanly, no approval (plan on disk for later)
+- **Discuss** — open conversation, no decision yet
+
+**Step 4 — Small/Medium/Large/Mega tier menu.** Use AskUserQuestion:
 
 ```json
 {
   "questions": [{
-    "question": "Plan ready. What's next?",
-    "header": "Next step",
+    "question": "Plan saved to `.claude/temp/<task>/<task>-plan.md`. Final review — how would you like to proceed?",
+    "header": "Final review",
     "options": [
-      {"label": "Subagent-Driven", "description": "Fresh subagent per task with two-stage review, checkpoint after each task"},
-      {"label": "Inline", "description": "Execute tasks step-by-step in this session, no subagents"},
-      {"label": "Edit", "description": "Revise the plan before executing — tell me what to change"},
-      {"label": "Done", "description": "Stop here, no execution"}
+      {"label": "Walk by section", "description": "Show one section at a time, decide after each"},
+      {"label": "Show full digest", "description": "Show the sectioned digest as one block"},
+      {"label": "Approve", "description": "Skip review, proceed to execution handoff"},
+      {"label": "Save", "description": "Exit cleanly — plan on disk, decide later"},
+      {"label": "Discuss", "description": "Open conversation, no decision yet"}
     ],
     "multiSelect": false
   }]
 }
 ```
 
-**If Subagent-Driven:** Use subagent-driven-development skill — fresh subagent per task, two-stage review, checkpoint after each task.
+**Walk by section:** show one section, then AskUserQuestion (Next / Approve all remaining / Discuss / Save). After last section, re-offer Approve/Save/Discuss.
 
-**If Inline:** Use executing-plans skill — step-by-step execution in this session.
+**Show full digest:** print the sectioned digest as one block, then offer Approve/Save/Discuss.
 
-**If Edit:** Ask the user what to change, apply the edits to the plan file, then re-offer this same question. Edit can be selected repeatedly until the user picks a terminal option.
+**Discuss:** converse freely. If revisions emerge, update the plan, re-run the plan review loop, then re-enter Final Review. If no changes, re-offer the menu.
 
-**If Done:** Stop. Plan stays at its path for later use.
+**Save:** stop here. Plan stays at its path. User can resume later by re-invoking the skill or jumping straight to execution.
+
+**Approve:** proceed to Execution Handoff.
+
+## Execution Handoff
+
+After Final Review approval, auto-execute based on complexity from the spec — no menu. The user already said "go" at Final Review; a second menu to re-confirm the obvious mode is friction.
+
+- **Simple** (1-3 files, 1 pattern) → invoke `executing-plans` (Inline, step-by-step in this session)
+- **Medium/Complex** (4+ files, multiple patterns) → invoke `subagent-driven-development` (fresh subagent per task, two-stage review, checkpoint after each task)
+
+Announce the choice and the override path before starting:
+
+> "Approved. Starting **[Subagent-Driven / Inline]** execution based on **[Simple / Medium / Complex]** complexity from the spec. Reply with `switch to inline` (or `switch to subagent`) if you want the other mode."
+
+Then proceed. Revisions and exits are handled at Final Review (Discuss / Save), so they don't reappear here.
+
+**Override**: if the user replies with a switch instruction before execution starts (or interrupts shortly after), honor it — invoke the other skill instead. After substantive execution has begun, treat a switch request as a stop-and-restart decision and confirm with the user.

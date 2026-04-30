@@ -60,7 +60,7 @@ You MUST create a task for each of these items and complete them in order:
 10. **Present design** — in sections scaled to complexity, get user approval after each section
 11. **Write spec file** — save to `<task>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
-13. **User reviews written spec** — ask user to review the spec file before proceeding
+13. **Final review** — walk user through a size-aware digest of the saved spec (size assessment → digest → menu: walk by section / show full digest / approve / save / discuss). See Final Review section.
 
 ## Process Flow
 
@@ -96,18 +96,15 @@ Read proposal + assets
         │
    Review passed? ──no──► Fix issues, re-dispatch
         │ yes
-   User reviews spec
+   Final review (size assessment → digest → menu)
         │
-   Changes requested? ──yes──► Update spec, re-run review
-        │ no
+   Outcome? ──save────► Exit (spec on disk, resume later)
+        │      ──discuss─► Converse → revise → re-review → Final review
+        │ approve
    ✅ Spec approved — ready for implementation
 ```
 
-**The terminal state is an approved spec file.** Do NOT start implementation.
-
-After the user approves the spec, suggest the next step:
-
-> "Spec approved. Next step: use `/writing-plans` to create the implementation plan from this spec."
+**The terminal state is an approved spec file.** Do NOT start implementation. Approval happens at the Final Review stage (see below) — the user picks Approve from the menu, and the skill announces the next step.
 
 ## The Process
 
@@ -221,13 +218,60 @@ After writing the spec file:
 2. If Issues Found: fix, re-dispatch, repeat until Approved
 3. If loop exceeds 5 iterations, surface to human for guidance
 
-**User Review Gate:**
+**Final Review:**
 
-After the spec review loop passes, ask the user to review the written spec:
+After the spec review loop passes, the spec is on disk. Walk the user through a size-aware digest before handing off to implementation. The goal is skim-able, sectioned review — not re-reading the whole file.
 
-> "Spec written to `.claude/temp/<task>/<task>-spec.md`. Please review it and let me know if you want any changes before we move to implementation."
+**Step 1 — Size assessment.** Estimate digest size based on spec phases and complexity:
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only consider the spec done once the user approves.
+| Tier   | Spec scope                | Digest                              |
+|--------|---------------------------|-------------------------------------|
+| Tiny   | 1-2 phases / trivial      | Single block, no menu               |
+| Small  | 3-5 phases                | 1-2 sections                        |
+| Medium | 6-7 phases                | 3-5 sections                        |
+| Large  | Past the 7-phase cap      | Suggest splitting before continuing |
+
+Specs cap at 7 phases — most reviews are Tiny/Small/Medium. Large means the spec needs splitting upstream rather than a bigger menu here.
+
+**Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface.
+
+**Step 3 — Tiny tier flow.** Show the full digest as one block, then ask via AskUserQuestion:
+- **Approve** — spec accepted, hand off to `/writing-plans`
+- **Save** — exit cleanly, no approval (spec on disk for later)
+- **Discuss** — open conversation, no decision yet
+
+**Step 4 — Small/Medium/Large/Mega tier menu.** Use AskUserQuestion:
+
+```json
+{
+  "questions": [{
+    "question": "Spec saved to `.claude/temp/<task>/<task>-spec.md`. Final review — how would you like to proceed?",
+    "header": "Final review",
+    "options": [
+      {"label": "Walk by section", "description": "Show one section at a time, decide after each"},
+      {"label": "Show full digest", "description": "Show the sectioned digest as one block"},
+      {"label": "Approve", "description": "Skip review, hand off to writing-plans"},
+      {"label": "Save", "description": "Exit cleanly — spec on disk, decide later"},
+      {"label": "Discuss", "description": "Open conversation, no decision yet"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+**Walk by section:** show one section, then AskUserQuestion (Next / Approve all remaining / Discuss / Save). After last section, re-offer Approve/Save/Discuss.
+
+**Show full digest:** print the sectioned digest as one block, then offer Approve/Save/Discuss.
+
+**Discuss:** converse freely. If revisions emerge, update the spec, re-run the spec review loop, then re-enter Final Review. If no changes, re-offer the menu.
+
+**Save:** stop here. Spec stays at its path. User can resume later by re-invoking the skill or moving directly to `/writing-plans`.
+
+**Approve:** announce "Spec approved." Recommend a fresh session for the next step:
+
+> "Spec approved. **Recommended:** start a new Claude Code session and run `/writing-plans` from there — the planner reads the spec + proposal + assets and works best with clean context (no brainstorm dialogue baggage). The spec is the contract; if anything is unclear in a fresh session, that's a spec gap worth fixing here.
+>
+> Alternative: continue with `/writing-plans` in this session (faster but inherits brainstorm context)."
 
 ## What To Do When...
 
