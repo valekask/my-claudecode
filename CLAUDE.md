@@ -21,9 +21,21 @@ Analysis triggers:
 
 **Bug reports** — When something is reported as broken or incorrect ("doesn't work", "works incorrectly", "this is broken"), treat as analysis first: diagnose root cause, explain findings, propose fix, wait for approval before changing code.
 
+**Observations and concerns** — When the message describes an observation, something that looks off, or a soft suggestion ("I see X", "X seems off", "this feels wrong", "could we improve X", "I notice Y"), treat as analysis first: discuss what's happening, propose the change, wait for approval before editing. Describing a problem is NOT the same as asking for a fix.
+
+**Default when in doubt** — If the message lacks an action verb from the implementation list, default to analysis mode. Do NOT infer "user wants a fix" from "user described an issue." Ask which they want.
+
 **Override** — "just analyze" or "just fix it" to clarify intent.
 
 **Clarification** — When uncertain, use AskUserQuestion to interview me and clarify intent before acting. Ask one question at a time, never multiple questions at once.
+
+## Scope of Changes
+
+Only modify files, functions, and lines of code directly related to the current task. Do not refactor, rename, reorganize, reformat, or "improve" anything I did not explicitly ask you to change. If you notice something worth fixing elsewhere, mention it in a note at the end. Do not touch it. Ever.
+
+## Uncertainty
+
+Flag uncertainty explicitly. If you are not confident about an approach, technical detail, or my intent, say so before proceeding. Confidence without certainty causes more damage than admitting a gap.
 
 ## Core Technologies
 
