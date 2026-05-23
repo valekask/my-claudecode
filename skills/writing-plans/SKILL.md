@@ -143,7 +143,7 @@ After writing the complete plan:
 1. Dispatch a single plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
    - Provide: path to the plan document, path to spec document
 2. If ❌ Issues Found: fix the issues, re-dispatch reviewer for the whole plan
-3. If ✅ Approved: proceed to execution handoff
+3. If ✅ Approved: proceed to Final Review
 
 **Review loop guidance:**
 - Same agent that wrote the plan fixes it (preserves context)
@@ -152,7 +152,7 @@ After writing the complete plan:
 
 ## Final Review
 
-After the plan review loop passes, the plan is on disk. Walk the user through a size-aware digest before the execution handoff. The goal is skim-able, sectioned review — not re-reading the full plan file.
+After the plan review loop passes, the plan is on disk. Walk the user through a size-aware digest before emitting the Save handoff. The goal is skim-able, sectioned review — not re-reading the full plan file.
 
 **Step 1 — Size assessment.** Estimate digest size based on phase count and task density:
 
@@ -168,10 +168,7 @@ After the plan review loop passes, the plan is on disk. Walk the user through a 
 
 **Step 2 — Build the digest.** Summarize the saved plan into sections grouped by **natural seams** — model picks the seams each time. Examples: Setup & foundations / Core feature work / Migration & cleanup / Tests. Each section names the phases it covers, the goal of that group (1-2 lines), and the files or subsystems touched. Headlines + Goal + Architecture from the plan header are the spine; phase details live in the file.
 
-**Step 3 — Tiny tier flow.** Show the full digest as one block, then ask via AskUserQuestion:
-- **Approve** — proceed to Execution Handoff
-- **Save** — exit cleanly, no approval (plan on disk for later)
-- **Discuss** — open conversation, no decision yet
+**Step 3 — Tiny tier flow.** Show the full digest as one block, then emit the Save handoff (see Save below). No menu needed at this size.
 
 **Step 4 — Small/Medium/Large/Mega tier menu.** Use AskUserQuestion:
 
@@ -181,38 +178,19 @@ After the plan review loop passes, the plan is on disk. Walk the user through a 
     "question": "Plan saved to `.claude/temp/<task>/<task>-plan.md`. Final review — how would you like to proceed?",
     "header": "Final review",
     "options": [
-      {"label": "Walk by section", "description": "Show one section at a time, decide after each"},
-      {"label": "Show full digest", "description": "Show the sectioned digest as one block"},
-      {"label": "Approve", "description": "Skip review, proceed to execution handoff"},
-      {"label": "Save", "description": "Exit cleanly — plan on disk, decide later"},
-      {"label": "Discuss", "description": "Open conversation, no decision yet"}
+      {"label": "Walk by section", "description": "Show one section at a time"},
+      {"label": "Save", "description": "Emit the handoff line and exit"}
     ],
     "multiSelect": false
   }]
 }
 ```
 
-**Walk by section:** show one section, then AskUserQuestion (Next / Approve all remaining / Discuss / Save). After last section, re-offer Approve/Save/Discuss.
+If the user has feedback at any point — during the walk, after a section, or before picking from the menu — address it: revise the plan, re-run the plan review loop, then re-enter Final Review. Don't channel comments through a menu option; just respond to what they say.
 
-**Show full digest:** print the sectioned digest as one block, then offer Approve/Save/Discuss.
+**Walk by section:** show one section, then AskUserQuestion (Next / Save). After the last section, auto-emit the Save handoff. If the user types feedback instead of picking Next or Save, treat it as discussion — revise and re-enter Final Review.
 
-**Discuss:** converse freely. If revisions emerge, update the plan, re-run the plan review loop, then re-enter Final Review. If no changes, re-offer the menu.
+**Save:** emit this exact text and stop. Do NOT auto-invoke `subagent-driven-development` or `executing-plans` in this session — execution belongs in a fresh session.
 
-**Save:** stop here. Plan stays at its path. User can resume later by re-invoking the skill or jumping straight to execution.
-
-**Approve:** proceed to Execution Handoff.
-
-## Execution Handoff
-
-After Final Review approval, auto-execute based on complexity from the spec — no menu. The user already said "go" at Final Review; a second menu to re-confirm the obvious mode is friction.
-
-- **Simple** (1-3 files, 1 pattern) → invoke `executing-plans` (Inline, step-by-step in this session)
-- **Medium/Complex** (4+ files, multiple patterns) → invoke `subagent-driven-development` (fresh subagent per task, two-stage review, checkpoint after each task)
-
-Announce the choice and the override path before starting:
-
-> "Approved. Starting **[Subagent-Driven / Inline]** execution based on **[Simple / Medium / Complex]** complexity from the spec. Reply with `switch to inline` (or `switch to subagent`) if you want the other mode."
-
-Then proceed. Revisions and exits are handled at Final Review (Discuss / Save), so they don't reappear here.
-
-**Override**: if the user replies with a switch instruction before execution starts (or interrupts shortly after), honor it — invoke the other skill instead. After substantive execution has begun, treat a switch request as a stop-and-restart decision and confirm with the user.
+> Plan saved to `.claude/temp/<task>/<task>-plan.md`.
+> Use subagent-driven-development skill to execute plan at `.claude/temp/<task>/<task>-plan.md`.
