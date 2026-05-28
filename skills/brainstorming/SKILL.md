@@ -196,13 +196,15 @@ Read proposal + assets
 
 **What specs include vs. what they don't:**
 
+**Rule of thumb:** names in prose are fine; code syntax is not.
+
 | Specs define (what + why) | Specs do NOT include (how) |
 |---------------------------|---------------------------|
 | Goals and success criteria | Pseudocode or algorithms |
 | Constraints and boundaries | Function signatures |
 | Scope (in/out) | Exact file paths (use directory hints) |
 | Architecture and data flow | Step-by-step implementation instructions |
-| Error handling strategy | Internal variable names |
+| Error handling strategy | Code syntax (type annotations, decorators, code blocks, template literals) |
 | Testing approach | Framework-specific boilerplate |
 
 The implementation agent discovers the *how* by searching the current codebase. Over-specifying implementation details makes specs brittle and conflicts with what the implementer finds.

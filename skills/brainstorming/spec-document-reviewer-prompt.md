@@ -14,6 +14,29 @@ Agent tool (general-purpose):
 
     **Spec to review:** [SPEC_FILE_PATH]
 
+    ## Hard Rejection — Code Syntax
+
+    Any of these patterns in the spec is an automatic **Issues Found**:
+
+    - Fenced code blocks (` ```ts `, ` ```js `, ` ```typescript `, etc.)
+    - Function signatures with typed parameters: `foo(x: Type)`, `bar(x: T): R`
+    - Type annotations or generics: `: Observable<...>`, `BehaviorSubject<string[]>`
+    - Decorators: `@Injectable(...)`, `@Component(...)`, `@Input(...)`
+    - Template literals with interpolation: `` `${foo}-${bar}` ``
+    - Exact file paths with extensions: `libs/foo/bar.ts`, paths ending in `.ts/.tsx/.html/.scss`
+
+    **Rule:** names in prose are fine; code syntax is not.
+
+    ✅ "Use ComponentStore for the list state."
+    ✅ "Service named `ColorMapService` in the dashboard data-access lib."
+    ✅ "Key format: workspace name + dashboard name + `colorMap` suffix."
+
+    ❌ `class ColorMapStore extends ComponentStore<State>`
+    ❌ `@Injectable({ providedIn: 'root' })`
+    ❌ `` `${workspaceName}-${dashboardName}-colorMap` ``
+
+    List each violation in Issues with the section it appears in. Do not approve until every code-syntax violation is rewritten in prose.
+
     ## What to Check
 
     | Category | What to Look For |
