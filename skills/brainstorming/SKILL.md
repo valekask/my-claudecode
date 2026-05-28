@@ -195,18 +195,28 @@ Read proposal + assets
 - **Max 7 phases.** If more are needed, split into multiple specs — each gets its own brainstorming cycle.
 - Do NOT commit the file — the user manages git operations manually
 
-**What specs include vs. what they don't:**
+**What specs define (what + why):** goals and success criteria; constraints and boundaries; scope (in/out); architecture and data flow; error handling strategy; testing approach.
+
+**Hard rules — do NOT write any of these in the spec.** The reviewer rejects on sight; write the spec right the first time rather than cleaning up afterward.
+
+- Fenced code blocks (` ```ts `, ` ```js `, ` ```typescript `, etc.)
+- Function signatures with typed parameters: `foo(x: Type)`, `bar(x: T): R`
+- Type annotations or generics: `: Observable<...>`, `BehaviorSubject<string[]>`
+- Decorators: `@Injectable(...)`, `@Component(...)`, `@Input(...)`
+- Template literals with interpolation: `` `${foo}-${bar}` ``
+- Exact file paths with extensions: `libs/foo/bar.ts`, paths ending in `.ts/.tsx/.html/.scss` — use directory hints in prose instead
+- Pseudocode, algorithms, or step-by-step implementation instructions
+- Framework-specific boilerplate
 
 **Rule of thumb:** names in prose are fine; code syntax is not.
 
-| Specs define (what + why) | Specs do NOT include (how) |
-|---------------------------|---------------------------|
-| Goals and success criteria | Pseudocode or algorithms |
-| Constraints and boundaries | Function signatures |
-| Scope (in/out) | Exact file paths (use directory hints) |
-| Architecture and data flow | Step-by-step implementation instructions |
-| Error handling strategy | Code syntax (type annotations, decorators, code blocks, template literals) |
-| Testing approach | Framework-specific boilerplate |
+✅ "Use ComponentStore for the list state."
+✅ "Service named `ColorMapService` in the dashboard data-access lib."
+✅ "Key format: workspace name + dashboard name + `colorMap` suffix."
+
+❌ `class ColorMapStore extends ComponentStore<State>`
+❌ `@Injectable({ providedIn: 'root' })`
+❌ `` `${workspaceName}-${dashboardName}-colorMap` ``
 
 The implementation agent discovers the *how* by searching the current codebase. Over-specifying implementation details makes specs brittle and conflicts with what the implementer finds.
 
