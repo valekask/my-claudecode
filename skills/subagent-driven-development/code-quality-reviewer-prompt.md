@@ -42,7 +42,7 @@ Task tool (general-purpose):
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
-    - Are tests comprehensive for the requirements?
+    - Are tests comprehensive for what the plan required? Component unit tests are not expected — never flag their absence as a gap.
     - Are test names descriptive?
 
     **Discipline:**
