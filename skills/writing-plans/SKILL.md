@@ -22,6 +22,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 Read the spec file (`.claude/temp/<task>/<task>-spec.md`), the proposal file, and any files in `assets/` before doing anything else. Understand the goals, constraints, architecture, and complexity classification before decomposing into tasks.
 
+**Spec is *what*, plan re-decides *how*.** The spec is the contract for goals, scope, and architectural intent. If the spec leaks implementation details (a specific service, a global singleton, a particular abstraction, a fixed file location) and a simpler or better-located alternative exists in the live codebase, you can — and should — re-decide. Surface the choice rather than blindly implementing the elaborate version. The planner has codebase context the brainstormer didn't; use it.
+
 **Fresh context preferred.** This skill works best when invoked in a new Claude Code session — the spec + proposal + assets are the only inputs the planner needs. Inheriting brainstorm dialogue carries forward rejected paths, hedged framings, and conversational baggage that bias decomposition. If the spec leaves something ambiguous in a fresh session, that's a spec gap worth surfacing back to brainstorming, not papering over with remembered context.
 
 ## Scope Check
@@ -46,21 +48,23 @@ Pause between mapping files and writing tasks. Scan for high-leverage decisions 
 
 **Scan for:**
 
-- **Reuse candidates** — before planning any new file/function/service, grep for existing similar functionality. If matches exist, ask: extend the existing one, or create new? (This is the most common source of sub-optimal plans — Claude proposes new code where extension would be cleaner.)
+- **Reuse candidates** — before planning any new file/function/service/util (including ones the spec proposes), grep for existing similar functionality. Two common misses: (a) spec-proposed services that could extend something existing — a spec naming `FooService` doesn't force net-new code; (b) duplicate utils under different names — a planned `formatCurrency` may already exist as `currencyFormatter`. For utils, grep by capability (`format`, `parse`, `validate`, `normalize`), not by exact target name, and check the project's typical util homes (`*.utils.ts`, `*.helpers.ts`, `lib/utils/`). If matches exist, ask: extend the existing one, or create new?
+- **Simpler alternative** — when the spec (or your draft plan) calls for a new service, global singleton, DI token, app-module init hook, or other architectural machinery, ask: could this be done with local component state plus existing primitives instead? If yes, surface as a decision. Example: a global service holding a `BehaviorSubject` initialised at app start may be replaceable by local state loaded on open and persisted on close.
+- **Logic location** — for each file the plan will touch, ask: does the logic naturally belong here, or is it being piled onto a generic file (e.g. adding feature-specific code to a shared `binder.ts`)? If wrong home, propose moving it to a service or util in the feature's natural directory.
 - **Structural ambiguities** — spec gaps the plan would resolve by guessing (where a new utility lives, whether to split a service, how to wire two pieces together). Ask rather than guess.
 - **Scope concerns** — phases that look bigger than the spec implies, or implementations that pull in items adjacent to but not in the spec. Flag and ask: split, defer, or keep together?
 - **Convention deviation** — when the obvious implementation would break an existing codebase pattern. Surface the choice rather than silently follow either path.
 
 **How to surface:**
 
-1. Compile 1-3 highest-leverage items across the four categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
+1. Compile 1-3 highest-leverage items across the six categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
 2. Use AskUserQuestion (one question at a time). Multiple-choice when there's a clear set of options, open-ended when not.
 3. If nothing material is flagged across all four categories, say "no surface decisions needed" and proceed straight to task writing.
 
 **What not to ask:**
 
 - Implementation-detail choices (variable names, exact function signatures) — those belong at execution time
-- Anything the spec already answers — re-read the spec first
+- Anything the spec already answers and you have no concrete reason to revisit — re-read the spec first. (Architectural details the spec leaked are fair game when a simpler alternative exists — that's what *Simpler alternative* and *Logic location* are for.)
 - Style preferences not relevant to plan structure
 
 Apply user answers when writing tasks. Bake the decision into the relevant phase's rationale where it materially shapes the plan.
