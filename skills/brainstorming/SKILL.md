@@ -139,6 +139,7 @@ Read proposal + assets
 - Only one question per message
 - Focus on: purpose, constraints, success criteria, edge cases
 - If the feature involves forms or user input, ask about validation: what are the rules, and would any need to be enforced from a second entry point? If yes, those belong in shared validators/services — clarify this early so the spec places them correctly.
+- If the user states a specific value, name, format, or instruction they want honored exactly, capture it verbatim for the **User Technical Notes** section of the spec (see Writing the spec) rather than paraphrasing it away
 - Skip questions already answered by the proposal, visible in the assets, or discoverable in the codebase
 
 **Research before proposing (Medium/Complex only):**
@@ -210,13 +211,23 @@ Read proposal + assets
 
 **Rule of thumb:** names in prose are fine; code syntax is not.
 
+**Locations at directory-hint altitude.** Refer to where code lives in words — "a formatting util in the shared utils directory" — not slash-path notation like `shared/utils`. This holds even without a file extension: path notation is the planner's altitude, not the spec's. The writing-plans phase resolves exact paths against the live codebase (per the *what vs how* contract at the top of this skill).
+
 ✅ "Use ComponentStore for the list state."
 ✅ "Service named `ColorMapService` in the dashboard data-access lib."
+✅ "A formatting util in the shared utils directory."
 ✅ "Key format: workspace name + dashboard name + `colorMap` suffix."
 
 ❌ `class ColorMapStore extends ComponentStore<State>`
 ❌ `@Injectable({ providedIn: 'root' })`
+❌ `shared/utils/format.ts` — and even `shared/utils` (path notation; write it in prose)
 ❌ `` `${workspaceName}-${dashboardName}-colorMap` ``
+
+**Exception — the User Technical Notes section.** The hard rules above do NOT apply inside a section titled **User Technical Notes**. This is the one sanctioned place for verbatim author instructions — exact names, values, key formats, even short code snippets the user wants honored as written. Lead the section with one line stating the contract:
+
+> Direct instructions from the spec author. The planning and implementation phases honor these by default; if an item looks wrong, conflicts with the codebase, or is ambiguous, that phase raises it with the user rather than silently following or dropping it.
+
+Include this section only when the user has given such direct instructions — omit it otherwise, and never invent entries. Use it for author preferences ("I want this exact name"). Things that *must* hold for an external reason (matches stored data, an API contract) are binding requirements — put those under Constraints with the rationale, where the planner cannot re-decide them. Keep the section short: it is an escape hatch, not a place to pre-write the implementation.
 
 The implementation agent discovers the *how* by searching the current codebase. Over-specifying implementation details makes specs brittle and conflicts with what the implementer finds.
 

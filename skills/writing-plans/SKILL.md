@@ -24,6 +24,8 @@ Read the spec file (`.claude/temp/<task>/<task>-spec.md`), the proposal file, an
 
 **Spec is *what*, plan re-decides *how*.** The spec is the contract for goals, scope, and architectural intent. If the spec leaks implementation details (a specific service, a global singleton, a particular abstraction, a fixed file location) and a simpler or better-located alternative exists in the live codebase, you can — and should — re-decide. Surface the choice rather than blindly implementing the elaborate version. The planner has codebase context the brainstormer didn't; use it.
 
+**User Technical Notes are honored by default.** If the spec has a "User Technical Notes" section, treat its items as the author's direct instructions and follow them as written. These are NOT the leaked implementation details described above that you may freely re-decide — they are deliberate author choices, so the bar for overriding is a concrete problem, not merely a nicer alternative. If an item looks wrong, conflicts with the live codebase, or is ambiguous, do not silently follow or silently drop it — raise it in the Surface Decisions step below and discuss with the user.
+
 **Fresh context preferred.** This skill works best when invoked in a new Claude Code session — the spec + proposal + assets are the only inputs the planner needs. Inheriting brainstorm dialogue carries forward rejected paths, hedged framings, and conversational baggage that bias decomposition. If the spec leaves something ambiguous in a fresh session, that's a spec gap worth surfacing back to brainstorming, not papering over with remembered context.
 
 ## Scope Check
@@ -59,7 +61,7 @@ Pause between mapping files and writing tasks. Scan for high-leverage decisions 
 
 1. Compile 1-3 highest-leverage items across the six categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
 2. Use AskUserQuestion (one question at a time). Multiple-choice when there's a clear set of options, open-ended when not.
-3. If nothing material is flagged across all four categories, say "no surface decisions needed" and proceed straight to task writing.
+3. If nothing material is flagged across all six categories, say "no surface decisions needed" and proceed straight to task writing.
 
 **What not to ask:**
 
