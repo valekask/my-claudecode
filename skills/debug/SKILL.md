@@ -1,6 +1,7 @@
 ---
 name: debug
 description: Use when encountering any bug, test failure, or unexpected behavior. Finds root cause through collaboration and evidence before attempting fixes.
+effort: xhigh
 ---
 
 # Debug

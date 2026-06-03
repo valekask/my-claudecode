@@ -1,6 +1,7 @@
 ---
 name: trace-workflow
 description: Trace functions for decision-point correctness — finds inconsistent conditional branches, missing cases, nullish gaps, and cross-function mismatches. Use during implementation or review to verify logic.
+effort: xhigh
 ---
 
 # Trace Workflow
