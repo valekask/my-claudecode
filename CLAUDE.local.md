@@ -39,12 +39,18 @@ Do not save to memory without explicit approval. Ask first.
 
 ## Git Restrictions (MANDATORY)
 
-**NEVER perform git write operations.** The user prefers to manually review all changes before committing.
+Commit ONLY when I explicitly ask — never automatically, never at the end of a
+task on your own initiative. Do NOT add a `Co-Authored-By:` trailer (or any other
+footer) to commits. The push is always mine — I run it manually.
 
-Forbidden operations:
-- `git commit`, `git add`, `git push`, `git checkout`
-- `git reset`, `git revert`, `git merge`, `git rebase`, `git stash`
+**Allowed** (read-only, always): `git status`, `git log`, `git diff`, `git branch`, `git show`
 
-**Allowed** (read-only): `git status`, `git log`, `git diff`, `git branch`, `git show`
+**Allowed** (write, only when I explicitly ask): `git add`, `git commit`
 
-If a skill or plugin requests a commit, **refuse and inform the user** that manual review is required first.
+**Forbidden** (require an explicit, in-the-moment request): `git push` (any form),
+`git reset --hard`, `git revert`, `git merge`, `git rebase`, `git commit --amend`,
+`git checkout -- <file>` / `git restore` that discard changes, `git clean`, and
+anything touching git config or hooks.
+
+If a skill or plugin requests a forbidden operation, refuse and tell me it needs
+manual action or explicit approval.
