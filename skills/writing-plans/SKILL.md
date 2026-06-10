@@ -42,6 +42,7 @@ Before defining tasks, map out which files will be created or modified and what 
 - Files that change together should live together. Split by responsibility, not by technical layer.
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
 - **Impact tracing** — when modifying a function's signature or behavior, grep for ALL callers to build the complete file list. Include indirect callers through shared services and utilities, not just direct callers in the target area. When adding state that depends on another piece of state, trace ALL triggers that can change the source state, not just the primary use case.
+- **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify. Their *Edge cases & non-obvious constraints* section names guards the plan must preserve, not remove — carry those into the relevant task's rationale.
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 

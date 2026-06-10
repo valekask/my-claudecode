@@ -51,7 +51,7 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Read proposal and assets** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided
 2. **Clarify intent** — confirm you understand the problem the proposal is trying to solve. If the proposal is clear, skip. If not, ask one focused question via AskUserQuestion. Goal: a confirmed problem statement before any codebase exploration.
-3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time).
+3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area — they carry the settled *why* and decisions you must not silently re-litigate.
 4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
 5. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
 6. **Ask clarifying questions** — one at a time, fill gaps not covered by the proposal, assets, or codebase. Minimum question count depends on track.

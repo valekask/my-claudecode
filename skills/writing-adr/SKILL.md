@@ -17,7 +17,7 @@ ADRs are **never** generated automatically. Write one only when judgment says it
 2. **Reasoning isn't obvious from the code** — intent / forces can't be reconstructed by reading it.
 3. **Genuine alternatives or constraints existed** — there was a real choice, with a specific rationale.
 
-If a change is simple and self-explanatory, **do not** write an ADR — noise erodes the signal that makes the folder worth reading.
+**If any of the three is missing, skip the ADR.** A simple, self-explanatory, or easily reversible change does not get one — noise erodes the signal that makes the folder worth reading.
 
 When invoked at the end of an implementation, **offer** an ADR only if the work involved non-obvious constraints; let the user decide.
 
@@ -120,36 +120,46 @@ Date: YYYY-MM-DD
 
 ## README index
 
-Keep `docs/adr/README.md` as the index, split by type:
+Keep `docs/adr/README.md` as the index — it's the entry point agents scan to find *relevant* ADRs cheaply (read one file, match by decision/area, open only the hits). Use a table per type so the decision, area, and status are visible without opening each file:
 
 ```markdown
 # Architecture Decision Records
 
 Why our code is the way it is. Code is the primary source for *what*; these record *why*
-and the edge cases that aren't recoverable from code. Never edit an accepted ADR's
-decision — supersede it with a new file and a `Superseded by` pointer.
+and the edge cases that aren't recoverable from code. Append-only — never edit an accepted
+ADR's decision, supersede it. **Scan this index first** to find ADRs relevant to the area
+you're touching, and skip anything `Superseded`.
 
 ## System-wide
-- [0001 — Auth](0001-auth.md)
+| ADR | Decision | Status |
+|-----|----------|--------|
+| [0001](0001-auth.md) | Auth via session cookies, not JWT | Accepted |
 
 ## Feature-level
-- [FNA-15102 — Property-based coloring](FNA-15102-property-based-coloring.md)
+| ADR | Decision | Area | Status |
+|-----|----------|------|--------|
+| [FNA-15102](FNA-15102-property-based-coloring.md) | Color rows by domain property | timeline grid | Accepted |
 ```
 
-Add the new entry to the matching section after writing an ADR.
+After writing an ADR, add a row to the matching table — the one-line Decision (+ Area) is what lets an agent judge relevance from the index alone.
 
 ## CLAUDE.md note (target repo)
 
-Once `docs/adr/` exists, the target repo's `CLAUDE.md` should carry a short pointer so agents consult and create ADRs. Suggested note:
+Once `docs/adr/` exists, the target repo's `CLAUDE.md` should carry a short pointer so agents know the project has ADRs and use them — when changing code *and* when reading/explaining it. Don't reference this skill by name (a project may not have it installed). Suggested note:
 
 ```markdown
 ## Architecture Decision Records
 
-`docs/adr/` records *why* complex code is the way it is and the edge cases that aren't
-recoverable from the code. When working on code that has an ADR, read it first. When
-implementing complex code with non-obvious constraints, consider writing one (see the
-`writing-adr` skill). Code is primary; ADRs capture intent. Never edit an accepted ADR —
-supersede it.
+This project keeps Architecture Decision Records in `docs/adr/` — they record *why* complex
+code is the way it is: intent, trade-offs, and edge cases not recoverable from the code.
+Code is primary for *what*; ADRs are authoritative for *why*. `docs/adr/README.md` indexes them.
+
+- Before proposing or implementing architectural changes, scan `docs/adr/README.md` and read
+  any ADRs relevant to the area you're touching.
+- When explaining or analyzing how code works, consult `docs/adr/README.md` too — the code
+  shows *what*; the ADR holds the *why* and edge cases the code can't tell you.
+- When implementing complex code with non-obvious constraints, consider capturing one in `docs/adr/`.
+- Never edit an accepted ADR's decision — supersede it.
 ```
 
 ## Lifecycle
