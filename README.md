@@ -184,5 +184,6 @@ All artifacts live in `.claude/temp/<task>/` where `<task>` is a short descripti
 | **Plan**     | `<task>-plan.md`     | `writing-plans`   | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                       |
 | **Result**   | `<task>-result.md`   | `executing-plans` | Summary of implementation: files changed, decisions made, test results                                                                                    |
 | **Review**   | `<task>-review.md`   | `checklist-review` | Review report with item status tracking (Open / Fixed / Skipped / Wontfix) across iterations. Opt-in - only saved when requested or a prior report exists |
+| **Product Summary** | `<task>-result-product.md` | `subagent-driven-development` | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features |
 
 > **ADRs are the exception.** Unlike the temp artifacts above, an Architecture Decision Record (`writing-adr`) is **committed** and lives in `docs/adr/`, not `.claude/temp/`. It's a durable record of *why*, not a per-task working file.

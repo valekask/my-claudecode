@@ -215,6 +215,41 @@ After the result file is written, if any task involved **non-obvious constraints
 
 This is opt-in — never auto-write. The result file (decisions, concerns) plus the implemented code are the inputs `writing-adr` needs. Don't offer for straightforward work; noise erodes the ADR set's value.
 
+## Product Summary (optional)
+
+A **product-facing** companion to the result file, written for managers / PMs / stakeholders — copy-paste-ready, no engineering jargon. **Opt-in:** produce it on request (or offer it for user-facing features); skip pure internal refactors. Inputs are the spec (what + why) and the result file (what shipped, edge cases).
+
+**Save to:** `.claude/temp/<task>/<task>-result-product.md`
+
+**Register:** plain language, behavior-focused. NO file paths, NO code, NO task/review-loop mechanics — write for someone who will paste it straight to a manager.
+
+```markdown
+# <Feature Name> — Product Summary
+
+**Ticket:** FNA-xxxxx
+**Status:** <e.g., Implemented, tested, and committed (not yet merged)>
+**Area:** <where in the product this lives>
+
+## What we shipped
+<The headline: what's new, in 2-4 sentences a non-engineer understands.>
+
+## What the user sees   (UI features only — omit for non-visual work)
+<State/indicator table or short description of the visible behavior.>
+
+## How it behaves
+<The behavioral contract: what happens on interaction, the important rules, what's preserved.>
+
+## Decisions made   (when a behavioral choice isn't obvious)
+<Product/behavioral choices a stakeholder might question — why it works this way and not an
+alternative a user might expect. Plain-language *why*, not technical or architectural reasoning.>
+
+## Scope notes   (when there are meaningful boundaries)
+<What was deliberately not changed; new settings/state or the lack of them; reused machinery.>
+
+## Known edge cases (non-blocking)   (when any)
+<Plain-language risk disclosure; invite a follow-up decision ("let us know if worth a follow-up").>
+```
+
 ## Red Flags
 
 **Never:**
