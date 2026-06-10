@@ -47,7 +47,7 @@ Read plan + spec → Extract all tasks → Create task tracking
     │
     ▼ (all tasks done)
     │
-Write result file → Present to user
+Write result file → Offer ADR (if warranted) → Present to user
 ```
 
 ## Handling Implementer Status
@@ -206,6 +206,14 @@ Task 3: Dashboard integration
 ## Test Results
 [Summary of test runs]
 ```
+
+## Capturing an ADR (optional)
+
+After the result file is written, if any task involved **non-obvious constraints or edge cases** that won't be recoverable from the code later, **offer** to capture a feature-level ADR via the `writing-adr` skill:
+
+> This task added non-obvious guards in [files]. Want me to capture an ADR (`docs/adr/FNA-xxxxx-...`) so the *why* survives?
+
+This is opt-in — never auto-write. The result file (decisions, concerns) plus the implemented code are the inputs `writing-adr` needs. Don't offer for straightforward work; noise erodes the ADR set's value.
 
 ## Red Flags
 

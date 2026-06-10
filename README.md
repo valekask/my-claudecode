@@ -115,6 +115,25 @@ Implements the plan task-by-task. Each task is implemented by a fresh subagent i
 
 - Write a result summary with files changed, review history, and test results
 
+#### `writing-adr`
+
+Captures an **Architecture Decision Record** - a committed snapshot under `docs/adr/` of *why* complex code is the way it is, plus the edge cases and non-obvious constraints that aren't recoverable from the code. Code is the primary source for *what*; ADRs are the durable secondary source for *why*.
+
+**Gating:**
+
+- **Never auto-written** - opt-in judgment call. Record only when the change is costly to reverse, the reasoning isn't obvious from code, and genuine alternatives existed
+- Offered (not forced) at the end of `subagent-driven-development` when a task involved non-obvious constraints
+
+**Two types:**
+
+- **Feature-level** (`FNA-xxxxx-<slug>.md`) - session snapshot (summary / why / key decisions) with a **mandatory edge-cases section**; the default
+- **System-wide** (`NNNN-<component>.md`) - stable, system-shaping decisions; on explicit request
+
+**Sources:**
+
+- Spec, plan, and result file from the workflow artifacts; the **actual code** for edge cases (read the guards); **git history** when writing retroactively
+- Lifecycle: never edit an accepted ADR - supersede it. Writes the file but does not commit (the user commits)
+
 ### Quality gates
 
 #### `review`
@@ -165,3 +184,5 @@ All artifacts live in `.claude/temp/<task>/` where `<task>` is a short descripti
 | **Plan**     | `<task>-plan.md`     | `writing-plans`   | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                       |
 | **Result**   | `<task>-result.md`   | `executing-plans` | Summary of implementation: files changed, decisions made, test results                                                                                    |
 | **Review**   | `<task>-review.md`   | `review`          | Review report with item status tracking (Open / Fixed / Skipped / Wontfix) across iterations. Opt-in - only saved when requested or a prior report exists |
+
+> **ADRs are the exception.** Unlike the temp artifacts above, an Architecture Decision Record (`writing-adr`) is **committed** and lives in `docs/adr/`, not `.claude/temp/`. It's a durable record of *why*, not a per-task working file.
