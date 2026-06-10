@@ -56,18 +56,22 @@ An ADR needs both halves — the *why* and the *edge cases* — which live in di
 ## Feature-level template
 
 ```markdown
-# FNA-xxxxx: <decision/task stated as a sentence>
+# FNA-xxxxx: <short decision sentence — one readable line; push detail to Summary>
 
-Status: Accepted | Proposed | Superseded by <id>
-Date: YYYY-MM-DD
-Ticket(s): FNA-xxxxx
-Key files: libs/.../foo.component.ts, libs/.../bar.service.ts   # 2-4 anchors; ticket/PR has the full list
+- **Status:** Accepted | Proposed | Superseded by <id>
+- **Date:** YYYY-MM-DD
+- **Ticket(s):** FNA-xxxxx
+- **Key files:** 2-4 anchors (ticket/PR has the full list)
+  - `libs/.../foo.component.ts`
+  - `libs/.../bar.service.ts`
 
 ## Summary
 <2-3 sentences: what this task changed. Fast-orientation hook. Keep it short.>
 
 ## Why
-<Intent + the forces that made this non-trivial — the part NOT recoverable from code.>
+<Lead with the problem/symptom (or the requirement) in plain language — what was wrong or
+what we set out to achieve — THEN the forces that made it non-trivial. The whole section is
+the part NOT recoverable from code; don't open on the technical mechanism.>
 
 ## Key decisions
 <What we chose and why; one bullet each. Fold deliberate trade-offs/limitations in here.
@@ -84,18 +88,19 @@ If truly none, write "None" — and reconsider whether this needed an ADR.>
 ```
 
 Rules:
-- **Title is a sentence**, not a topic label (ADR convention).
-- **`Key files`** lists 2–4 anchor files where the non-obvious logic lives — *not* a full manifest. The ticket/PR carries the complete list and is the entry into git history.
+- **Title is a sentence**, not a topic label (ADR convention) — but keep it to **one readable line**; push the rest into Summary. A title that needs three clauses is doing Summary's job.
+- **Metadata (Status/Date/Ticket/Key files) is a bullet list**, not bare consecutive lines — bare lines collapse into one run-on paragraph when rendered.
+- **`Key files`** lists 2–4 anchor files where the non-obvious logic lives — *not* a full manifest — as a nested list, one path per line. The ticket/PR carries the complete list and is the entry into git history.
 - **`Edge cases & non-obvious constraints` is the only mandatory body section** beyond Summary. It carries the value that justified the ADR.
 - Don't fill a section for its own sake — keep everything except Edge cases minimal, present it only when it has signal.
 
 ## System-wide template
 
 ```markdown
-# NNNN: <decision stated as a sentence>
+# NNNN: <short decision sentence — one readable line>
 
-Status: Accepted | Proposed | Superseded by <id>
-Date: YYYY-MM-DD
+- **Status:** Accepted | Proposed | Superseded by <id>
+- **Date:** YYYY-MM-DD
 
 ## Context
 <The problem / forces that made this decision non-trivial.>
