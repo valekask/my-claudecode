@@ -1,5 +1,5 @@
 ---
-name: review
+name: checklist-review
 description: Checklist-driven review of code changes before PR with FNA-UI quality standards. Use when ready to review changes.
 ---
 
@@ -68,7 +68,7 @@ Review reports **can** be saved to `.claude/temp/<task>/<task>-review.md` to tra
 ### When persistence is active
 
 Persistence is active when **any** of these are true:
-- The user passes `--save` (e.g., `/review --save`)
+- The user passes `--save` (e.g., `/checklist-review --save`)
 - The user says "save the review" (before or after the review)
 - A previous report already exists for this task (sticky — once you save the first report, subsequent reviews in the same task auto-save)
 

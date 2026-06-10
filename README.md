@@ -136,7 +136,7 @@ Captures an **Architecture Decision Record** - a committed snapshot under `docs/
 
 ### Quality gates
 
-#### `review`
+#### `checklist-review`
 
 Checklist-driven review of changes before PR. **160 checks across 11 parallel agents** (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms) plus end-to-end data flow tracing.
 
@@ -183,6 +183,6 @@ All artifacts live in `.claude/temp/<task>/` where `<task>` is a short descripti
 | **Spec**     | `<task>-spec.md`     | `brainstorming`   | Approved specification: goals, constraints, architecture, scope (what + why, not how)                                                                     |
 | **Plan**     | `<task>-plan.md`     | `writing-plans`   | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                       |
 | **Result**   | `<task>-result.md`   | `executing-plans` | Summary of implementation: files changed, decisions made, test results                                                                                    |
-| **Review**   | `<task>-review.md`   | `review`          | Review report with item status tracking (Open / Fixed / Skipped / Wontfix) across iterations. Opt-in - only saved when requested or a prior report exists |
+| **Review**   | `<task>-review.md`   | `checklist-review` | Review report with item status tracking (Open / Fixed / Skipped / Wontfix) across iterations. Opt-in - only saved when requested or a prior report exists |
 
 > **ADRs are the exception.** Unlike the temp artifacts above, an Architecture Decision Record (`writing-adr`) is **committed** and lives in `docs/adr/`, not `.claude/temp/`. It's a durable record of *why*, not a per-task working file.
