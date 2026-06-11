@@ -16,7 +16,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** The spec should already exist in the task's working directory (produced by brainstorming skill).
 
-**Save plans to:** `.claude/temp/<task-description>/<task-description>-plan.md`
+**Save plans to:** `.claude/temp/<task>/<task>-plan.md`
 - Plans live alongside the proposal and spec in the same task directory
 
 ## Step 1: Read the Spec
@@ -88,7 +88,7 @@ Apply user answers when writing tasks. Bake the decision into the relevant phase
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** Implemented via `subagent-driven-development` or `executing-plans`, auto-routed by spec complexity. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Implemented via `subagent-driven-development` (the default), or `executing-plans` for simple inline execution. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 

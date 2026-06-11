@@ -39,6 +39,7 @@ After all tasks are complete and verified:
 1. Run a final verification (all tests pass, no compilation errors)
 2. Write result summary to `.claude/temp/<task>/<task>-result.md`
 3. Present the result to the user
+4. **Hand off:** the result is saved — tell the user to run `polish` (fresh session) before manual verification
 
 ## Result File Format
 

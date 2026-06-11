@@ -1,11 +1,13 @@
 ---
 name: checklist-review
-description: Checklist-driven review of code changes before PR with FNA-UI quality standards. Use when ready to review changes.
+description: Checklist-driven review of code changes before PR with the project's Angular quality standards. Use when ready to review changes.
 ---
 
 # Code Review
 
-Checklist-driven review with parallel agents. 160 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms) plus end-to-end data flow tracing.
+Checklist-driven review with parallel agents. 160 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms).
+
+**End-to-end data-flow tracing is a separate skill.** It lives in `trace-dataflow` — run it alongside this review when a change crosses layers (service/store + component, effects/reducers/selectors, or HTTP calls). This skill no longer performs flow tracing.
 
 **Workflow:** Scope → Plan → Check (flag broadly) → Investigate (verify with full context) → Summary
 
@@ -63,7 +65,7 @@ TaskCreate(subject="Phase 5: Summary", description="Merge with previous, dedupli
 
 ## Review Persistence
 
-Review reports **can** be saved to `.claude/temp/<task>/<task>-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
+Review reports **can** be saved to `.claude/temp/<task>/<task>-checklist-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
 
 ### When persistence is active
 
@@ -74,11 +76,11 @@ Persistence is active when **any** of these are true:
 
 ### Task directory
 
-When persistence is active and no `.claude/temp/<task>/` directory exists, ask the user for a short task name (e.g., `add-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
+When persistence is active and no `.claude/temp/<task>/` directory exists, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
 
 ### Previous report handling
 
-At the start of each review, if a task directory exists, check for an existing `<task>-review.md`. If found (this also activates persistence):
+At the start of each review, if a task directory exists, check for an existing `<task>-checklist-review.md`. If found (this also activates persistence):
 
 1. **Read it** and extract the Summary table (the `| # | Type | Issue | Severity | Status |` table at the bottom)
 2. **Carry forward resolved items.** Items with status `Fixed`, `Skipped`, or `Wontfix` are NOT re-checked. They appear in a **Previously Resolved** section of the new report with their original status.
@@ -106,7 +108,7 @@ Determine what to review.
 
 Look for an existing review report **only if** a task directory is already known (user specified a task name, or an active task directory exists under `.claude/temp/`):
 
-1. If a task directory exists, check for `<task>-review.md` inside it
+1. If a task directory exists, check for `<task>-checklist-review.md` inside it
 2. If found, read the file and extract:
    - The **Summary table** (items with their statuses)
    - The **Scope** section (to compare what was reviewed before)
@@ -163,19 +165,18 @@ Determine which agents to activate based on changed files. Use a fast model (hai
 | Agent 5: DATA FLOW | component, service, store, module, or infra files changed |
 | Agent 6: STATE MANAGEMENT | store files changed, OR files importing from `@ngrx` changed |
 | Agent 7: SAFETY | Always |
-| Agent 8: TRACING | Diff includes both a service/store AND a component, OR diff modifies an effect/reducer/selector, OR diff touches HTTP calls |
-| Agent 9: TEST QUALITY | Any `.service.ts`, `.store.ts`, `.utils.ts`, `.pipe.ts`, `.directive.ts`, `.guard.ts`, or `.interceptor.ts` changed — OR any `.spec.ts` changed |
-| Agent 10: STYLING | Any `.scss` or `.html` file changed |
-| Agent 11: FORMS | Any changed `.ts` file imports `FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, or `ControlValueAccessor` |
+| Agent 8: TEST QUALITY | Any `.service.ts`, `.store.ts`, `.utils.ts`, `.pipe.ts`, `.directive.ts`, `.guard.ts`, or `.interceptor.ts` changed — OR any `.spec.ts` changed |
+| Agent 9: STYLING | Any `.scss` or `.html` file changed |
+| Agent 10: FORMS | Any changed `.ts` file imports `FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, or `ControlValueAccessor` |
 
 ### Lightweight mode
 
 If ≤3 files changed AND no store/service files:
 - **Always:** Agent 1+2+3 (if any `.ts` file) + Agent 7 (safety)
-- **Add Agent 9** if any `.spec.ts` file changed
-- **Add Agent 10** if any `.scss` or `.html` file changed
-- **Add Agent 11** if any changed `.ts` file imports form APIs
-- **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management), Agent 8 (tracing)
+- **Add Agent 8** if any `.spec.ts` file changed
+- **Add Agent 9** if any `.scss` or `.html` file changed
+- **Add Agent 10** if any changed `.ts` file imports form APIs
+- **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management)
 
 ---
 
@@ -246,78 +247,7 @@ All checking agents use this mindset:
 
 **Input:** Full diff of all changed files + checklist contents. For regression checks (RG-1, RG-2), search the broader codebase for callers of changed APIs.
 
-### Agent 8: TRACING
-
-**No checklist.** This agent follows data flows end-to-end instead of checking rules.
-
-**Input:** The changed files + their full source + imported files they depend on.
-
-**Instructions for the tracing agent:**
-
-```
-You are tracing data flows through changed code in the FNA-UI Angular project.
-
-## Changed Files
-{diff output + full source of changed files}
-
-## Instructions
-
-### Step 1: List ALL flows (MANDATORY — complete this before tracing)
-
-From the changed code, identify every flow. Output a numbered list using this template:
-
-| # | Type | Flow name | Start point | End point |
-|---|------|-----------|-------------|-----------|
-| 1 | Data | {name} | {API call or source} | {template binding or consumer} |
-| 2 | Interaction | {name} | {user event} | {UI update} |
-| 3 | Error | {name} | {failure point} | {user-visible result} |
-
-**Flow types to look for:**
-- **Data flow**: Which data is fetched, where is it stored, how does it reach the template?
-- **Interaction flow**: What user actions trigger changes, and how do those flow through handlers → store → UI update?
-- **Error flow**: When an API call fails, what happens at each step?
-
-**Minimum flow count:** You MUST identify at least one flow per changed service/store file. If the diff touches both a service/store AND a component, identify at least one data flow AND one interaction flow.
-
-Do NOT proceed to Step 2 until this table is complete.
-
-### Step 2: Trace each flow end-to-end
-
-For EACH flow in the table above (do not skip any), walk through the actual source files:
-
-1. **Start point**: API call or user event
-2. **Each step**: Follow the data through service → effect/updater → state → selector → container → template
-3. **End point**: What the user sees
-
-At each step, check:
-- Does the data shape match what the next step expects?
-- Is the error case handled?
-- Is loading state managed?
-- Are there race conditions (e.g., user triggers action while previous is in flight)?
-- Is cleanup handled (unsubscribe, cancel in-flight requests)?
-- If the same API call or data operation appears in multiple code paths (e.g., single-item fetch vs batch refresh, initial load vs retry), is the error handling consistent? Flag when one path shows user-facing error feedback (notification, error state) and another silently swallows or skips.
-
-### Step 3: Report
-
-For each gap found, output:
-
-### TRACE — short title
-- **Flow**: {flow # and name from the table}
-- **Gap at**: `path/to/file.ts:LINE`
-- **Issue**: What breaks or is missing between steps (1-2 sentences)
-- **Impact**: What the user sees when this breaks (1 sentence)
-- **Fix**: How to close the gap (1-2 sentences)
-- **Severity**: Critical | High | Medium | Low
-
-**Severity rule for traces:** Always rate by USER-VISIBLE impact, not code-level severity. If a data flow gap causes wrong data displayed to users, that's Critical even if the code change looks small. Ask: "What will the user see when this breaks?"
-
-If all flows are clean, output:
-
-### TRACE — All flows verified
-No gaps found in {N} traced flows: {list flow names}
-```
-
-### Agent 9: TEST QUALITY
+### Agent 8: TEST QUALITY
 
 **Checklist:** `test-quality.md` (14) = **14 checks**
 
@@ -331,7 +261,7 @@ No gaps found in {N} traced flows: {list flow names}
 **Instructions for the test quality agent:**
 
 ```
-You are reviewing test quality for the FNA-UI Angular project.
+You are reviewing test quality for the Angular project.
 Your job is to verify that tests actually cover the implementation logic — not just that tests exist.
 
 ## Checklist
@@ -374,7 +304,7 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 - **Confidence**: HIGH
 ```
 
-### Agent 10: STYLING
+### Agent 9: STYLING
 
 **Checklist:** `styling.md` (13) = **13 checks**
 
@@ -382,7 +312,7 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 **Input:** Diff of all changed `.scss` and `.html` files + checklist contents. Read `libs/ui/src/assets/scss/` variable files when checking if a hardcoded value exists in the design system. For ST-8 (Bootstrap deprecations), check both `.scss` class references and `.html` template class attributes.
 
-### Agent 11: FORMS
+### Agent 10: FORMS
 
 **Checklist:** `forms.md` (14) = **14 checks**
 
@@ -390,10 +320,10 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 **Input:** Diff of all changed `.ts` files that import form-related APIs (`FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, `ControlValueAccessor`) + their corresponding `.html` templates + checklist contents. Read full source files to trace the form lifecycle: setup → validation → data extraction → submission.
 
-### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 10, 11)
+### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 9, 10)
 
 ```
-You are a checking agent reviewing code changes for the FNA-UI Angular project.
+You are a checking agent reviewing code changes for the Angular project.
 Your job is to FLAG anything suspicious. Err on the side of reporting — the investigation phase will verify your findings.
 
 ## Your Checklist
@@ -463,7 +393,7 @@ Each investigation agent reads the **full source file** (not just the diff) with
 **Investigation agent prompt:**
 
 ```
-You are an investigation agent verifying flagged code review findings for the FNA-UI Angular project.
+You are an investigation agent verifying flagged code review findings for the Angular project.
 Each finding below was flagged by a checking agent. Your job is to read the full source code and verdict each one.
 
 ## Findings to Investigate
@@ -534,7 +464,7 @@ If a previous review report was loaded in Phase 1:
 Merge CONFIRMED findings that describe the same underlying problem:
 - Same file:line confirmed by multiple agents → merge into one finding (keep the highest severity and most impactful description)
 - Same root cause across multiple files (e.g., "duplicated pattern in 9 components" + "logic in component instead of selector") → merge into one finding, list all affected files
-- When merging, prefer the TRACING agent's framing (user-visible impact) over checklist agents' framing (rule violation)
+- When merging, prefer framing by user-visible impact over rule-violation framing
 - FALSE_POSITIVE items: include in the Dismissed Findings section (both notable passes and routine dismissals)
 - QUESTION items: include in the Questions section
 
@@ -590,15 +520,12 @@ Merge CONFIRMED findings that describe the same underlying problem:
 {Items where the reviewer needs more context — list with **Unknown** section}
 
 ## Test Quality Summary
-{Only include when Agent 9 (Test Quality) was activated. Summarize aggregate test coverage patterns across all reviewed files — this is the holistic view, not individual findings (those stay in Findings above).}
+{Only include when Agent 8 (Test Quality) was activated. Summarize aggregate test coverage patterns across all reviewed files — this is the holistic view, not individual findings (those stay in Findings above).}
 
 {List systemic test gaps as bullet points, e.g.:}
 - {pattern} untested in {N} stores/services
 - {file} has only {N} meaningful test covering {what}; {list of untested branches}
 - {selectors/utilities} have zero test coverage
-
-## Data Flow Traces
-{Summary of traced flows — gaps found or all clean}
 
 ## Review Coverage
 
@@ -612,7 +539,6 @@ Merge CONFIRMED findings that describe the same underlying problem:
 | DATA FLOW | 14 | X | X | {brief summary or "All passed"} |
 | STATE MGMT | 14 | X | X | {brief summary or "All passed"} |
 | SAFETY | 25 | X | X | {brief summary or "All passed"} |
-| TRACING | {N flows} | {clean flows} | {gaps + questions} | {brief summary} |
 | TEST QUALITY | 13 | X | X | {brief summary or "All passed"} |
 | STYLING | 13 | X | X | {brief summary or "All passed"} |
 
@@ -636,7 +562,7 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 | # | Type | Issue | Severity | Status |
 |---|------|-------|----------|--------|
-| 1 | {CATEGORY or TRACE} | {short description} | Critical/High/Medium/Low | Open |
+| 1 | {CATEGORY} | {short description} | Critical/High/Medium/Low | Open |
 | 2 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low | Open |
 | 3 | {CATEGORY: ID} | {short description} | Critical/High/Medium/Low | Fixed |
 | ... | | | | |
@@ -654,15 +580,15 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 When saving:
 
-1. If no task directory exists yet, ask the user for a short task name (e.g., `add-currency-filter`) and create `.claude/temp/<task>/`
-2. Write the full report to `.claude/temp/<task>/<task>-review.md` using the Write tool
+1. If no task directory exists yet, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create `.claude/temp/<task>/`
+2. Write the full report to `.claude/temp/<task>/<task>-checklist-review.md` using the Write tool
 3. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
-4. Tell the user: `Review saved to .claude/temp/<task>/<task>-review.md`
+4. Tell the user: `Review saved to .claude/temp/<task>/<task>-checklist-review.md`
 
 When **not** saving: skip this step silently. The report is already displayed in the conversation.
 
 **Tip for users:** To mark items as `Skipped` or `Wontfix`, either:
-- Edit the status in the Summary table of `<task>-review.md` directly
+- Edit the status in the Summary table of `<task>-checklist-review.md` directly
 - Tell the reviewer in conversation (e.g., "skip item #3, wontfix #5") before running the next review
 
 ### Decision criteria for merge readiness
@@ -686,7 +612,6 @@ Examples:
 - `2. [REGRESSION: RG-2] Removed properties break drill-down modal`
 - `3. [DEFENSIVE: DP-3] NaN input causes runtime RangeError`
 - `4. [FORMS: FM-1] Custom validator registered after initial validation pass`
-- `5. [TRACE] Daily mode detection broken for multi-currency`
 
 ---
 
@@ -701,9 +626,8 @@ Examples:
 | 5: DATA FLOW | Check | data-flow | 14 | Component/service/store/module/infra files |
 | 6: STATE MANAGEMENT | Check | state-management | 14 | Store files or `@ngrx` imports |
 | 7: SAFETY | Check | regressions + security | 25 | Always |
-| 8: TRACING | Check | (trace-based, no checklist) | — | Service/store + component in same diff, or effects/HTTP touched |
-| 9: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
-| 10: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
-| 11: FORMS | Check | forms | 14 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
+| 8: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
+| 9: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
+| 10: FORMS | Check | forms | 14 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
 | **Total** | | 11 checklists | **160** | |

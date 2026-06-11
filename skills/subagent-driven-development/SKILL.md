@@ -47,7 +47,7 @@ Read plan + spec → Extract all tasks → Create task tracking
     │
     ▼ (all tasks done)
     │
-Write result file → Offer ADR (if warranted) → Present to user
+Write result file → Present to user → hand off: run polish (fresh session)
 ```
 
 ## Handling Implementer Status
@@ -122,7 +122,7 @@ The controller (you) tracks which files each implementer reports as changed and 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file: .claude/temp/add-currency-filter/add-currency-filter-plan.md]
+[Read plan file: .claude/temp/FNA-1234-currency-filter/FNA-1234-currency-filter-plan.md]
 [Extract all 3 tasks with full text and context]
 [Create task tracking]
 
@@ -171,7 +171,7 @@ Task 3: Dashboard integration
 [... same flow ...]
 
 [All tasks complete]
-[Write .claude/temp/add-currency-filter/add-currency-filter-result.md]
+[Write .claude/temp/FNA-1234-currency-filter/FNA-1234-currency-filter-result.md]
 [Present result to user]
 ```
 
@@ -207,48 +207,13 @@ Task 3: Dashboard integration
 [Summary of test runs]
 ```
 
-## Capturing an ADR (optional)
+## Hand off
 
-After the result file is written, if any task involved **non-obvious constraints or edge cases** that won't be recoverable from the code later, **offer** to capture a feature-level ADR via the `writing-adr` skill:
+After the result file is written and presented, tell the user the next step: run `polish` in a **fresh session** before manual verification. SDD does not run polish, verify, or ship itself.
 
-> This task added non-obvious guards in [files]. Want me to capture an ADR (`docs/adr/FNA-xxxxx-...`) so the *why* survives?
+## ADRs are captured later (in `ship`)
 
-This is opt-in — never auto-write. The result file (decisions, concerns) plus the implemented code are the inputs `writing-adr` needs. Don't offer for straightforward work; noise erodes the ADR set's value.
-
-## Product Summary (optional)
-
-A **product-facing** companion to the result file, written for managers / PMs / stakeholders — copy-paste-ready, no engineering jargon. **Opt-in:** produce it on request (or offer it for user-facing features); skip pure internal refactors. Inputs are the spec (what + why) and the result file (what shipped, edge cases).
-
-**Save to:** `.claude/temp/<task>/<task>-result-product.md`
-
-**Register:** plain language, behavior-focused. NO file paths, NO code, NO task/review-loop mechanics — write for someone who will paste it straight to a manager.
-
-```markdown
-# <Feature Name> — Product Summary
-
-**Ticket:** FNA-xxxxx
-**Status:** <e.g., Implemented, tested, and committed (not yet merged)>
-**Area:** <where in the product this lives>
-
-## What we shipped
-<The headline: what's new, in 2-4 sentences a non-engineer understands.>
-
-## What the user sees   (UI features only — omit for non-visual work)
-<State/indicator table or short description of the visible behavior.>
-
-## How it behaves
-<The behavioral contract: what happens on interaction, the important rules, what's preserved.>
-
-## Decisions made   (when a behavioral choice isn't obvious)
-<Product/behavioral choices a stakeholder might question — why it works this way and not an
-alternative a user might expect. Plain-language *why*, not technical or architectural reasoning.>
-
-## Scope notes   (when there are meaningful boundaries)
-<What was deliberately not changed; new settings/state or the lack of them; reused machinery.>
-
-## Known edge cases (non-blocking)   (when any)
-<Plain-language risk disclosure; invite a follow-up decision ("let us know if worth a follow-up").>
-```
+Do **not** offer or write an ADR here. ADR creation belongs to the `ship` phase (after verification), which invokes `writing-adr` when a change warrants one. Your job is to make sure the inputs survive: when a task involved **non-obvious constraints or edge cases** that won't be recoverable from the code, record them in the result file's **Decisions Made** / **Concerns** sections so `ship` has what it needs.
 
 ## Red Flags
 

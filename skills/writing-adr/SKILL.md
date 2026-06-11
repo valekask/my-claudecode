@@ -25,7 +25,7 @@ When invoked at the end of an implementation, **offer** an ADR only if the work 
 
 | | Feature-level | System-wide |
 |---|---|---|
-| **File** | `docs/adr/FNA-xxxxx-<slug>.md` | `docs/adr/NNNN-<component>.md` |
+| **File** | `docs/adr/<ticket-number>-<slug>.md` | `docs/adr/NNNN-<component>.md` |
 | **Example** | `docs/adr/FNA-15102-property-based-coloring.md` | `docs/adr/0001-auth.md` |
 | **Shape** | Session snapshot + mandatory edge cases | Stable decision record |
 | **Purpose** | Quickly recover what/why for a complex task | Document durable, system-shaping choices |
@@ -37,7 +37,7 @@ Start minimal. Grow the set from real friction, not speculatively.
 
 Default to **feature-level** — it's the common implementation-time case. At invocation, confirm before writing:
 
-> Writing a feature-level ADR (`FNA-xxxxx-...`). Or did you mean a system-wide one?
+> Writing a feature-level ADR (`<ticket-number>-...`). Or did you mean a system-wide one?
 
 Write a **system-wide** ADR only on explicit request (e.g. "write a system-wide ADR for the timeline"). In that case the user typically names the sources directly — a feature area or directory (e.g. "source is `libs/feature-timeline`"). Use those plus that area's git history; the brainstorm/plan/execute artifacts below usually don't apply.
 
@@ -56,11 +56,11 @@ An ADR needs both halves — the *why* and the *edge cases* — which live in di
 ## Feature-level template
 
 ```markdown
-# FNA-xxxxx: <short decision sentence — one readable line; push detail to Summary>
+# <ticket-number>: <short decision sentence — one readable line; push detail to Summary>
 
 - **Status:** Accepted | Proposed | Superseded by <id>
 - **Date:** YYYY-MM-DD
-- **Ticket(s):** FNA-xxxxx
+- **Ticket(s):** <ticket-number>
 - **Key files:** 2-4 anchors (ticket/PR has the full list)
   - `libs/.../foo.component.ts`
   - `libs/.../bar.service.ts`
@@ -119,7 +119,7 @@ Rules:
 
 ## File naming & numbering
 
-- **Feature:** `FNA-<ticket>-<kebab-slug>.md`, slug derived from the decision/task.
+- **Feature:** `<ticket-number>-<kebab-slug>.md`, slug derived from the decision/task.
 - **System-wide:** `NNNN-<kebab-component>.md`. To pick `NNNN`, list `docs/adr/`, find the highest existing system-wide number, increment, zero-pad to 4 digits.
 - Create `docs/adr/` only when the first ADR is written.
 
