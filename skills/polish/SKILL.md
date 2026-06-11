@@ -52,7 +52,7 @@ The primary reviewer is **configurable** — currently being evaluated. Two opti
 
 ### Step 4: Run gates and collect findings
 
-Run the selected gates and gather all findings into one list with: source gate, file:line, severity, and confidence.
+The selected gates are independent reviewers, so **dispatch them concurrently** — launch them in a single batch rather than one after another, and gather findings as they return. (Some gates, like `checklist-review`, fan out their own internal agents; that's fine — they parallelize underneath.) Collect all findings into one list with: source gate, file:line, severity, and confidence.
 
 ### Step 5: Triage and auto-fix (bounded, meaningful-only)
 

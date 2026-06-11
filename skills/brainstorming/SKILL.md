@@ -146,6 +146,7 @@ Read proposal + assets
 **Research before proposing (Medium/Complex only):**
 
 - Use WebSearch/WebFetch when the task involves technology choices, new integrations, or patterns not yet in the codebase
+- When there are multiple independent research questions, dispatch them as parallel research agents — one per question — each returning a short digest. Research output is naturally a summary, so little nuance is lost by delegating; this is a clean fan-out, unlike the codebase search above.
 - Check current best practices — your training knowledge may be outdated
 - Compare findings against existing codebase conventions
 - Apply the **Convention Wins Rule**: codebase consistency is the default. Only recommend deviation when there's a concrete defect (bugs, security, performance). Document any deviation explicitly in the spec with rationale.
