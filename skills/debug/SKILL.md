@@ -58,6 +58,8 @@ Symptom (error/wrong output)
         = ROOT CAUSE (fix here)
 ```
 
+**Check for an ADR on this code.** If `docs/adr/README.md` exists, scan it for the area you're tracing. A non-obvious check or guard you're tempted to remove or "simplify" away may be load-bearing — the ADR's *Edge cases & non-obvious constraints* section says what it protects and what breaks without it. Don't remove a guard whose reason you haven't found.
+
 **For multi-component systems — add diagnostic logging BEFORE deep analysis:**
 
 At each component boundary, log what enters and exits. Run once to see WHERE it breaks, THEN investigate that specific component.
@@ -127,7 +129,7 @@ Ask via AskUserQuestion (one question at a time) when:
 
 If you catch yourself:
 - Proposing a fix without tracing the root cause
-- Adding try/catch or null checks to suppress errors
+- Adding try/catch or null checks to suppress errors, or removing a guard before confirming an ADR doesn't explain why it's there
 - Making multiple changes at once "just to be safe"
 - Thinking "let me just try this"
 - Reading code for 5+ minutes without asking the user anything
