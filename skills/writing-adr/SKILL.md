@@ -56,7 +56,7 @@ An ADR needs both halves — the *why* and the *edge cases* — which live in di
 ## Feature-level template
 
 ```markdown
-# <ticket-number>: <short decision sentence — one readable line; push detail to Summary>
+# <ticket-number>: <topic label — 1-3 words naming the subject; decision goes in README + Summary>
 
 - **Status:** Accepted | Proposed | Superseded by <id>
 - **Date:** YYYY-MM-DD
@@ -88,7 +88,7 @@ If truly none, write "None" — and reconsider whether this needed an ADR.>
 ```
 
 Rules:
-- **Title is a sentence** (applies to *both* templates), not a topic label (ADR convention) — but keep it to **one readable line**; push the rest into Summary. A title that needs three clauses is doing Summary's job. Bad: `0001: Auth is OAuth2/OIDC with a backend-profile-selected provider, bootstrapped config-first, with identity resolved lazily on the first guarded route`. Good: `0001: Auth via OAuth2/OIDC, provider selected by backend profile` — the rest (config-first bootstrap, lazy identity resolution) goes in Summary.
+- **Title** (applies to *both* templates) is a **bare topic label** — 1-3 words naming the ADR's subject, like a file or section name (e.g. `0020: Data backup`, `0001: Auth`). Never a sentence, never multi-clause. The decision sentence lives in the README `Decision` column and the body (Summary/Decision), not the H1.
 - **Metadata (Status/Date/Ticket/Key files) is a bullet list**, not bare consecutive lines — bare lines collapse into one run-on paragraph when rendered.
 - **`Key files`** lists 2–4 anchor files where the non-obvious logic lives — *not* a full manifest — as a nested list, one path per line. The ticket/PR carries the complete list and is the entry into git history.
 - **`Edge cases & non-obvious constraints` is the only mandatory body section** beyond Summary. It carries the value that justified the ADR.
@@ -97,7 +97,7 @@ Rules:
 ## System-wide template
 
 ```markdown
-# NNNN: <short decision sentence — one readable line>
+# NNNN: <topic label — 1-3 words naming the subject; decision goes in README + Summary>
 
 - **Status:** Accepted | Proposed | Superseded by <id>
 - **Date:** YYYY-MM-DD
@@ -150,7 +150,7 @@ you're touching, and skip anything `Superseded`.
 | [FNA-15102](FNA-15102-property-based-coloring.md) | Color rows by domain property | timeline grid | Accepted |
 ```
 
-After writing an ADR, add a row to the matching table — the one-line Decision (+ Area) is what lets an agent judge relevance from the index alone.
+After writing an ADR, add a row to the matching table — the one-line Decision (+ Area) is what lets an agent judge relevance from the index alone. Since the title is a bare topic label, the `Decision` column must carry the **full decision sentence** — it's the at-a-glance source of the decision.
 
 ## CLAUDE.md note (target repo)
 
