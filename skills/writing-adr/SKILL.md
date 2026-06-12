@@ -88,7 +88,7 @@ If truly none, write "None" — and reconsider whether this needed an ADR.>
 ```
 
 Rules:
-- **Title is a sentence**, not a topic label (ADR convention) — but keep it to **one readable line**; push the rest into Summary. A title that needs three clauses is doing Summary's job.
+- **Title is a sentence** (applies to *both* templates), not a topic label (ADR convention) — but keep it to **one readable line**; push the rest into Summary. A title that needs three clauses is doing Summary's job. Bad: `0001: Auth is OAuth2/OIDC with a backend-profile-selected provider, bootstrapped config-first, with identity resolved lazily on the first guarded route`. Good: `0001: Auth via OAuth2/OIDC, provider selected by backend profile` — the rest (config-first bootstrap, lazy identity resolution) goes in Summary.
 - **Metadata (Status/Date/Ticket/Key files) is a bullet list**, not bare consecutive lines — bare lines collapse into one run-on paragraph when rendered.
 - **`Key files`** lists 2–4 anchor files where the non-obvious logic lives — *not* a full manifest — as a nested list, one path per line. The ticket/PR carries the complete list and is the entry into git history.
 - **`Edge cases & non-obvious constraints` is the only mandatory body section** beyond Summary. It carries the value that justified the ADR.
@@ -101,6 +101,10 @@ Rules:
 
 - **Status:** Accepted | Proposed | Superseded by <id>
 - **Date:** YYYY-MM-DD
+
+## Summary
+<2-3 sentences: a one-breath TL;DR spanning context + decision + consequence. Fast-orientation
+hook — NOT the authoritative statement (that's Decision). Keep it short.>
 
 ## Context
 <The problem / forces that made this decision non-trivial.>
