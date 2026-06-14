@@ -42,7 +42,7 @@ Before defining tasks, map out which files will be created or modified and what 
 - Files that change together should live together. Split by responsibility, not by technical layer.
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
 - **Impact tracing** — when modifying a function's signature or behavior, grep for ALL callers to build the complete file list. Include indirect callers through shared services and utilities, not just direct callers in the target area. When adding state that depends on another piece of state, trace ALL triggers that can change the source state, not just the primary use case. When several symbols or state sources need tracing, this is independent read-only work — fan it out to parallel search agents (one per symbol/area), each returning its caller/trigger list, then merge the results.
-- **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify. Their *Edge cases & non-obvious constraints* section names guards the plan must preserve, not remove — carry those into the relevant task's rationale. **Record which ADRs you reviewed and your conclusion, even when none are relevant** (e.g. *ADRs reviewed: none relevant*) — the forced note keeps the scan from being skipped and leaves a visible record in the plan. If `docs/adr/README.md` doesn't exist, note that once and move on.
+- **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify **through the plan-writing lens: does any ADR name a guard in these files that the plan must preserve, not remove?** Their *Edge cases & non-obvious constraints* section names those guards — carry each into the relevant task's rationale. The spec's *ADRs Reviewed* section (written during brainstorming) already cleared the *direction* level; start from it, then run this guard-level scan against the live files. **Record the result in the plan's *ADRs Reviewed* section (see Plan Document Header)** — which ADRs you reviewed, the guard each imposes, and the task that preserves it, or a single line stating none were relevant. The forced note keeps the scan from being skipped and leaves a visible record. If `docs/adr/README.md` doesn't exist, note that once in the section and move on.
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
@@ -95,6 +95,10 @@ Apply user answers when writing tasks. Bake the decision into the relevant phase
 **Architecture:** [2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
+
+**ADRs Reviewed:**
+- [ADR ID + label] — guard it imposes; the task that preserves it. (Carried forward from the spec's *ADRs Reviewed* section, then refreshed against the live files.)
+- [Or a single line: none relevant to the files this plan touches.]
 
 ---
 ```
@@ -174,7 +178,7 @@ After the plan review loop passes, the plan is on disk. Walk the user through a 
 
 (Adjust slightly based on density — a focused 8-phase plan with thin tasks may digest as Small.)
 
-**Step 2 — Build the digest.** Summarize the saved plan into sections grouped by **natural seams** — model picks the seams each time. Examples: Setup & foundations / Core feature work / Migration & cleanup / Tests. Each section names the phases it covers, the goal of that group (1-2 lines), and the files or subsystems touched. Headlines + Goal + Architecture from the plan header are the spine; phase details live in the file.
+**Step 2 — Build the digest.** Summarize the saved plan into sections grouped by **natural seams** — model picks the seams each time. Examples: Setup & foundations / Core feature work / Migration & cleanup / Tests. Each section names the phases it covers, the goal of that group (1-2 lines), and the files or subsystems touched. Headlines + Goal + Architecture from the plan header are the spine; phase details live in the file. **Always include the *ADRs Reviewed* result as a one-line entry** (which ADRs impose guards and the tasks that preserve them, or "none relevant") so the user sees what was taken into account.
 
 **Step 3 — Tiny tier flow.** Show the full digest as one block, then emit the Save handoff (see Save below). No menu needed at this size.
 

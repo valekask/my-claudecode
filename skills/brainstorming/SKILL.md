@@ -51,7 +51,7 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Read proposal and assets** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided
 2. **Clarify intent** — confirm you understand the problem the proposal is trying to solve. If the proposal is clear, skip. If not, ask one focused question via AskUserQuestion. Goal: a confirmed problem statement before any codebase exploration.
-3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area — they carry the settled *why* and decisions you must not silently re-litigate. **Report what you found — state which ADRs you reviewed and your conclusion, even when none are relevant** (e.g. *ADRs reviewed: none relevant to this area*; or *ADRs reviewed: FNA-15102 (property coloring) — relevant, constrains the render path; no conflict with the proposed direction*). Forcing the statement keeps the scan from being skipped and makes the result visible rather than silent. If `docs/adr/README.md` doesn't exist, say so once and move on.
+3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area **through the brainstorming lens: does any ADR constrain the *direction* I'm about to propose?** ADRs carry the settled *why* — decisions you must not silently re-litigate. (The *guard-level* lens — which specific code guards a change must preserve — belongs to plan-writing, not here.) **Report what you found in conversation AND record it in the spec's *ADRs Reviewed* section (see Writing the spec)** — state which ADRs you reviewed and your direction-level conclusion, even when none are relevant (e.g. *ADRs reviewed: none relevant to this area*; or *ADRs reviewed: FNA-15102 (property coloring) — relevant, constrains the render path; no conflict with the proposed direction*). Forcing the statement keeps the scan from being skipped and makes the result visible rather than silent. If `docs/adr/README.md` doesn't exist, say so once and note that in the spec section.
 4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
 5. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
 6. **Ask clarifying questions** — one at a time, fill gaps not covered by the proposal, assets, or codebase. Minimum question count depends on track.
@@ -200,6 +200,14 @@ Read proposal + assets
 
 **What specs define (what + why):** goals and success criteria; constraints and boundaries; scope (in/out); architecture and data flow; error handling strategy; testing approach.
 
+**Include an *ADRs Reviewed* section.** Near the top of the spec (after the goals/overview), add a short section that records the ADR scan from step 3: every ADR you weighed and your direction-level conclusion for each, or a single line stating none were relevant. This is the visible record of the scan and the breadcrumb the plan-writing phase reads before its own guard-level scan. Use ADR IDs and short labels in prose — IDs are not code syntax, so the hard rules above do not apply here. For example:
+
+> ## ADRs Reviewed
+> - FNA-15102 (property coloring) — relevant; constrains the render path. Proposed direction does not conflict.
+> - None others relevant to this area.
+
+If `docs/adr/README.md` doesn't exist, the section says so in one line.
+
 **Hard rules — do NOT write any of these in the spec.** The reviewer rejects on sight; write the spec right the first time rather than cleaning up afterward.
 
 - Fenced code blocks (` ```ts `, ` ```js `, ` ```typescript `, etc.)
@@ -256,7 +264,7 @@ After the spec review loop passes, the spec is on disk. Walk the user through a 
 
 Specs cap at 7 phases — most reviews are Tiny/Small/Medium. Large means the spec needs splitting upstream rather than a bigger menu here.
 
-**Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface.
+**Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface. **Always include the *ADRs Reviewed* result as a one-line entry** (which ADRs were weighed and the direction conclusion, or "none relevant") so the user sees what was taken into account.
 
 **Step 3 — Tiny tier flow.** Show the full digest as one block, then emit the Save handoff (see Save below). No menu needed at this size.
 

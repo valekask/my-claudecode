@@ -26,6 +26,7 @@ Task tool (general-purpose):
     | Impact Completeness | When a function's signature or behavior is modified, are ALL callers (including indirect through shared services) accounted for in the plan? When new state depends on existing state, are all triggers that change the source state covered? |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | ADR review | An *ADRs Reviewed* section must be present, listing each relevant ADR, the guard it imposes, and the task that preserves it — or an explicit "none relevant" / "no ADR index" line. Flag if a named guard isn't carried into any task. |
 
     ## Calibration
 

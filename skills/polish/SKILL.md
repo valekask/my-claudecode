@@ -29,7 +29,7 @@ Run the project's **full build** to verify the whole project still compiles/pack
 
 ### Step 3: Select gates (risk-proportional — announce your choice)
 
-Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run everything every time. State which gates you're running and why.
+Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run everything every time. State which gates you're running and why. You report the full **review ledger** at the end (Step 7) — every gate listed, ran or skipped — so each gate you skip needs a stated reason its trigger didn't fire. Silence is not an option.
 
 | Gate | Run when |
 |------|----------|
@@ -72,12 +72,19 @@ For each finding, classify:
 
 ### Step 6: Persist the full report
 
-Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>/<task>-review.md`. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
+Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>/<task>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
 
 ### Step 7: Summarize and hand off
 
-Report:
-- Gates run (and why those)
+Lead with the **review ledger** — every gate listed in this order, each as a short prose line (not a table, so nothing interesting gets squeezed out): **status** + the info that matters for that gate. For a gate that ran, give its result — findings count, notable catches, what was auto-fixed vs surfaced. For a skipped gate, give the reason its trigger didn't fire. Every gate appears exactly once, even when skipped.
+
+1. **Primary reviewer** — always runs; name which one actually ran per the chosen option (CodeRabbit by default, the built-in `/code-review` under `--reviewer=builtin`, or both under `--compare`) and report its findings and notable catches.
+2. **checklist-review** — ran (result) or skipped (why, e.g. small generic diff below the threshold).
+3. **trace-workflow** — ran (result) or skipped (why, e.g. no conditional logic touched).
+4. **trace-dataflow** — ran (result) or skipped (why, e.g. change stays within one layer).
+5. **`/security-review`** — ran (result) or skipped (why, e.g. no security-sensitive surface).
+
+Then:
 - **Auto-fixed:** list each fix (file:line, what changed) — these need a fresh look during verification
 - **Needs your attention before verify:** surfaced findings that polish did not fix, with severity
 - Build/test status
@@ -89,6 +96,7 @@ End with the handoff: the change is ready for **manual verification + smoke test
 **Never:**
 - Auto-apply Medium/Low findings or anything needing judgment — surface them
 - Run all gates indiscriminately — select by risk and say why
+- Report only the gates that ran — every gate appears in the review ledger, skipped ones with a reason
 - Loop fix→recheck more than 3 times on one gate — escalate instead
 - Drop Low/Medium findings from the saved report
 - Perform any git operations (no add, no commit) — that's `ship`, and only after verification
