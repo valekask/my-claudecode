@@ -51,16 +51,16 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Read proposal and assets** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided
 2. **Clarify intent** — confirm you understand the problem the proposal is trying to solve. If the proposal is clear, skip. If not, ask one focused question via AskUserQuestion. Goal: a confirmed problem statement before any codebase exploration.
-3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area **through the brainstorming lens: does any ADR constrain the *direction* I'm about to propose?** ADRs carry the settled *why* — decisions you must not silently re-litigate. (The *guard-level* lens — which specific code guards a change must preserve — belongs to plan-writing, not here.) **Report what you found in conversation AND record it in the spec's *ADRs Reviewed* section (see Writing the spec)** — state which ADRs you reviewed and your direction-level conclusion, even when none are relevant. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
+3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area **through the brainstorming lens: does any ADR constrain the *direction* I'm about to propose?** ADRs carry the settled *why* — decisions you must not silently re-litigate. (The *guard-level* lens — which specific code guards a change must preserve — belongs to plan-writing, not here.) **Report what you found in conversation AND record it in the spec's *ADRs Reviewed* section (see Writing the spec)** — list only the ADRs that constrain the direction, with the match count in the header. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
 
-> **ADRs reviewed** (direction lens):
-> - `0001` auth — relevant; constrains the session flow I'm proposing. No conflict.
-> - `FNA-1234` mapping — relevant; new binder info applies, will follow it.
+> **ADRs reviewed** (direction lens — 2 matches):
+> - `0001` auth — constrains the session flow I'm proposing. No conflict.
+> - `FNA-1234` mapping — new binder info applies, will follow it.
 
-When none match, the block still names what was scanned and dismissed, so the scan is visibly done:
+When nothing matches, a single line is the whole block — it is the proof the scan ran:
 
-> **ADRs reviewed** (direction lens):
-> - None relevant to this area. (Index has `FNA-17026` mapping-persistence — different area.)
+> **ADRs reviewed** (direction lens — 0 matches):
+> - None constrain the direction proposed.
 
 Forcing the block keeps the scan from being skipped and makes the result visible rather than silent. If `docs/adr/README.md` doesn't exist, say so once in the block and note that in the spec section.
 4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
@@ -211,11 +211,10 @@ Read proposal + assets
 
 **What specs define (what + why):** goals and success criteria; constraints and boundaries; scope (in/out); architecture and data flow; error handling strategy; testing approach.
 
-**Include an *ADRs Reviewed* section.** Near the top of the spec (after the goals/overview), add a short section that records the ADR scan from step 3: every ADR you weighed and your direction-level conclusion for each, or a single line stating none were relevant. This is the visible record of the scan and the breadcrumb the plan-writing phase reads before its own guard-level scan. Use ADR IDs and short labels in prose — IDs are not code syntax, so the hard rules above do not apply here. For example:
+**Include an *ADRs Reviewed* section.** Near the top of the spec (after the goals/overview), add a short section that records the ADR scan from step 3: only the ADRs that constrain the direction (with the match count in the header), or a single line stating none do. This is the visible record of the scan and the breadcrumb the plan-writing phase reads before its own guard-level scan. Use ADR IDs and short labels in prose — IDs are not code syntax, so the hard rules above do not apply here. For example:
 
-> ## ADRs Reviewed
-> - FNA-15102 (property coloring) — relevant; constrains the render path. Proposed direction does not conflict.
-> - None others relevant to this area.
+> ## ADRs Reviewed (1 match)
+> - FNA-15102 (property coloring) — constrains the render path. Proposed direction does not conflict.
 
 If `docs/adr/README.md` doesn't exist, the section says so in one line.
 
@@ -275,7 +274,7 @@ After the spec review loop passes, the spec is on disk. Walk the user through a 
 
 Specs cap at 7 phases — most reviews are Tiny/Small/Medium. Large means the spec needs splitting upstream rather than a bigger menu here.
 
-**Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface. **Always include the *ADRs Reviewed* result as a one-line entry** (which ADRs were weighed and the direction conclusion, or "none relevant") so the user sees what was taken into account.
+**Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface. **Always include the *ADRs Reviewed* result as a one-line entry** (which ADRs constrain the direction, or "none relevant") so the user sees what was taken into account.
 
 **Step 3 — Tiny tier flow.** Show the full digest as one block, then emit the Save handoff (see Save below). No menu needed at this size.
 
