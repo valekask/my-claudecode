@@ -42,7 +42,18 @@ Before defining tasks, map out which files will be created or modified and what 
 - Files that change together should live together. Split by responsibility, not by technical layer.
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
 - **Impact tracing** — when modifying a function's signature or behavior, grep for ALL callers to build the complete file list. Include indirect callers through shared services and utilities, not just direct callers in the target area. When adding state that depends on another piece of state, trace ALL triggers that can change the source state, not just the primary use case. When several symbols or state sources need tracing, this is independent read-only work — fan it out to parallel search agents (one per symbol/area), each returning its caller/trigger list, then merge the results.
-- **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify **through the plan-writing lens: does any ADR name a guard in these files that the plan must preserve, not remove?** Their *Edge cases & non-obvious constraints* section names those guards — carry each into the relevant task's rationale. The spec's *ADRs Reviewed* section (written during brainstorming) already cleared the *direction* level; start from it, then run this guard-level scan against the live files. **Record the result in the plan's *ADRs Reviewed* section (see Plan Document Header)** — which ADRs you reviewed, the guard each imposes, and the task that preserves it, or a single line stating none were relevant. The forced note keeps the scan from being skipped and leaves a visible record. If `docs/adr/README.md` doesn't exist, note that once in the section and move on.
+- **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify **through the plan-writing lens: does any ADR name a guard in these files that the plan must preserve, not remove?** Their *Edge cases & non-obvious constraints* section names those guards — carry each into the relevant task's rationale. The spec's *ADRs Reviewed* section (written during brainstorming) already cleared the *direction* level; start from it, then run this guard-level scan against the live files. **Report what you found in conversation AND record it in the plan's *ADRs Reviewed* section (see Plan Document Header)** — which ADRs you reviewed, the guard each imposes, and the task that preserves it, or a single line stating none were relevant. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
+
+> **ADRs reviewed** (guard lens):
+> - `0001` auth — guards the cookie-refresh path; preserved by task 3. No conflict.
+> - `FNA-1234` mapping — guards binder ordering; task 5 keeps it.
+
+When none impose a guard, the block still names what was scanned and dismissed, so the scan is visibly done:
+
+> **ADRs reviewed** (guard lens):
+> - None impose a guard on the files this plan touches. (Index has `FNA-17026` mapping-persistence — different area.)
+
+The forced block keeps the scan from being skipped and leaves a visible record. If `docs/adr/README.md` doesn't exist, say so once in the block and note that in the plan section.
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
