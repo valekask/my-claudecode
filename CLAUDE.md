@@ -34,7 +34,7 @@ This project keeps Architecture Decision Records in `docs/adr/` — they record 
 - **Before proposing or implementing architectural changes, scan `docs/adr/README.md`** and read any ADRs relevant to the area you're touching — don't re-litigate a settled decision or remove a guard.
 - **When explaining or analyzing how code works, consult `docs/adr/README.md` too** — the code shows *what*; the ADR holds the *why* and edge cases the code can't tell you.
 - When implementing complex code with non-obvious constraints, consider capturing one as an ADR in `docs/adr/`.
-- Never edit an accepted ADR's decision — supersede it with a new record.
+- Feature-level ADRs are immutable — supersede them with a new record to change a decision. System-wide ADRs are living — edit them in place to keep them current, and capture each decision change in a feature-level ADR linked from the system-wide ADR's History.
 
 ## Protected Files
 

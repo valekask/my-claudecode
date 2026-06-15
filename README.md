@@ -138,13 +138,13 @@ Captures an **Architecture Decision Record** - a committed snapshot under `docs/
 
 **Two types:**
 
-- **Feature-level** (`<ticket-number>-<slug>.md`) - session snapshot (summary / why / key decisions) with a **mandatory edge-cases section**; the default
-- **System-wide** (`NNNN-<component>.md`) - stable, system-shaping decisions; on explicit request
+- **Feature-level** (`<ticket-number>-<slug>.md`) - immutable session snapshot (summary / why / key decisions) with a **mandatory edge-cases section**; change by superseding; the default
+- **System-wide** (`NNNN-<component>.md`) - living, system-shaping decisions, edited in place to stay current; on explicit request
 
 **Sources:**
 
 - Spec, plan, and result file from the workflow artifacts; the **actual code** for edge cases (read the guards); **git history** when writing retroactively
-- Lifecycle: never edit an accepted ADR - supersede it. Writes the file but does not commit (the user commits)
+- Lifecycle: feature-level ADRs are immutable (supersede to change); system-wide ADRs are living (edit in place, log each decision change in a linked feature-level ADR). Writes the file but does not commit (the user commits)
 
 #### `writing-result-product`
 

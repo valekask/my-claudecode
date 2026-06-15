@@ -5,9 +5,9 @@ description: Use to capture an Architecture Decision Record — a committed snap
 
 # Writing ADRs
 
-Capture a **decision + its context at a moment in time** into a committed file under `docs/adr/`.
+Capture **why complex code is the way it is** into a committed file under `docs/adr/`. Two kinds, with **opposite lifecycles**: **feature-level** ADRs are immutable moment-in-time snapshots (change one by superseding it); **system-wide** ADRs are living per-component records, edited in place to stay current.
 
-The pain this solves: coming back to complicated code months later, the *why* and especially the *edge cases* are gone — neither humans nor agents have enough context. The code is the **primary source** for *what it does now*; an ADR is the **only place intent lives** (*why it's this way, what each guard protects, what breaks if removed*). Unlike behavior-describing docs, an ADR doesn't go stale — it records a moment in time. The only risk is silent reversal, which superseding handles.
+The pain this solves: coming back to complicated code months later, the *why* and especially the *edge cases* are gone — neither humans nor agents have enough context. The code is the **primary source** for *what it does now*; an ADR is the **only place intent lives** (*why it's this way, what each guard protects, what breaks if removed*). A **feature-level** ADR records a moment in time, so it doesn't go stale — the only risk is silent reversal, which superseding handles. A **system-wide** ADR is the opposite: it's the living current-truth doc for a component, kept up to date as the component changes; the trail of *why it used to be different* lives in the feature-level ADRs that changed it (linked from its `History` section) and in git, not in the edited file.
 
 ## The Gate (no auto-write)
 
@@ -27,7 +27,8 @@ When invoked at the end of an implementation, **offer** an ADR only if the work 
 |---|---|---|
 | **File** | `docs/adr/<ticket-number>-<slug>.md` | `docs/adr/NNNN-<component>.md` |
 | **Example** | `docs/adr/FNA-15102-property-based-coloring.md` | `docs/adr/0001-auth.md` |
-| **Shape** | Session snapshot + mandatory edge cases | Stable decision record |
+| **Shape** | Session snapshot + mandatory edge cases | Living current-truth record for a component |
+| **Lifecycle** | **Immutable** — change by superseding | **Living** — edit in place to stay current; log each change in a feature-level ADR linked from `History` |
 | **Purpose** | Quickly recover what/why for a complex task | Document durable, system-shaping choices |
 | **When** | Authored at implementation time for complicated code (the weekly pain) | When a stable, system-wide decision is made or debated — let one appear from real friction, don't backfill speculatively |
 
@@ -99,8 +100,8 @@ Rules:
 ```markdown
 # NNNN: <topic label — 1-3 words naming the subject; decision goes in README + Summary>
 
-- **Status:** Accepted | Proposed | Superseded by <id>
-- **Date:** YYYY-MM-DD
+- **Status:** Accepted | Proposed | Deprecated   (living doc — not superseded; edit in place)
+- **Last updated:** YYYY-MM-DD
 
 ## Summary
 <2-3 sentences: a one-breath TL;DR spanning context + decision + consequence. Fast-orientation
@@ -117,8 +118,14 @@ hook — NOT the authoritative statement (that's Decision). Keep it short.>
 
 ## Alternatives considered   (optional — only if a rejected option keeps tempting people)
 
+## History   ← REQUIRED for a living doc
+<The trail of how this decision evolved — the edited Decision above no longer shows it.
+One bullet per change, newest first, each linking the feature-level ADR (and/or commit)
+that made it. This is what preserves *why it used to be different*.>
+- YYYY-MM-DD — <what changed and why> → see [`FNA-1234`](FNA-1234-oauth.md)
+
 ## References   (optional)
-<Related/superseded ADRs, docs.>
+<Related ADRs, docs.>
 ```
 
 ## File naming & numbering
@@ -135,9 +142,10 @@ Keep `docs/adr/README.md` as the index — it's the entry point agents scan to f
 # Architecture Decision Records
 
 Why our code is the way it is. Code is the primary source for *what*; these record *why*
-and the edge cases that aren't recoverable from code. Append-only — never edit an accepted
-ADR's decision, supersede it. **Scan this index first** to find ADRs relevant to the area
-you're touching, and skip anything `Superseded`.
+and the edge cases that aren't recoverable from code. **Feature-level** ADRs are immutable —
+change one by superseding it. **System-wide** ADRs are living — edited in place to stay current.
+**Scan this index first** to find ADRs relevant to the area you're touching, and skip anything
+`Superseded`.
 
 ## System-wide
 | ADR | Decision | Status |
@@ -150,7 +158,7 @@ you're touching, and skip anything `Superseded`.
 | [FNA-15102](FNA-15102-property-based-coloring.md) | Color rows by domain property | timeline grid | Accepted |
 ```
 
-After writing an ADR, add a row to the matching table — the one-line Decision (+ Area) is what lets an agent judge relevance from the index alone. Since the title is a bare topic label, the `Decision` column must carry the **full decision sentence** — it's the at-a-glance source of the decision.
+After writing an ADR, add a row to the matching table — the one-line Decision (+ Area) is what lets an agent judge relevance from the index alone. Since the title is a bare topic label, the `Decision` column must carry the **full decision sentence** — it's the at-a-glance source of the decision. When you **edit** a system-wide ADR, update its `Decision` cell here too, so the index never disagrees with the living doc.
 
 ## CLAUDE.md note (target repo)
 
@@ -168,12 +176,13 @@ Code is primary for *what*; ADRs are authoritative for *why*. `docs/adr/README.m
 - When explaining or analyzing how code works, consult `docs/adr/README.md` too — the code
   shows *what*; the ADR holds the *why* and edge cases the code can't tell you.
 - When implementing complex code with non-obvious constraints, consider capturing one in `docs/adr/`.
-- Never edit an accepted ADR's decision — supersede it.
+- Feature-level ADRs are immutable — supersede to change one. System-wide ADRs are living — edit them in place to keep them current, and log each decision change in a linked feature-level ADR.
 ```
 
 ## Lifecycle
 
-- Carry a `Status` field. Change a decision by **superseding**: write a new ADR, set the old one's `Status: Superseded by <id>`, and cross-link in `References`. **Never edit the decision of an accepted ADR** — a clean supersede pointer is what reads well on the return visit.
+- **Feature-level (immutable).** Carry a `Status` field. Change a decision by **superseding**: write a new ADR, set the old one's `Status: Superseded by <id>`, and cross-link in `References`. **Never edit the decision of an accepted feature-level ADR** — a clean supersede pointer is what reads well on the return visit.
+- **System-wide (living).** Edit it in place to reflect the component's current state — don't supersede it. Every change that alters its decision must be captured in a **feature-level** ADR and linked from the system-wide ADR's `History` section; that, plus git, preserves *why it used to be different* (the edited file no longer shows it). Keep its README `Decision` row and `Last updated` date current. Reconcile affected system-wide ADRs at ship time, when the change is final.
 
 ## Git
 
@@ -185,6 +194,6 @@ Write the ADR file and update the README index. **Do not commit** — the user c
 - Auto-write an ADR — the gate is a judgment call, surfaced to the user.
 - Write the Edge cases section from the result file or spec alone — **read the code's guards.**
 - Enumerate 10+ files in `Key files` — list 2–4 anchors, point to the ticket/PR for the rest.
-- Edit an accepted ADR's decision instead of superseding.
+- Edit a **feature-level** ADR's decision instead of superseding (system-wide ADRs, by contrast, are *meant* to be edited in place).
 - Add a Concerns / Known Issues section — transient issues go stale; deliberate trade-offs belong in Key decisions.
 - Commit on your own — the user owns all commits.
