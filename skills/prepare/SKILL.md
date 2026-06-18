@@ -17,19 +17,17 @@ The **scaffolding skill**. It sets up the right artifacts for one of three thing
 
 ## Naming conventions
 
-The grammar below is the skills' shared convention. The **structure** lives here; the concrete **scope values** are project-defined (see the project's `CLAUDE.md` / Git Workflow).
+Branch, directory, and file names follow the workflow's shared convention — see **`docs/CONTRIBUTING.md`**, the single source of truth (the project's `CLAUDE.md` supplies the scope values). In brief:
 
 ```
-branch:     <task>-<slug>                  or  <task>-<slug>-<type-of-work>
+branch:     <task>-<slug>            (follow-up rounds add a <branch-type>: <task>-<slug>-uat)
 directory:  .claude/temp/<task>-<slug>/
 file:       <task>-<slug>-<file-type>.md
 ```
 
-- **`<task>`** — the Jira ticket number (e.g. `FNA-1234`). Links the work to the issue tracker and keeps names unique.
-- **`<slug>`** — `<scope>-<subject>`, 2–3 lowercase, dash-separated words.
-  - **`<scope>`** — the affected part of the project (e.g. `timeline`, `network-widget`, `widgets`, `ilo-template`, `platform`). The full list is **project-defined** — see the project's `CLAUDE.md`. Omit the scope if the change spans many areas.
-  - **`<subject>`** — a couple of words on what changes.
-- **`<type-of-work>`** (branch only, optional) — `uat` | `bugfix` | `refactoring` | `improvement`. For post-ship follow-ups, `uat` is the default. Primary feature work omits it.
+- **`<task>`** — the Jira ticket number (e.g. `FNA-1234`).
+- **`<slug>`** — `<scope>-<subject>`; `<scope>` is project-defined (omit it for cross-cutting changes).
+- **`<branch-type>`** (branch only, optional) — `uat` (default follow-up round) | `bugfix`. Primary work omits it.
 - **`<file-type>`** — the artifact: `proposal` | `spec` | `plan` | `result` | `review` | `result-product` | `uat` | `discussion`.
 
 Throughout this skill, `<task>-<slug>` is the identifier the user supplies (e.g. `FNA-1234-timeline-hover`); it names both the branch and the task directory.
@@ -72,7 +70,7 @@ Default to the repo's default branch — detect via `git symbolic-ref refs/remot
 
 ### Step N2: Create the branch
 
-Create and switch to a branch named exactly `<task>-<slug>` off the base (primary feature work — no `<type-of-work>` suffix):
+Create and switch to a branch named exactly `<task>-<slug>` off the base (primary feature work — no `<branch-type>` suffix):
 
 ```
 git switch -c <task>-<slug> <base>
@@ -107,7 +105,7 @@ The folder `.claude/temp/<task>-<slug>/` should already exist (this is post-ship
 
 ### Step U2: Create the UAT branch
 
-The original task branch is usually merged or gone, so branch off the **integration base**, not the old branch. Detect the base the same way as new-task mode (`git symbolic-ref refs/remotes/origin/HEAD`, fall back to `main`); honor `--base <branch>` for a release/integration branch. The round uses `uat` as its `<type-of-work>`:
+The original task branch is usually merged or gone, so branch off the **integration base**, not the old branch. Detect the base the same way as new-task mode (`git symbolic-ref refs/remotes/origin/HEAD`, fall back to `main`); honor `--base <branch>` for a release/integration branch. The round uses `uat` as its `<branch-type>`:
 
 ```
 git switch -c <task>-<slug>-uat <base>

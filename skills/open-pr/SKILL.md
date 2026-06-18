@@ -43,7 +43,7 @@ Build the draft from what's actually on the branch — do not invent scope:
 - Task artifacts, if present under `.claude/temp/<task>-<slug>/` (where `<task>-<slug>` matches the branch name): the spec gives *what + why*, the result file gives *what shipped*. These are the best body sources when they exist.
 
 Draft:
-- **Title** — a concise imperative summary of the change. If the branch follows `<task>-<slug>`, lead with the ticket reference per the project's convention.
+- **Title** — a concise imperative summary of the change; lead with the `<task>` reference, per the **Pull request convention** in `docs/CONTRIBUTING.md`.
 - **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains.
 
 ### Step 3: Show the preview and ask for approval

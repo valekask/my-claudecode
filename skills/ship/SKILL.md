@@ -33,7 +33,7 @@ Invoke the `writing-adr` skill **only** when the change involved non-obvious con
 
 1. Run `git status` and `git diff` (and `git diff --cached`) so you and the user see exactly what will be committed.
 2. `git add` the change (the implementation + any ADR; result/product-summary live under `.claude/temp/` — include them only if the user tracks that directory).
-3. Propose a commit message in the project's format — `<task>: (<type>:<scope>) <subject>` (see the project's `CLAUDE.md` / Git Workflow). `<type>`: feat, fix, docs, style, refactor, perf, test, build; `<subject>`: imperative present tense, lowercase first letter, no trailing dot. Show it to the user.
+3. Propose a commit message following the **Commit message convention** in `docs/CONTRIBUTING.md` — `<task>: (<type>:<scope>) <subject>`, header only by default (no body/footer unless the change warrants it). Show it to the user.
 4. On the user's go-ahead, `git commit`.
 
 **Commit rules (MANDATORY — from the project's git restrictions):**

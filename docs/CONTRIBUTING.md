@@ -1,170 +1,127 @@
 # Contribution Guideline
 
-This guide describes how to work with branches, commits and pull requests.
+The single source of truth for **branch**, **commit**, **pull-request**, and **artifact-naming** conventions. The workflow skills, the management workspace, and each project all defer to this file instead of restating the rules — copy it to a project to make it that project's convention.
 
-Both for contributors and reviewers, well-established conventions for structure,
-naming and formatting will save time and hassle caused by improperly created branches,
-commits or pull requests that have to be rejected and re-submitted.
+The **only** project-specific piece is the **scope list**, which lives in the project's `CLAUDE.md`, not here (see [Scope](#scope)). Keeping it out of this file is deliberate: the grammar below rarely changes, so a copied CONTRIBUTING.md stays current even as scopes evolve per project.
 
--   [Branch name convention](#branch-name-convention)
--   [Commit message convention](#commit-message-convention)
--   [Pull Request convention](#pull-request-convention)
+- [Vocabulary](#vocabulary)
+- [Branch name convention](#branch-name-convention)
+- [Commit message convention](#commit-message-convention)
+- [Pull request convention](#pull-request-convention)
+- [Artifact & directory naming](#artifact--directory-naming)
+- [Scope](#scope)
+
+## Vocabulary
+
+- **`<task>`** — the Jira ticket number (e.g. `FNA-1234`). Links the work to the issue tracker and keeps names unique and searchable.
+- **`<slug>`** — `<scope>-<subject>`: 2–3 lowercase, dash-separated words.
+  - **`<scope>`** — the affected part of the project. **Project-defined** — see [Scope](#scope). Omit for changes that span many areas.
+  - **`<subject>`** — a couple of words on what changes.
+- **`<branch-type>`** — an optional branch suffix marking a **follow-up round on already-shipped work** (see [Branch type](#3-branch-type-optional)).
 
 ## Branch name convention
 
-1. Use prefix to define branch type
-2. Use issue ticket number to link it with issue tracker system
-3. Define scope of affected part of project
-4. Define short description of changes
-5. Use dash to separate words
-6. Use small letters
-
-**1. Prefix**
-
-Use prefix _release_ for preparation of a new production release,
-and _hotfix_ for critical production fix.
-
-Skip other type, such as _bugfix_ and _feature_, to make branch name shorter.
-
-Separate prefix and next word with slash.
-
-**2. Issue ticket number**
-
-We use Jira for our issue tracking, so including the number makes it easier to look up in the system and allow to keep branch names unique.
-
-Including that number also makes it searchable when trying to find that issue inside repository when trying to submit a pull request.
-
-**3. Define scope of affected part of project**
-
-Scope helps to quickly understand which part of the project is affected.
-Example of scope might be _platform_, _dashboard_, _simulator_, _editor_ or _timeline_. See more allowed scopes in commit message convention.
-If you're having a hard time to define scope, you might be having
-general-purpose branch. Strive for one-purpose branch.
-
-Skip scope if changes are done across many places.
-
-**4. Define short description of changes**
-
-Add few short and descriptive words to describe context or reason.
-Words _bug_ or _feat_ can be used to tell to which part of workflow the branch belongs.
-
-**5. Use dash to separate words**
-
-A branch name cannot have space, so use dashed-multi-words for branch name.
-
-**6. Use small letters**
-
-Simple rule is to use small letters everywhere to optimize readability.
-
-### Format
-
 ```
-(<type>/)<ticket-number>(-<scope>)-subject
+(<prefix>/)<task>-<slug>(-<branch-type>)
 ```
+
+Lowercase, dash-separated, one purpose per branch.
+
+### 1. Prefix (rare — omit by default)
+
+Regular task branches have **no prefix**. Use a prefix only for the two integration branches you branch *from*, not for per-task work:
+
+- `release/` — preparing a new production release
+- `hotfix/` — a critical production fix
+
+### 2. `<task>-<slug>` (always)
+
+- **`<task>`** — the ticket number; always present.
+- **`<slug>` = `<scope>-<subject>`** — the project scope plus a short description. Omit the scope if the change spans many areas (`<task>-<subject>`).
+
+### 3. `<branch-type>` (optional)
+
+Omit by default. Add it only for a follow-up round on work that already shipped:
+
+- **`uat`** — UAT feedback / acceptance follow-ups. The default follow-up round.
+- **`bugfix`** — a post-ship defect round that doesn't warrant a `hotfix/` release branch.
 
 ### Examples
 
 ```
+FNA-1234-timeline-hover
+FNA-1234-network-widget-filters
+FNA-1234-timeline-hover-uat
+FNA-1234-network-widget-filters-bugfix
 release/FNA-9272-20.1.1
-hotfix/FNA-1234-editor-scripting-bug
-FNA-1234-simulator-feat
-FNA-1234-timeline-hover-bug
-FNA-1234-admin-user-management-feat
-FNA-1234-auth-bug
-FNA-1234-dashboard-mapping-panel-bug
+hotfix/FNA-1234-editor-scripting
 ```
 
 ## Commit message convention
 
-A commit message consists of a header, an optional body and an optional footer, separated by a blank line.
-Any line of the commit message cannot be longer than 100 characters!
-This allows the message to be easier to read on the web interface as well as in various tools.
-
-### Message header
-
-The message header is a single line that contains short description of the change.
-It contains a ticket number, an optional type, an optional scope and a subject.
-
-**Ticket number**
-
-Jira ticket number to easy follow the issue.
-
-**Allowed type**
-
-This describes the kind of change that this commit is providing:
-
--   **feat** (feature)
--   **fix** (bug fix)
--   **docs** (documentation)
--   **style** (changes that not affect the meaning of the code (spaces, formatting, semi-colons)
--   **refactor** (changes that neither fixes a bug nor adds a feature)
--   **perf** (changes that improves performance)
--   **test** (adding missing tests or correcting existing tests)
--   **build** (change to build system or external dependencies)
-
-**Allowed scope**
-
-Scope defines affected part of the project:
-
--   **platform** (list of workspaces, dashboards, account setting)
--   **editor** (script editor, output, list of resources)
--   **admin** (scheduler, user management, workspace management)
--   **dashboard** (panels, views, timeline)
--   **simulator** (list of simulations, wizards, result)
--   **common** (ui-lib, utils-lib, http, models, navbar, auth, security)
--   **empty string** (might be used for changes that are done across many places)
-
-**Subject text**
-
-This is a very short description of the change.
-
--   use imperative, present tense: "change" not "changed" nor "changes"
--   begin subject with a small letter
--   no dot (.) at the end
--   should complete the sentence "If applied, this commit will _your subject line here_"
-
-### Message body
-
-Use the body to explain what and why vs. how. Body should help future maintainers to understand context and reason for change.
-Includes motivation for the change and contrasts with previous behavior.
-
-Just as in <subject>, try to use imperative, present tense: "change" not "changed" nor "changes".
-But keep in mind, that use of the imperative is important only in the subject line.
-You can relax this restriction when you’re writing the body.
-
-### Message footer
-
-Use the footer to put issue tracker references.
-
-### Format
+Header only by default; body and footer are optional. Keep every line ≤ 100 characters.
 
 ```
-<ticket-number>: (<type>:<scope>) <subject>
-<BLANK LINE>
-<body>
-<BLANK LINE>
-<footer>
+<task>: (<type>:<scope>) <subject>
+
+<body>      (optional)
+
+<footer>    (optional)
 ```
+
+**`<task>`** — the Jira ticket number. Because it already leads the header, a footer issue-reference is **redundant** — omit the footer unless you're cross-referencing *other* tickets.
+
+**`<type>`** — the kind of change:
+
+- **feat** — a feature
+- **fix** — a bug fix
+- **docs** — documentation
+- **style** — formatting only; no meaning change
+- **refactor** — neither fixes a bug nor adds a feature
+- **perf** — a performance improvement
+- **test** — adds or corrects tests
+- **build** — build system or external dependencies
+
+**`<scope>`** — the affected part of the project; **project-defined** (see [Scope](#scope)). Use the empty scope for cross-cutting changes.
+
+**`<subject>`** — imperative, present tense ("change", not "changed"); lowercase first letter; no trailing dot. It should complete "If applied, this commit will _…_".
+
+**Body** (optional) — what & why, not how; for changes whose motivation isn't obvious from the diff.
+
+**Footer** (optional) — additional issue references only.
 
 ### Example
 
 ```
 FNA-1234: (fix:editor) correctly highlight script
-
-Older IEs incorrectly highlight semi colon.
-Add a special handler for older browsers.
-
-Close FNA-1234
-Partially mention in FNA-5678
 ```
 
-## Pull Request convention
+## Pull request convention
 
-When development on a branch is completed and you are ready to propose your changes
-to the main repository, follow next steps:
+- **Title** — a concise imperative summary; lead with the `<task>` reference.
+- **Base** — the appropriate integration branch (the repo default, unless targeting a `release/` or `hotfix/` line).
+- **Reviewers** — set your technical leads.
+- **After merge** — make sure the branch is closed/deleted.
 
-1. Be sure that your code is stable. Run command `ng build <app> --prod` if you are not sure.
-2. Push your branch
-3. In BitBucket, create a Pull Request to appropriate branch
-4. Set your technical Leads as Reviewers
-5. Make sure the branch is closed after merge
+Two ways to open one:
+
+- **Automated** — the `open-pr` skill drafts the PR, shows a preview, and on your approval pushes the branch to a **same-name** remote branch and creates the PR via the Bitbucket Cloud REST API.
+- **Manual** — confirm the build is stable, push your branch, create the PR in Bitbucket against the appropriate base, and set reviewers.
+
+## Artifact & directory naming
+
+Workflow artifacts share the branch's `<task>-<slug>` stem (without the prefix or branch-type):
+
+```
+directory:  .claude/temp/<task>-<slug>/        (one folder per ticket)
+file:       <task>-<slug>-<file-type>.md
+```
+
+- **One folder per ticket.** Every artifact for a ticket lives together — `proposal`, `spec`, `plan`, `result`, `result-product`, `review`, `uat`, `discussion`. A follow-up round adds files to this folder rather than creating a new one (only the *branch* carries the `<branch-type>` suffix).
+- **`<file-type>`** is the artifact kind: `proposal` | `spec` | `plan` | `result` | `review` | `result-product` | `uat` | `discussion`.
+
+> `uat` appears as both a `<file-type>` and a `<branch-type>` — same word, two dimensions: the **file** (`<task>-<slug>-uat.md`) is the follow-up ledger; the **branch** (`<task>-<slug>-uat`) is the round that works through it.
+
+## Scope
+
+`<scope>` values are **project-specific** and defined in the project's `CLAUDE.md`, not in this file. Examples seen across projects: `platform`, `dashboard`, `timeline`, `network-widget`, `widgets`, `ilo-template`. Use the **empty** scope for changes that span many areas.

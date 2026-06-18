@@ -45,7 +45,7 @@ Scaffolds what you're about to work on, in one of three modes. Explicit mode (`u
 - **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
 - **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development` / `fast-track`).
 - **discuss** (`prepare discuss <task>-<slug>`) - captures a ticket conversation and a proposed answer in `<task>-<slug>-discussion.md`. **No branch** - discussion-only tickets stay out of git.
-- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — warns, doesn't block); the skill defines the grammar (`<task>-<slug>[-<type-of-work>]`), the project's `CLAUDE.md` defines the scope values.
+- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — warns, doesn't block); the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`, and the project's `CLAUDE.md` supplies the scope values.
 
 #### `brainstorming`
 
@@ -238,7 +238,7 @@ All artifacts live in `.claude/temp/<task>-<slug>/` and are named `<task>-<slug>
 - **`<task>`** is the Jira ticket number (e.g. `FNA-1234`),
 - **`<slug>`** is `<scope>-<subject>` — 2–3 lowercase dash-separated words (e.g. `timeline-hover`); the scope vocabulary is project-defined,
 
-so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timeline-hover-spec.md`. Branches follow the same stem: `<task>-<slug>` (or `<task>-<slug>-<type-of-work>` for follow-up rounds — `uat` / `bugfix` / `refactoring` / `improvement`). The `prepare` skill is the authoritative source of this grammar.
+so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timeline-hover-spec.md`. Branches follow the same stem: `<task>-<slug>` (follow-up rounds add a branch-type: `<task>-<slug>-uat`). **`docs/CONTRIBUTING.md`** is the authoritative source of this grammar — branch, commit, PR, and artifact naming all live there.
 
 | Artifact            | File                                                                             | Created By                            | Description                                                                                                                                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
