@@ -238,7 +238,7 @@ All artifacts live in `.claude/temp/<task>-<slug>/` and are named `<task>-<slug>
 - **`<task>`** is the Jira ticket number (e.g. `FNA-1234`),
 - **`<slug>`** is `<scope>-<subject>` — 2–3 lowercase dash-separated words (e.g. `timeline-hover`); the scope vocabulary is project-defined,
 
-so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timeline-hover-spec.md`. Branches follow the same stem: `<task>-<slug>` (follow-up rounds add a branch-type: `<task>-<slug>-uat`). **`docs/CONTRIBUTING.md`** is the authoritative source of this grammar — branch, commit, PR, and artifact naming all live there.
+so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timeline-hover-spec.md`. Branches follow the same stem: `<task>-<slug>` (follow-up rounds add a branch-type: `<task>-<slug>-uat`). **`docs/CONTRIBUTING.md`** is the authoritative source for the branch, commit, and PR conventions; the artifact/directory naming above is the workflow's own.
 
 | Artifact            | File                                                                             | Created By                            | Description                                                                                                                                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

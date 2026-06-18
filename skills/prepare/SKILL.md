@@ -17,7 +17,7 @@ The **scaffolding skill**. It sets up the right artifacts for one of three thing
 
 ## Naming conventions
 
-Branch, directory, and file names follow the workflow's shared convention — see **`docs/CONTRIBUTING.md`**, the single source of truth (the project's `CLAUDE.md` supplies the scope values). In brief:
+Branch names follow **`docs/CONTRIBUTING.md`** — the single source of truth for branch/commit/PR conventions (the project's `CLAUDE.md` supplies the scope values). Directory and file names are the workflow's own artifacts; they reuse the same `<task>-<slug>` stem, summarized here (and in the README):
 
 ```
 branch:     <task>-<slug>            (follow-up rounds add a <branch-type>: <task>-<slug>-uat)

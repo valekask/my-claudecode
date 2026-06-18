@@ -1,6 +1,6 @@
 # Contribution Guideline
 
-The single source of truth for **branch**, **commit**, **pull-request**, and **artifact-naming** conventions. The workflow skills, the management workspace, and each project all defer to this file instead of restating the rules — copy it to a project to make it that project's convention.
+The single source of truth for **branch**, **commit**, and **pull-request** conventions. The workflow skills, the management workspace, and each project all defer to this file instead of restating the rules — copy it to a project to make it that project's convention.
 
 The **only** project-specific piece is the **scope list**, which lives in the project's `CLAUDE.md`, not here (see [Scope](#scope)). Keeping it out of this file is deliberate: the grammar below rarely changes, so a copied CONTRIBUTING.md stays current even as scopes evolve per project.
 
@@ -8,7 +8,6 @@ The **only** project-specific piece is the **scope list**, which lives in the pr
 - [Branch name convention](#branch-name-convention)
 - [Commit message convention](#commit-message-convention)
 - [Pull request convention](#pull-request-convention)
-- [Artifact & directory naming](#artifact--directory-naming)
 - [Scope](#scope)
 
 ## Vocabulary
@@ -88,7 +87,7 @@ Header only by default; body and footer are optional. Keep every line ≤ 100 ch
 
 **Body** (optional) — what & why, not how; for changes whose motivation isn't obvious from the diff.
 
-**Footer** (optional) — additional issue references only.
+**Footer** (optional) — additional issue references only. **Never** add a `Co-Authored-By:` trailer (or any other tool/agent attribution footer).
 
 ### Example
 
@@ -107,20 +106,6 @@ Two ways to open one:
 
 - **Automated** — the `open-pr` skill drafts the PR, shows a preview, and on your approval pushes the branch to a **same-name** remote branch and creates the PR via the Bitbucket Cloud REST API.
 - **Manual** — confirm the build is stable, push your branch, create the PR in Bitbucket against the appropriate base, and set reviewers.
-
-## Artifact & directory naming
-
-Workflow artifacts share the branch's `<task>-<slug>` stem (without the prefix or branch-type):
-
-```
-directory:  .claude/temp/<task>-<slug>/        (one folder per ticket)
-file:       <task>-<slug>-<file-type>.md
-```
-
-- **One folder per ticket.** Every artifact for a ticket lives together — `proposal`, `spec`, `plan`, `result`, `result-product`, `review`, `uat`, `discussion`. A follow-up round adds files to this folder rather than creating a new one (only the *branch* carries the `<branch-type>` suffix).
-- **`<file-type>`** is the artifact kind: `proposal` | `spec` | `plan` | `result` | `review` | `result-product` | `uat` | `discussion`.
-
-> `uat` appears as both a `<file-type>` and a `<branch-type>` — same word, two dimensions: the **file** (`<task>-<slug>-uat.md`) is the follow-up ledger; the **branch** (`<task>-<slug>-uat`) is the round that works through it.
 
 ## Scope
 
