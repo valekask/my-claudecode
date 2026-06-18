@@ -40,6 +40,8 @@ Throughout this skill, `<task>-<slug>` is the identifier the user supplies (e.g.
 
 ## The Process
 
+> **Working directory.** prepare creates the branch and `.claude/temp/<task>-<slug>/` **relative to the current working directory**, and `git switch` acts on the repo there. Under orchestration the cwd may not be the target project — before creating anything, confirm `git rev-parse --show-toplevel` is the repo you mean to work in.
+
 ### Step 1: Resolve the mode
 
 **Explicit wins.** If the first argument is `uat` or `discuss`, use that mode — no guessing. This is your escape hatch when inference would get it wrong.

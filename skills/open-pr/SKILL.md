@@ -29,6 +29,7 @@ Turns the current branch into a **Bitbucket Cloud** pull request. The skill **dr
 
 ### Step 1: Determine the from-branch and base-branch
 
+- **Repo guard:** confirm `git rev-parse --show-toplevel` is the repo you intend to open a PR for — under orchestration the cwd may not be the target project. Everything below (branches, and the workspace/repo slug in Step 5) derives from *this* repo's `origin`.
 - **From-branch (the PR head):** `git branch --show-current`.
   - If it's empty (detached HEAD) → **STOP** and tell the user; you can't open a PR from a detached HEAD.
 - **Base-branch (the PR target):** default to the repo's default branch — detect via `git symbolic-ref refs/remotes/origin/HEAD` (strip the `origin/` prefix); fall back to `main` if that fails. Override with `--base <branch>`.
