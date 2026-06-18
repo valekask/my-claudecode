@@ -28,10 +28,13 @@ Lowercase, dash-separated, one purpose per branch.
 
 ### 1. Prefix (rare — omit by default)
 
-Regular task branches have **no prefix**. Use a prefix only for the two integration branches you branch *from*, not for per-task work:
+Regular task branches have **no prefix**. Prefixes mark long-lived **integration branches** you branch *from* — never per-task work. The common ones:
 
 - `release/` — preparing a new production release
 - `hotfix/` — a critical production fix
+- `feature/` — a long-lived integration line / release train, when a project uses one as its default branch
+
+The exact set of integration branches (and their full names) is **project-defined** — see the project's `CLAUDE.md`.
 
 ### 2. `<task>-<slug>` (always)
 
@@ -54,6 +57,7 @@ FNA-1234-timeline-hover-uat
 FNA-1234-network-widget-filters-bugfix
 release/FNA-9272-20.1.1
 hotfix/FNA-1234-editor-scripting
+feature/FNA-1234-monitoring-26.x
 ```
 
 ## Commit message convention
