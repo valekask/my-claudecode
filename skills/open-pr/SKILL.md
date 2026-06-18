@@ -44,7 +44,7 @@ Build the draft from what's actually on the branch — do not invent scope:
 - Task artifacts, if present under `.claude/temp/<task>-<slug>/` (where `<task>-<slug>` matches the branch name): the spec gives *what + why*, the result file gives *what shipped*. These are the best body sources when they exist.
 
 Draft:
-- **Title** — a concise imperative summary of the change; lead with the `<task>` reference, per the **Pull request convention** in `docs/CONTRIBUTING.md`.
+- **Title** — follow the commit header format `<task>: (<type>:<scope>) <subject>` (see the **Pull request convention** in `docs/CONTRIBUTING.md`), e.g. `FNA-16973: (feat:ilo) reorder timeline toolbar to group time-related controls`. Take `<task>` from the branch name; pick the `<type>` and `<scope>` that best summarize the whole PR. If `docs/CONTRIBUTING.md` is absent, the format still holds: `<type>` ∈ feat|fix|docs|style|refactor|perf|test|build, `<scope>` project-defined.
 - **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains.
 
 ### Step 3: Show the preview and ask for approval

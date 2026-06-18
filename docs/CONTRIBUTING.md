@@ -97,7 +97,7 @@ FNA-1234: (fix:editor) correctly highlight script
 
 ## Pull request convention
 
-- **Title** — a concise imperative summary; lead with the `<task>` reference.
+- **Title** — follow the commit header format: `<task>: (<type>:<scope>) <subject>` (e.g. `FNA-16973: (feat:ilo) reorder timeline toolbar to group time-related controls`). Same `<type>` / `<scope>` / `<subject>` rules as a commit; pick the type and scope that best summarize the PR as a whole.
 - **Base** — the appropriate integration branch (the repo default, unless targeting a `release/` or `hotfix/` line).
 - **Reviewers** — set your technical leads.
 - **After merge** — make sure the branch is closed/deleted.
