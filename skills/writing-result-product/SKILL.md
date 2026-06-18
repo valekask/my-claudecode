@@ -19,8 +19,8 @@ Produce a **product-facing** companion to the implementation result file, writte
 
 Read these first; don't re-derive intent you can read off the artifacts:
 
-- `.claude/temp/<task>/<task>-spec.md` — the *what + why* (goals, scope)
-- `.claude/temp/<task>/<task>-result.md` — what shipped, decisions made, edge cases
+- `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md` — the *what + why* (goals, scope)
+- `.claude/temp/<task>-<slug>/<task>-<slug>-result.md` — what shipped, decisions made, edge cases
 - The actual change (diff) when the artifacts are thin on a behavioral detail
 
 ## Rules
@@ -32,14 +32,14 @@ Read these first; don't re-derive intent you can read off the artifacts:
 
 ## Save to
 
-`.claude/temp/<task>/<task>-result-product.md`
+`.claude/temp/<task>-<slug>/<task>-<slug>-result-product.md`
 
 ## Template
 
 ```markdown
 # <Feature Name> — Product Summary
 
-**Ticket:** <ticket-number>
+**Ticket:** <task>
 **Status:** <e.g., Implemented, tested, and committed (not yet merged)>
 **Area:** <where in the product this lives>
 

@@ -65,7 +65,7 @@ TaskCreate(subject="Phase 5: Summary", description="Merge with previous, dedupli
 
 ## Review Persistence
 
-Review reports **can** be saved to `.claude/temp/<task>/<task>-checklist-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
+Review reports **can** be saved to `.claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
 
 ### When persistence is active
 
@@ -76,11 +76,11 @@ Persistence is active when **any** of these are true:
 
 ### Task directory
 
-When persistence is active and no `.claude/temp/<task>/` directory exists, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
+When persistence is active and no `.claude/temp/<task>-<slug>/` directory exists, ask the user for a task name in `<task>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
 
 ### Previous report handling
 
-At the start of each review, if a task directory exists, check for an existing `<task>-checklist-review.md`. If found (this also activates persistence):
+At the start of each review, if a task directory exists, check for an existing `<task>-<slug>-checklist-review.md`. If found (this also activates persistence):
 
 1. **Read it** and extract the Summary table (the `| # | Type | Issue | Severity | Status |` table at the bottom)
 2. **Carry forward resolved items.** Items with status `Fixed`, `Skipped`, or `Wontfix` are NOT re-checked. They appear in a **Previously Resolved** section of the new report with their original status.
@@ -108,7 +108,7 @@ Determine what to review.
 
 Look for an existing review report **only if** a task directory is already known (user specified a task name, or an active task directory exists under `.claude/temp/`):
 
-1. If a task directory exists, check for `<task>-checklist-review.md` inside it
+1. If a task directory exists, check for `<task>-<slug>-checklist-review.md` inside it
 2. If found, read the file and extract:
    - The **Summary table** (items with their statuses)
    - The **Scope** section (to compare what was reviewed before)
@@ -580,15 +580,15 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 When saving:
 
-1. If no task directory exists yet, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create `.claude/temp/<task>/`
-2. Write the full report to `.claude/temp/<task>/<task>-checklist-review.md` using the Write tool
+1. If no task directory exists yet, ask the user for a task name in `<task>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create `.claude/temp/<task>-<slug>/`
+2. Write the full report to `.claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md` using the Write tool
 3. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
-4. Tell the user: `Review saved to .claude/temp/<task>/<task>-checklist-review.md`
+4. Tell the user: `Review saved to .claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md`
 
 When **not** saving: skip this step silently. The report is already displayed in the conversation.
 
 **Tip for users:** To mark items as `Skipped` or `Wontfix`, either:
-- Edit the status in the Summary table of `<task>-checklist-review.md` directly
+- Edit the status in the Summary table of `<task>-<slug>-checklist-review.md` directly
 - Tell the reviewer in conversation (e.g., "skip item #3, wontfix #5") before running the next review
 
 ### Decision criteria for merge readiness

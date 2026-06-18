@@ -32,17 +32,20 @@ A few principles fall out of this:
 
 Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes.
 
+**After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, `prepare discuss <task>-<slug>` captures a ticket conversation and a proposed answer (`<task>-<slug>-discussion.md`, no branch) for tickets that need thought, not code.
+
 ## Skills
 
 ### Workflow skills
 
 #### `prepare`
 
-Kicks off a ticket. Given a name like `FNA-1234-currency-filter`, it creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-proposal.md` (ticket / title / description / technical notes) for the user to fill in.
+Scaffolds what you're about to work on, in one of three modes. Explicit mode (`uat` / `discuss`) wins; with no mode it infers from the task-folder state and confirms before acting — never on a silent guess.
 
-- **Branch only** - creates and switches; does not fetch, pull, or commit
-- Checks the name against the project's `<ticket-number>-<slug>` convention (advisory — warns, doesn't block); uses it for both the branch and the task prefix
-- Hands off to the user: fill the proposal, then run `brainstorming` in a fresh session
+- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
+- **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development` / `fast-track`).
+- **discuss** (`prepare discuss <task>-<slug>`) - captures a ticket conversation and a proposed answer in `<task>-<slug>-discussion.md`. **No branch** - discussion-only tickets stay out of git.
+- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — warns, doesn't block); the skill defines the grammar (`<task>-<slug>[-<type-of-work>]`), the project's `CLAUDE.md` defines the scope values.
 
 #### `brainstorming`
 
@@ -138,7 +141,7 @@ Captures an **Architecture Decision Record** - a committed snapshot under `docs/
 
 **Two types:**
 
-- **Feature-level** (`<ticket-number>-<slug>.md`) - immutable session snapshot (summary / why / key decisions) with a **mandatory edge-cases section**; change by superseding; the default
+- **Feature-level** (`<task>-<slug>.md`) - immutable session snapshot (summary / why / key decisions) with a **mandatory edge-cases section**; change by superseding; the default
 - **System-wide** (`NNNN-<component>.md`) - living, system-shaping decisions, edited in place to stay current; on explicit request
 
 **Sources:**
@@ -148,7 +151,7 @@ Captures an **Architecture Decision Record** - a committed snapshot under `docs/
 
 #### `writing-result-product`
 
-Writes the **product-facing summary** (`<task>-result-product.md`) - a plain-language companion to the result file for managers / PMs / stakeholders, with no file paths or code. Reads the spec (what + why) and the result file (what shipped, edge cases).
+Writes the **product-facing summary** (`<task>-<slug>-result-product.md`) - a plain-language companion to the result file for managers / PMs / stakeholders, with no file paths or code. Reads the spec (what + why) and the result file (what shipped, edge cases).
 
 - **Opt-in** - on request, or offered for user-facing features; skipped for pure internal refactors
 - Invoked from `ship`; moved out of `subagent-driven-development` to keep execution lighter
@@ -173,7 +176,7 @@ Checklist-driven review of changes before PR. **160 checks across 11 parallel ag
 
 - Single merged report grouped by severity (Critical / High / Medium / Low)
 - Verdict: Yes / No / With fixes
-- **Persistence is opt-in** - saves to `<task>-checklist-review.md` with `--save`, on user request, or automatically on every later review once a report exists. Tracks Open / Fixed / Skipped / Wontfix across iterations
+- **Persistence is opt-in** - saves to `<task>-<slug>-checklist-review.md` with `--save`, on user request, or automatically on every later review once a report exists. Tracks Open / Fixed / Skipped / Wontfix across iterations
 
 Reports findings - does not auto-fix.
 
@@ -207,7 +210,7 @@ The **pre-verification quality pass** - the one phase that mutates code after ex
 - **Format** first (runs `formatting`), then **select gates by risk**: a **pluggable primary reviewer** (CodeRabbit or built-in `/code-review`) always, plus `/security-review`, `trace-workflow`, `trace-dataflow`, or `checklist-review` when the change warrants them
 - **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on
 - **Auto-applies only meaningful fixes** - High-confidence + Critical/High + mechanical. Everything else (Medium/Low, uncertain, judgment-dependent) is surfaced, not changed. Bounded to 3 fix→recheck loops per gate
-- Saves the **full report** (all severities) to `<task>-review.md` for rule-tuning; makes no commits
+- Saves the **full report** (all severities) to `<task>-<slug>-review.md` for rule-tuning; makes no commits
 
 ### Finishing
 
@@ -219,18 +222,34 @@ The **finalize phase**, run _after_ manual verification + smoke test pass. Docum
 - Shows `git status` / `git diff`, proposes a commit message in the repo's style, then commits on your go-ahead
 - **Never** adds a `Co-Authored-By:` footer, amends, rebases, or pushes - the push is always manual
 
+#### `open-pr`
+
+Opens a pull request from the current branch. Drafts the PR, shows a **preview** (`from → base`, title, description), and waits for your **approval** before anything touches the remote - then pushes the branch and creates the PR via the **Bitbucket Cloud REST API** (`gh` has no Bitbucket equivalent).
+
+- **Preview-then-approve** - nothing is pushed or opened until you reply "approved" / "proceed"; that approval is the explicit, in-the-moment push authorization
+- **Safe-push guard** - only ever pushes the current branch to a **same-name** remote branch (`git push -u origin HEAD`) and verifies the upstream afterwards; never pushes to, or tracks, the base branch (guards against the past "branch tracked the base, push landed on it" mistake)
+- **Derives** workspace + repo slug from `origin`; base branch defaults to the repo default (override with `--base`); title/body drafted from the branch's commits and any task artifacts
+- **Auth via env** - reads `BITBUCKET_EMAIL` + `BITBUCKET_API_TOKEN` (Basic auth uses the email, not the username); the token must belong to the identity with repo access. Never edits code, commits, amends, or force-pushes
+
 ## Artifacts
 
-All artifacts live in `.claude/temp/<task>/` where `<task>` is `<ticket-number>-<slug>` (e.g., `FNA-1234-currency-filter`).
+All artifacts live in `.claude/temp/<task>-<slug>/` and are named `<task>-<slug>-<file-type>.md`, where:
+
+- **`<task>`** is the Jira ticket number (e.g. `FNA-1234`),
+- **`<slug>`** is `<scope>-<subject>` — 2–3 lowercase dash-separated words (e.g. `timeline-hover`); the scope vocabulary is project-defined,
+
+so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timeline-hover-spec.md`. Branches follow the same stem: `<task>-<slug>` (or `<task>-<slug>-<type-of-work>` for follow-up rounds — `uat` / `bugfix` / `refactoring` / `improvement`). The `prepare` skill is the authoritative source of this grammar.
 
 | Artifact            | File                                                                             | Created By                            | Description                                                                                                                                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Proposal**        | `<task>-proposal.md`                                                             | `prepare` (template) + User (content) | Initial feature request, requirements, context. `prepare` scaffolds the template; the user fills it in                                                                                                                   |
+| **Proposal**        | `<task>-<slug>-proposal.md`                                                             | `prepare` (template) + User (content) | Initial feature request, requirements, context. `prepare` scaffolds the template; the user fills it in                                                                                                                   |
 | **Assets**          | `assets/`                                                                        | User                                  | Mockups, screenshots, diagrams, reference material (user creates the dir when needed)                                                                                                                                    |
-| **Spec**            | `<task>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how)                                                                                                                                    |
-| **Plan**            | `<task>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                                                                                      |
-| **Result**          | `<task>-result.md`                                                               | `executing-plans`                     | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
-| **Review**          | `<task>-review.md` (`polish`), `<task>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-checklist-review.md` |
-| **Product Summary** | `<task>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features (invoked from `ship`)  |
+| **Spec**            | `<task>-<slug>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how)                                                                                                                                    |
+| **Plan**            | `<task>-<slug>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                                                                                      |
+| **Result**          | `<task>-<slug>-result.md`                                                               | `executing-plans`                     | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
+| **Review**          | `<task>-<slug>-review.md` (`polish`), `<task>-<slug>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-<slug>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-<slug>-checklist-review.md` |
+| **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features (invoked from `ship`)  |
+| **UAT / Follow-ups** | `<task>-<slug>-uat.md`                                                                 | `prepare uat` (template) + User        | Post-ship work ledger: UAT feedback, bugfixes, and change requests on shipped code. Each item tagged `uat` / `bug` / `change` with a status (`open` → `in-progress` → `done` · `wontfix`) and the fixing commit                |
+| **Discussion**      | `<task>-<slug>-discussion.md`                                                            | `prepare discuss` (template) + User    | Optional conversation + proposed answer for a ticket that needs thought, not (yet) code. 1–2 topics per file; no branch                                                                                                  |
 
 > **ADRs are the exception.** Unlike the temp artifacts above, an Architecture Decision Record (`writing-adr`) is **committed** and lives in `docs/adr/`, not `.claude/temp/`. It's a durable record of _why_, not a per-task working file.

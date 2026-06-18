@@ -72,7 +72,7 @@ For each finding, classify:
 
 ### Step 6: Persist the full report
 
-Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>/<task>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
+Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
 
 ### Step 7: Summarize and hand off
 

@@ -17,8 +17,8 @@ Load plan, review critically, execute all tasks step-by-step in the current sess
 
 ### Step 1: Load and Review Plan
 
-1. Read plan file from `.claude/temp/<task>/<task>-plan.md`
-2. Read the spec file for reference: `.claude/temp/<task>/<task>-spec.md`
+1. Read plan file from `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`
+2. Read the spec file for reference: `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`
 3. Review critically — identify any questions or concerns about the plan
 4. If concerns: Raise them with the user before starting
 5. If no concerns: Create task tracking and proceed
@@ -37,7 +37,7 @@ For each task:
 
 After all tasks are complete and verified:
 1. Run a final verification (all tests pass, no compilation errors)
-2. Write result summary to `.claude/temp/<task>/<task>-result.md`
+2. Write result summary to `.claude/temp/<task>-<slug>/<task>-<slug>-result.md`
 3. Present the result to the user
 4. **Hand off:** the result is saved — tell the user to run `polish` (fresh session) before manual verification
 
@@ -46,8 +46,8 @@ After all tasks are complete and verified:
 ```markdown
 # [Feature Name] — Implementation Result
 
-**Plan:** `.claude/temp/<task>/<task>-plan.md`
-**Spec:** `.claude/temp/<task>/<task>-spec.md`
+**Plan:** `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`
+**Spec:** `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`
 
 ## Summary
 [What was built, 2-3 sentences]
