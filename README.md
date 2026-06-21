@@ -160,7 +160,7 @@ Writes the **product-facing summary** (`<task>-<slug>-result-product.md`) - a pl
 
 #### `checklist-review`
 
-Checklist-driven review of changes before PR. **160 checks across 11 parallel agents** (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms). End-to-end data-flow tracing now lives in the separate `trace-dataflow` skill.
+Checklist-driven review of changes before PR. **194 checks across 14 parallel agents** (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift). End-to-end data-flow tracing now lives in the separate `trace-dataflow` skill.
 
 **Scoping:**
 
@@ -207,7 +207,7 @@ Applies Prettier and code organization to locally modified files.
 
 The **pre-verification quality pass** - the one phase that mutates code after execution. Runs after execution and _before_ manual verification, so verification happens on clean, gated code.
 
-- **Format** first (runs `formatting`), then **select gates by risk**: a **pluggable primary reviewer** (CodeRabbit or built-in `/code-review`) always, plus `/security-review`, `trace-workflow`, `trace-dataflow`, or `checklist-review` when the change warrants them
+- **Format** first (runs `formatting`), then **select gates by risk**: a **pluggable primary reviewer** (CodeRabbit or built-in `/code-review`) always, plus `/security-review`, `trace-workflow`, `trace-dataflow`, `checklist-review`, or `/simplify` (surface-only) when the change warrants them
 - **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on
 - **Auto-applies only meaningful fixes** - High-confidence + Critical/High + mechanical. Everything else (Medium/Low, uncertain, judgment-dependent) is surfaced, not changed. Bounded to 3 fix→recheck loops per gate
 - Saves the **full report** (all severities) to `<task>-<slug>-review.md` for rule-tuning; makes no commits
