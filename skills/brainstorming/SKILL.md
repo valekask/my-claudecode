@@ -19,10 +19,10 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 All brainstorming artifacts live in a task directory:
 
 ```
-.claude/temp/<task>/
-  ├── <task>-proposal.md   # input (user provides)
+.claude/temp/<task>-<slug>/
+  ├── <task>-<slug>-proposal.md   # input (user provides)
   ├── assets/               # mockups, screenshots, diagrams, references (optional)
-  └── <task>-spec.md        # output (this skill produces)
+  └── <task>-<slug>-spec.md        # output (this skill produces)
 ```
 
 - The `assets/` directory may contain images, mockups, Figma exports, PDFs, or any reference material. Check it early — these assets often answer questions before you need to ask them.
@@ -70,7 +70,7 @@ Forcing the block keeps the scan from being skipped and makes the result visible
 8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
 9. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
 10. **Present design** — in sections scaled to complexity, get user approval after each section
-11. **Write spec file** — save to `<task>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
+11. **Write spec file** — save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
 13. **Final review** — walk user through a size-aware digest of the saved spec (size assessment → digest → menu: walk by section / save). See Final Review section.
 
@@ -204,7 +204,7 @@ Read proposal + assets
 
 **Writing the spec:**
 
-- Write the validated design to `<task>-spec.md` in the task directory
+- Write the validated design to `<task>-<slug>-spec.md` in the task directory
 - The spec should be self-contained: someone reading only this file should understand what to build and why
 - **Max 7 phases.** If more are needed, split into multiple specs — each gets its own brainstorming cycle.
 - Do NOT commit the file — the user manages git operations manually
@@ -283,7 +283,7 @@ Specs cap at 7 phases — most reviews are Tiny/Small/Medium. Large means the sp
 ```json
 {
   "questions": [{
-    "question": "Spec saved to `.claude/temp/<task>/<task>-spec.md`. Final review — how would you like to proceed?",
+    "question": "Spec saved to `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`. Final review — how would you like to proceed?",
     "header": "Final review",
     "options": [
       {"label": "Walk by section", "description": "Show one section at a time"},
@@ -300,8 +300,8 @@ If the user has feedback at any point — during the walk, after a section, or b
 
 **Save:** emit this exact text and stop. Do NOT auto-invoke `/writing-plans` in this session — the next phase belongs in a fresh session.
 
-> Spec saved to `.claude/temp/<task>/<task>-spec.md`.
-> Use writing-plans skill to make a plan for `.claude/temp/<task>/<task>-spec.md`.
+> Spec saved to `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`.
+> Use writing-plans skill to make a plan for `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`.
 
 ## What To Do When...
 

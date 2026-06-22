@@ -38,6 +38,7 @@ Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run 
 | **`trace-workflow`** | Diff adds or modifies conditional logic (branches/switches/guards in services, stores, utils, effects, reducers, selectors) |
 | **`trace-dataflow`** | Diff crosses layers: service/store **and** component, or effects/reducers/selectors, or HTTP calls |
 | **`checklist-review`** (project-specific Angular agents) | Larger or architectural changes (roughly 9+ files, or structural component/service/store/module changes). Skip for small, generic diffs — the primary reviewer + built-ins cover that ground |
+| **`/simplify`** (simplification pass — **surface-only**) | Diff adds or substantially changes logic. Skip for trivial or config-only diffs. **Run it review-only** — collect its proposals; do NOT let it mutate code here. Its findings are always *surfaced*, never auto-applied (simplification is judgment-level — see Step 5) |
 
 #### Primary code reviewer (pluggable)
 
@@ -67,12 +68,13 @@ For each finding, classify:
 - Medium or Low severity (style, naming, smells, doc gaps)
 - Low/uncertain confidence
 - The fix needs design judgment, touches architecture, changes behavior, or reinterprets the spec
+- It is a **simplification proposal** from `/simplify` — these are always surfaced for human review, never auto-applied here (simplification is judgment-level)
 
 **Bounded loop:** after applying fixes, re-run the relevant gate **and the build** (or re-check the specific findings) to confirm they're resolved and nothing regressed. Max **3** fix→recheck iterations per gate; if findings persist, stop and surface them — something needs human input.
 
 ### Step 6: Persist the full report
 
-Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>/<task>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
+Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
 
 ### Step 7: Summarize and hand off
 
@@ -83,6 +85,7 @@ Lead with the **review ledger** — every gate listed in this order, each as a s
 3. **trace-workflow** — ran (result) or skipped (why, e.g. no conditional logic touched).
 4. **trace-dataflow** — ran (result) or skipped (why, e.g. change stays within one layer).
 5. **`/security-review`** — ran (result) or skipped (why, e.g. no security-sensitive surface).
+6. **`/simplify`** — ran (result: simplification proposals surfaced) or skipped (why, e.g. trivial/config-only diff). Proposals are surfaced, never auto-applied.
 
 Then:
 - **Auto-fixed:** list each fix (file:line, what changed) — these need a fresh look during verification

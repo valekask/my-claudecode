@@ -13,7 +13,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 ## When to Use
 
-- You have an implementation plan (`.claude/temp/<task>/<task>-plan.md`)
+- You have an implementation plan (`.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`)
 - Tasks are mostly independent
 - You want automated review gates per task
 - For simpler tasks or when subagents aren't needed, use executing-plans instead
@@ -180,8 +180,8 @@ Task 3: Dashboard integration
 ```markdown
 # [Feature Name] — Implementation Result
 
-**Plan:** `.claude/temp/<task>/<task>-plan.md`
-**Spec:** `.claude/temp/<task>/<task>-spec.md`
+**Plan:** `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`
+**Spec:** `.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`
 
 ## Summary
 [What was built, 2-3 sentences]

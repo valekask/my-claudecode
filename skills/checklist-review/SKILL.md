@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with the project'
 
 # Code Review
 
-Checklist-driven review with parallel agents. 160 checks across 11 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms).
+Checklist-driven review with parallel agents. 194 checks across 14 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift).
 
 **End-to-end data-flow tracing is a separate skill.** It lives in `trace-dataflow` — run it alongside this review when a change crosses layers (service/store + component, effects/reducers/selectors, or HTTP calls). This skill no longer performs flow tracing.
 
@@ -65,7 +65,7 @@ TaskCreate(subject="Phase 5: Summary", description="Merge with previous, dedupli
 
 ## Review Persistence
 
-Review reports **can** be saved to `.claude/temp/<task>/<task>-checklist-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
+Review reports **can** be saved to `.claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md` to track item status across iterations. Saving is **opt-in** — quick one-off reviews produce no files.
 
 ### When persistence is active
 
@@ -76,11 +76,11 @@ Persistence is active when **any** of these are true:
 
 ### Task directory
 
-When persistence is active and no `.claude/temp/<task>/` directory exists, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
+When persistence is active and no `.claude/temp/<task>-<slug>/` directory exists, ask the user for a task name in `<task>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create the directory. When persistence is **not** active, do not ask for a task name.
 
 ### Previous report handling
 
-At the start of each review, if a task directory exists, check for an existing `<task>-checklist-review.md`. If found (this also activates persistence):
+At the start of each review, if a task directory exists, check for an existing `<task>-<slug>-checklist-review.md`. If found (this also activates persistence):
 
 1. **Read it** and extract the Summary table (the `| # | Type | Issue | Severity | Status |` table at the bottom)
 2. **Carry forward resolved items.** Items with status `Fixed`, `Skipped`, or `Wontfix` are NOT re-checked. They appear in a **Previously Resolved** section of the new report with their original status.
@@ -108,7 +108,7 @@ Determine what to review.
 
 Look for an existing review report **only if** a task directory is already known (user specified a task name, or an active task directory exists under `.claude/temp/`):
 
-1. If a task directory exists, check for `<task>-checklist-review.md` inside it
+1. If a task directory exists, check for `<task>-<slug>-checklist-review.md` inside it
 2. If found, read the file and extract:
    - The **Summary table** (items with their statuses)
    - The **Scope** section (to compare what was reviewed before)
@@ -145,6 +145,7 @@ Group files by type:
 | `*.directive.ts` | directive |
 | `*.pipe.ts` | pipe |
 | `*.guard.ts`, `*.interceptor.ts` | infra |
+| `migrations/*`, `*.migration.ts`, `*.sql` | migration |
 
 ---
 
@@ -154,7 +155,7 @@ Determine which agents to activate based on changed files. Use a fast model (hai
 
 ### Agent activation
 
-**Always activate:** Agent 7: SAFETY (regressions apply to all changes)
+**Always activate:** Agent 7: SAFETY (regressions apply to all changes) and Agent 13: STANDARDS DRIFT (documented standards apply to all changes)
 
 | Agent | Activate when |
 |---|---|
@@ -168,14 +169,19 @@ Determine which agents to activate based on changed files. Use a fast model (hai
 | Agent 8: TEST QUALITY | Any `.service.ts`, `.store.ts`, `.utils.ts`, `.pipe.ts`, `.directive.ts`, `.guard.ts`, or `.interceptor.ts` changed — OR any `.spec.ts` changed |
 | Agent 9: STYLING | Any `.scss` or `.html` file changed |
 | Agent 10: FORMS | Any changed `.ts` file imports `FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, or `ControlValueAccessor` |
+| Agent 11: PERFORMANCE | component, template, store, or service files changed |
+| Agent 12: MIGRATION SAFETY | migration files changed, OR any changed file touches persisted state (`localStorage`, `sessionStorage`, `indexedDB`, state hydration/rehydration, or DB schema/migrations) |
+| Agent 13: STANDARDS DRIFT | Always |
 
 ### Lightweight mode
 
 If ≤3 files changed AND no store/service files:
-- **Always:** Agent 1+2+3 (if any `.ts` file) + Agent 7 (safety)
+- **Always:** Agent 1+2+3 (if any `.ts` file) + Agent 7 (safety) + Agent 13 (standards drift)
 - **Add Agent 8** if any `.spec.ts` file changed
 - **Add Agent 9** if any `.scss` or `.html` file changed
 - **Add Agent 10** if any changed `.ts` file imports form APIs
+- **Add Agent 11** if a `.html` template or rendering-heavy component changed
+- **Add Agent 12** if a migration file or persisted-state code changed
 - **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management)
 
 ---
@@ -320,7 +326,31 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 **Input:** Diff of all changed `.ts` files that import form-related APIs (`FormBuilder`, `FormGroup`, `FormArray`, `FormControl`, `Validators`, `ControlValueAccessor`) + their corresponding `.html` templates + checklist contents. Read full source files to trace the form lifecycle: setup → validation → data extraction → submission.
 
-### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 9, 10)
+### Agent 11: PERFORMANCE
+
+**Checklist:** `performance.md` (12) = **12 checks**
+
+**Focus:** Change detection and rendering cost, redundant/N+1 network calls, observable sharing, memoization of expensive work, large-list rendering, lazy loading, accumulating work from uncleaned subscriptions/timers.
+
+**Input:** Diff of component, template, store, and service files + checklist contents. Read full source files when a check needs surrounding context (e.g., whether a binding calls a heavy function, whether a subscription is cleaned up).
+
+### Agent 12: MIGRATION SAFETY
+
+**Checklist:** `migration-safety.md` (12) = **12 checks**
+
+**Focus:** Backward-compatible (expand-contract) schema/data migrations, defaults/backfill before constraints, reversibility and rollback without data loss, idempotency, safe execution on production volume, and versioned upgrade paths for persisted client state (`localStorage`/`indexedDB`/hydrated state).
+
+**Input:** Diff of migration files + any changed file touching persisted state + checklist contents. Read the full migration and the code that depends on it to judge ordering and compatibility.
+
+### Agent 13: STANDARDS DRIFT
+
+**Checklist:** `standards-drift.md` (10) = **10 checks**
+
+**Focus:** Drift from documented standards — contradicting or weakening an accepted ADR, violating `CLAUDE.md` conventions, touching Protected Files, diverging from established patterns in adjacent code, reinventing existing abstractions, fragmenting domain terminology.
+
+**Input:** Full diff + checklist contents. **Must also read** `docs/adr/README.md` (and any relevant ADR), the project `CLAUDE.md`, and a sample of files adjacent to the change — drift can only be judged against these sources.
+
+### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13)
 
 ```
 You are a checking agent reviewing code changes for the Angular project.
@@ -541,6 +571,9 @@ Merge CONFIRMED findings that describe the same underlying problem:
 | SAFETY | 25 | X | X | {brief summary or "All passed"} |
 | TEST QUALITY | 13 | X | X | {brief summary or "All passed"} |
 | STYLING | 13 | X | X | {brief summary or "All passed"} |
+| PERFORMANCE | 12 | X | X | {brief summary or "All passed"} |
+| MIGRATION SAFETY | 12 | X | X | {brief summary or "All passed"} |
+| STANDARDS DRIFT | 10 | X | X | {brief summary or "All passed"} |
 
 {Only include rows for activated agents. "Failed" = confirmed findings, not raw flags.}
 
@@ -580,15 +613,15 @@ Merge CONFIRMED findings that describe the same underlying problem:
 
 When saving:
 
-1. If no task directory exists yet, ask the user for a task name in `<ticket-number>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create `.claude/temp/<task>/`
-2. Write the full report to `.claude/temp/<task>/<task>-checklist-review.md` using the Write tool
+1. If no task directory exists yet, ask the user for a task name in `<task>-<slug>` form (e.g., `FNA-1234-currency-filter`) and create `.claude/temp/<task>-<slug>/`
+2. Write the full report to `.claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md` using the Write tool
 3. If the file already exists, overwrite it (the new report contains all historical context in the Previously Resolved section)
-4. Tell the user: `Review saved to .claude/temp/<task>/<task>-checklist-review.md`
+4. Tell the user: `Review saved to .claude/temp/<task>-<slug>/<task>-<slug>-checklist-review.md`
 
 When **not** saving: skip this step silently. The report is already displayed in the conversation.
 
 **Tip for users:** To mark items as `Skipped` or `Wontfix`, either:
-- Edit the status in the Summary table of `<task>-checklist-review.md` directly
+- Edit the status in the Summary table of `<task>-<slug>-checklist-review.md` directly
 - Tell the reviewer in conversation (e.g., "skip item #3, wontfix #5") before running the next review
 
 ### Decision criteria for merge readiness
@@ -629,5 +662,8 @@ Examples:
 | 8: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
 | 9: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
 | 10: FORMS | Check | forms | 14 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
+| 11: PERFORMANCE | Check | performance | 12 | Component/template/store/service files changed |
+| 12: MIGRATION SAFETY | Check | migration-safety | 12 | Migration files or persisted-state code changed |
+| 13: STANDARDS DRIFT | Check | standards-drift | 10 | Always |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 11 checklists | **160** | |
+| **Total** | | 14 checklists | **194** | |

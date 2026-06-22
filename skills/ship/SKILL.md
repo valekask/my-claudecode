@@ -23,7 +23,7 @@ Confirm (or ask) that manual verification + smoke test have passed. If not, stop
 
 ### Step 2: Product summary (opt-in)
 
-Invoke the `writing-result-product` skill to produce `<task>-result-product.md` **when** the change is user-facing — offer it otherwise, skip pure internal refactors. (That skill reads the spec + result file; it owns the format.)
+Invoke the `writing-result-product` skill to produce `<task>-<slug>-result-product.md` **when** the change is user-facing — offer it otherwise, skip pure internal refactors. (That skill reads the spec + result file; it owns the format.)
 
 ### Step 3: ADR (only when warranted)
 
@@ -31,9 +31,9 @@ Invoke the `writing-adr` skill **only** when the change involved non-obvious con
 
 ### Step 4: Stage, review, and commit
 
-1. Run `git status` and `git diff` (and `git diff --cached`) so you and the user see exactly what will be committed.
+1. **Confirm the repo.** Run `git rev-parse --show-toplevel` and confirm it's the target project — under orchestration the cwd may differ from where you intend to commit. Stop if it's the wrong repo. (**Worktree-safe:** if the work lives in a git worktree, run ship from inside it — `--show-toplevel` resolves to the worktree root and the commit lands on its branch, no special handling needed.) Then run `git status` and `git diff` (and `git diff --cached`) so you and the user see exactly what will be committed.
 2. `git add` the change (the implementation + any ADR; result/product-summary live under `.claude/temp/` — include them only if the user tracks that directory).
-3. Propose a commit message in the project's format — `<ticket-number>: (<type>:<scope>) <subject>` (see the project's `CLAUDE.md` / Git Workflow). `<type>`: feat, fix, docs, style, refactor, perf, test, build; `<subject>`: imperative present tense, lowercase first letter, no trailing dot. Show it to the user.
+3. Propose a commit message following the **Commit message convention** in `docs/CONTRIBUTING.md` (authoritative) — `<task>: (<type>:<scope>) <subject>`, header only by default (no body/footer unless the change warrants it). If that file isn't present in the repo, the format still holds: `<type>` ∈ feat|fix|docs|style|refactor|perf|test|build, `<scope>` is project-defined, `<subject>` is imperative present tense, lowercase first letter, no trailing dot. Show it to the user.
 4. On the user's go-ahead, `git commit`.
 
 **Commit rules (MANDATORY — from the project's git restrictions):**

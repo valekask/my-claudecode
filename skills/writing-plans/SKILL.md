@@ -16,12 +16,12 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** The spec should already exist in the task's working directory (produced by brainstorming skill).
 
-**Save plans to:** `.claude/temp/<task>/<task>-plan.md`
+**Save plans to:** `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`
 - Plans live alongside the proposal and spec in the same task directory
 
 ## Step 1: Read the Spec
 
-Read the spec file (`.claude/temp/<task>/<task>-spec.md`), the proposal file, and any files in `assets/` before doing anything else. Understand the goals, constraints, architecture, and complexity classification before decomposing into tasks.
+Read the spec file (`.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`), the proposal file, and any files in `assets/` before doing anything else. Understand the goals, constraints, architecture, and complexity classification before decomposing into tasks.
 
 **Spec is *what*, plan re-decides *how*.** The spec is the contract for goals, scope, and architectural intent. If the spec leaks implementation details (a specific service, a global singleton, a particular abstraction, a fixed file location) and a simpler or better-located alternative exists in the live codebase, you can — and should — re-decide. Surface the choice rather than blindly implementing the elaborate version. The planner has codebase context the brainstormer didn't; use it.
 
@@ -198,7 +198,7 @@ After the plan review loop passes, the plan is on disk. Walk the user through a 
 ```json
 {
   "questions": [{
-    "question": "Plan saved to `.claude/temp/<task>/<task>-plan.md`. Final review — how would you like to proceed?",
+    "question": "Plan saved to `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`. Final review — how would you like to proceed?",
     "header": "Final review",
     "options": [
       {"label": "Walk by section", "description": "Show one section at a time"},
@@ -215,5 +215,5 @@ If the user has feedback at any point — during the walk, after a section, or b
 
 **Save:** emit this exact text and stop. Do NOT auto-invoke `subagent-driven-development` or `executing-plans` in this session — execution belongs in a fresh session.
 
-> Plan saved to `.claude/temp/<task>/<task>-plan.md`.
-> Use subagent-driven-development skill to execute plan at `.claude/temp/<task>/<task>-plan.md`.
+> Plan saved to `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`.
+> Use subagent-driven-development skill to execute plan at `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`.

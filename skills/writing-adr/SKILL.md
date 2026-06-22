@@ -25,7 +25,7 @@ When invoked at the end of an implementation, **offer** an ADR only if the work 
 
 | | Feature-level | System-wide |
 |---|---|---|
-| **File** | `docs/adr/<ticket-number>-<slug>.md` | `docs/adr/NNNN-<component>.md` |
+| **File** | `docs/adr/<task>-<slug>.md` | `docs/adr/NNNN-<component>.md` |
 | **Example** | `docs/adr/FNA-15102-property-based-coloring.md` | `docs/adr/0001-auth.md` |
 | **Shape** | Session snapshot + mandatory edge cases | Living current-truth record for a component |
 | **Lifecycle** | **Immutable** — change by superseding | **Living** — edit in place to stay current; log each change in a feature-level ADR linked from `History` |
@@ -38,7 +38,7 @@ Start minimal. Grow the set from real friction, not speculatively.
 
 Default to **feature-level** — it's the common implementation-time case. At invocation, confirm before writing:
 
-> Writing a feature-level ADR (`<ticket-number>-...`). Or did you mean a system-wide one?
+> Writing a feature-level ADR (`<task>-...`). Or did you mean a system-wide one?
 
 Write a **system-wide** ADR only on explicit request (e.g. "write a system-wide ADR for the timeline"). In that case the user typically names the sources directly — a feature area or directory (e.g. "source is `libs/feature-timeline`"). Use those plus that area's git history; the brainstorm/plan/execute artifacts below usually don't apply.
 
@@ -46,9 +46,9 @@ Write a **system-wide** ADR only on explicit request (e.g. "write a system-wide 
 
 An ADR needs both halves — the *why* and the *edge cases* — which live in different places. Gather them before writing:
 
-- **Why / intent / forces** → the spec (`.claude/temp/<task>/<task>-spec.md`) and brainstorming context.
-- **Structural decisions** → the plan (`.claude/temp/<task>/<task>-plan.md`) — reuse choices, traced callers, where code landed. Good fodder for *Key decisions*.
-- **Decisions made / concerns** → the result file (`.claude/temp/<task>/<task>-result.md`), if present. Raw input, not a substitute.
+- **Why / intent / forces** → the spec (`.claude/temp/<task>-<slug>/<task>-<slug>-spec.md`) and brainstorming context.
+- **Structural decisions** → the plan (`.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`) — reuse choices, traced callers, where code landed. Good fodder for *Key decisions*.
+- **Decisions made / concerns** → the result file (`.claude/temp/<task>-<slug>/<task>-<slug>-result.md`), if present. Raw input, not a substitute.
 - **Edge cases & non-obvious constraints** → **read the actual code.** This is the #1 payload and it is *not* in any doc. Open the implemented files, find each guard / special case, and articulate what it protects against and what breaks if removed.
 - **Verification pointer** → the ticket / PR, so a reader (or agent) can follow it into git history (the primary source).
 
@@ -57,11 +57,11 @@ An ADR needs both halves — the *why* and the *edge cases* — which live in di
 ## Feature-level template
 
 ```markdown
-# <ticket-number>: <topic label — 1-3 words naming the subject; decision goes in README + Summary>
+# <task>: <topic label — 1-3 words naming the subject; decision goes in README + Summary>
 
 - **Status:** Accepted | Proposed | Superseded by <id>
 - **Date:** YYYY-MM-DD
-- **Ticket(s):** <ticket-number>
+- **Ticket(s):** <task>
 - **Key files:** 2-4 anchors (ticket/PR has the full list)
   - `libs/.../foo.component.ts`
   - `libs/.../bar.service.ts`
@@ -130,7 +130,7 @@ that made it. This is what preserves *why it used to be different*.>
 
 ## File naming & numbering
 
-- **Feature:** `<ticket-number>-<kebab-slug>.md`, slug derived from the decision/task.
+- **Feature:** `<task>-<kebab-slug>.md`, slug derived from the decision/task.
 - **System-wide:** `NNNN-<kebab-component>.md`. To pick `NNNN`, list `docs/adr/`, find the highest existing system-wide number, increment, zero-pad to 4 digits.
 - Create `docs/adr/` only when the first ADR is written.
 
