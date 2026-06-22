@@ -37,10 +37,11 @@ Throughout this skill, `<task>-<slug>` is the identifier the user supplies (e.g.
 - **Mode** (optional): the literal token `uat` or `discuss` as the first argument. Omit it for a new task, or to let the skill infer from folder state and confirm. See [Step 1](#step-1-resolve-the-mode).
 - **Task name** in the form `<task>-<slug>` (e.g., `FNA-1234-timeline-hover`). Accept it as an argument; if missing, ask for it via AskUserQuestion. Validation is **advisory**: it should look like the convention above — a ticket number plus a `<scope>-<subject>` slug. If it doesn't match, warn and confirm with the user rather than blocking.
 - **Base branch** (optional, modes that branch): defaults to the repo's default branch. Accept `--base <branch>` to branch off a release/integration branch instead.
+- **Isolation** (optional, modes that branch): how the branch is checked out — **branch** (default, in-place) or **worktree** (its own directory). Opt into a worktree with the `--worktree` flag or natural language ("…using a worktree"). See [Isolation](#isolation-branch-default-or-worktree).
 
 ## The Process
 
-> **Working directory.** prepare creates the branch and `.claude/temp/<task>-<slug>/` **relative to the current working directory**, and `git switch` acts on the repo there. Under orchestration the cwd may not be the target project — before creating anything, confirm `git rev-parse --show-toplevel` is the repo you mean to work in.
+> **Working directory.** In branch mode (the default), prepare creates the branch and `.claude/temp/<task>-<slug>/` **relative to the current working directory**, and `git switch` acts on the repo there. In worktree mode it instead creates a **separate directory** for the branch and scaffolds inside it (see [Isolation](#isolation-branch-default-or-worktree)). Either way, under orchestration the cwd may not be the target project — before creating anything, confirm `git rev-parse --show-toplevel` is the repo you mean to work in.
 
 ### Step 1: Resolve the mode
 
@@ -57,6 +58,23 @@ A wrong inference then costs one confirmation, not a stray branch.
 ### Step 2: Resolve the task name
 
 Take it from the argument or ask. Check it looks like the `<task>-<slug>` convention above; if it doesn't, warn and confirm rather than block.
+
+### Isolation: branch (default) or worktree
+
+Both **new** and **uat** modes create a branch. *How* that branch is checked out is the isolation choice (the **discuss** mode creates no branch, so it never applies):
+
+- **branch (default)** — `git switch -c <branch> <base>` checks the branch out **in place**, in the current working directory. Use it unless asked otherwise.
+- **worktree** — `git worktree add <path> -b <branch> <base>` creates the branch in its **own directory**, leaving the current working tree where it is. Opt in with the `--worktree` flag or natural language ("prepare FNA-1234 using a worktree").
+
+**Worktree path — personal default:** `.worktrees/<task>-<slug>`, relative to the repo root. This is a **personal** convention, deliberately *not* in `docs/CONTRIBUTING.md` (which holds project-shared branch/commit/PR rules only). Keep worktrees out of `git status` by ensuring `.worktrees/` is listed in **`.git/info/exclude`** — the repo-local, uncommitted exclude file (not the tracked `.gitignore`, and not config or hooks) — and add the line there if it's missing.
+
+**Worktree guards:**
+- If the target worktree path already exists (e.g. a stale abort) → **stop and ask**. Never reuse or clobber it.
+- The same "branch already exists" guard from below still applies — `git worktree add -b` fails if the branch exists, which is the safe outcome.
+
+**After creating a worktree**, that directory is where the work happens: scaffold `.claude/temp/<task>-<slug>/` **inside the worktree**, and at hand-off tell the user to `cd` into it (or open a fresh session there) before brainstorming/executing. `polish`, `ship`, and `open-pr` then run from inside the worktree unchanged — they act on the current repo/branch, and the repo guard resolves to the worktree root.
+
+**Teardown is manual (for now).** After the PR merges, the user removes the worktree themselves with `git worktree remove <path>`. prepare does not tear anything down, and `ship`/`open-pr` must not either — `open-pr` pushes *from* the worktree's branch, so it must still exist at PR time.
 
 ---
 
@@ -78,19 +96,27 @@ Create and switch to a branch named exactly `<task>-<slug>` off the base (primar
 git switch -c <task>-<slug> <base>
 ```
 
-> **Note:** Creating the branch off the default is the sanctioned way to isolate work before the first edit — the project's git workflow lets agents create branches proactively. prepare creates and switches only; it never commits.
+In **worktree** mode, create the branch in its own directory instead (see [Isolation](#isolation-branch-default-or-worktree)):
 
-If a branch with that name already exists, stop and tell the user rather than overwriting state.
+```
+git worktree add .worktrees/<task>-<slug> -b <task>-<slug> <base>
+```
+
+> **Note:** Creating the branch off the default is the sanctioned way to isolate work before the first edit — the project's git workflow lets agents create branches proactively. prepare creates the branch (in place, or as a worktree) only; it never commits.
+
+If a branch with that name already exists, stop and tell the user rather than overwriting state. In worktree mode, also stop if the worktree path already exists.
 
 ### Step N3: Scaffold the directory and proposal
 
-Create `.claude/temp/<task>-<slug>/` containing `<task>-<slug>-proposal.md` (from the [proposal template](#proposal-template)). Do **not** create an `assets/` directory — the user adds one only on the rare occasion they have mockups. Do not fill the proposal in; the user does that.
+Create `.claude/temp/<task>-<slug>/` containing `<task>-<slug>-proposal.md` (from the [proposal template](#proposal-template)). In worktree mode, create it **inside the worktree** (`.worktrees/<task>-<slug>/.claude/temp/<task>-<slug>/`). Do **not** create an `assets/` directory — the user adds one only on the rare occasion they have mockups. Do not fill the proposal in; the user does that.
 
 ### Step N4: Hand off
 
 Report the branch created and the proposal scaffolded, and tell the user to:
 1. Fill in `<task>-<slug>-proposal.md`
 2. Run `brainstorming` (fresh session) on the proposal
+
+In worktree mode, also report the worktree path and tell the user to `cd` into it (or open a fresh session there) first — the proposal and all later work live inside the worktree.
 
 ---
 
@@ -113,11 +139,17 @@ The original task branch is usually merged or gone, so branch off the **integrat
 git switch -c <task>-<slug>-uat <base>
 ```
 
-If a `<task>-<slug>-uat` branch already exists, stop and tell the user rather than overwriting.
+In **worktree** mode, create it in its own directory instead (see [Isolation](#isolation-branch-default-or-worktree)):
+
+```
+git worktree add .worktrees/<task>-<slug>-uat -b <task>-<slug>-uat <base>
+```
+
+If a `<task>-<slug>-uat` branch already exists, stop and tell the user rather than overwriting. In worktree mode, also stop if the worktree path already exists.
 
 ### Step U3: Scaffold the UAT ledger
 
-Write `.claude/temp/<task>-<slug>/<task>-<slug>-uat.md` from the [UAT ledger template](#uat-ledger-template). Seed it with any items the user has already named; otherwise leave the example row for them to replace.
+Write `.claude/temp/<task>-<slug>/<task>-<slug>-uat.md` from the [UAT ledger template](#uat-ledger-template) (in worktree mode, **inside the worktree**). Seed it with any items the user has already named; otherwise leave the example row for them to replace.
 
 ### Step U4: Hand off
 
@@ -125,6 +157,8 @@ Report the branch and ledger. Tell the user to:
 1. List the follow-up items in `<task>-<slug>-uat.md`, each tagged `uat` / `bug` / `change`.
 2. Implement them (use `executing-plans` / `subagent-driven-development`, or the management `fast-track` skill for small, already-clear fixes).
 3. Update each item's **Status** and record the commit under **Fixed by** as it lands; then `polish` → verify → `ship` as usual.
+
+In worktree mode, also report the worktree path and tell the user to `cd` into it (or open a fresh session there) first.
 
 ---
 
@@ -210,6 +244,7 @@ Keep it to 1–2 topics per file.
 ## Rules
 
 - **No commits.** Prepare creates branches and writes files only — it does not stage or commit anything.
+- **Branch is the default isolation; worktree is opt-in** (`--worktree` / NL). In worktree mode, never reuse or clobber an existing worktree path, and don't tear worktrees down — teardown is the user's manual step after merge.
 - **Explicit mode always wins** over inference; inference never acts on a silent guess — it confirms first.
 - Never overwrite an existing branch, proposal, UAT ledger, or discussion file without telling the user. (Discussion is the one exception: append a new topic section rather than overwrite.)
 - **discuss** never creates a branch.
