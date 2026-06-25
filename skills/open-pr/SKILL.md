@@ -18,6 +18,7 @@ Turns the current branch into a **Bitbucket Cloud** pull request. The skill **dr
 ## Prerequisites
 
 - **`BITBUCKET_API_TOKEN`** + **`BITBUCKET_EMAIL`** — a Bitbucket Cloud **API token** and the Atlassian **email** it belongs to, both exported in the user's shell env (e.g. `~/.zshenv`). Bitbucket REST API requests authenticate with **Basic auth** as `email:api_token` — the **email**, not the username (`username:token` returns 401 on the API; the username is only for git over HTTPS). The token must belong to the Bitbucket **identity that actually has access to the target repo** — if access is inherited via a group or a secondary account, mint the token while signed in as *that* identity. The API token is the app-password replacement; app passwords are deprecated. A scoped token needs **all three** of `read:repository` (required to reach any `/repositories/{ws}/{repo}/…` path — including PRs), `read:pullrequest`, and `write:pullrequest`; scopes are fixed at creation, so a missing one means recreating the token. The skill reads both env vars from the environment; neither is passed as an argument. (`BITBUCKET_USERNAME` / `BITBUCKET_URL` may also be set for other tooling, but this skill does not use them.)
+- **`BITBUCKET_REVIEWERS`** (optional) — the default reviewers to add to the PR, as a **comma-separated string** (e.g. `id1, id2, id3`). Bitbucket Cloud's API identifies reviewers by **`account_id`** (e.g. `557058:1a2b…`) or **`uuid`** in braces (e.g. `{9c1f…}`), never by username or email — so these are account IDs/UUIDs, not human names. Whitespace around entries is trimmed; an entry wrapped in `{…}` is treated as a `uuid`, everything else as an `account_id`. If unset or empty, the PR is created with no reviewers. **Do not include your own account** — Bitbucket rejects a PR whose author is also a reviewer (400).
 - **`jq`** and **`curl`** on PATH (used to build the request body safely and call the API).
 
 ## Inputs
@@ -61,6 +62,9 @@ Title:
 
 Description:
   <description>
+
+Reviewers:
+  <comma-separated list from BITBUCKET_REVIEWERS, or "none">
 
 On approval I will:
   1. git push -u origin HEAD   → pushes <from_branch> to origin/<from_branch>
@@ -114,7 +118,18 @@ workspace=${slug%%/*}
 repo=${slug#*/}
 ```
 
-**Create the PR** with the approved title, description, and branches. Build the JSON body with `jq -n` (never string-interpolate) so quotes/newlines in the title or description can't break the payload or inject fields:
+**Parse `BITBUCKET_REVIEWERS` into a reviewers array** (skip this if it's unset/empty). Split the comma-separated value, trim whitespace, drop empties, and map each entry to the account object Bitbucket expects:
+
+```sh
+reviewers=$(printf '%s' "${BITBUCKET_REVIEWERS:-}" | jq -Rc '
+  split(",")
+  | map(gsub("^\\s+|\\s+$";""))
+  | map(select(length > 0))
+  | map(if test("^\\{.*\\}$") then {uuid: .} else {account_id: .} end)' )
+reviewers=${reviewers:-[]}
+```
+
+**Create the PR** with the approved title, description, branches, and reviewers. Build the JSON body with `jq -n` (never string-interpolate) so quotes/newlines in the title or description can't break the payload or inject fields. The `reviewers` key is added only when the array is non-empty:
 
 ```sh
 curl -sS --fail-with-body -X POST \
@@ -124,18 +139,21 @@ curl -sS --fail-with-body -X POST \
   -d "$(jq -n \
         --arg t '<title>' --arg d '<description>' \
         --arg s '<from_branch>' --arg b '<base_branch>' \
+        --argjson r "$reviewers" \
         '{title:$t, description:$d,
-          source:{branch:{name:$s}}, destination:{branch:{name:$b}}}')"
+          source:{branch:{name:$s}}, destination:{branch:{name:$b}}}
+         + (if ($r | length) > 0 then {reviewers:$r} else {} end)')"
 ```
 
 - Set `source.branch.name` = `<from_branch>` and `destination.branch.name` = `<base_branch>` **explicitly** — never let either be inferred.
 - `--fail-with-body` makes curl exit non-zero on an HTTP error while still printing the response body. On error, **STOP** and show the user the body. Common cases:
   - `401` / `403`, or a body about "may not have access to this repository" — token missing or lacks a required scope (`read:repository` + `write:pullrequest`). Scopes are fixed at creation; recreate the token with the full set.
   - `400` — a PR for this source→destination already exists. Don't retry; instead `GET .../pullrequests?q=source.branch.name="<from_branch>"&state=OPEN` and show the user the existing PR.
+  - `400` with a body mentioning **reviewers** — a `BITBUCKET_REVIEWERS` entry is invalid/unknown, or it includes the PR **author** (Bitbucket forbids author-as-reviewer). **STOP** and show the body; the fix is to correct the env var (remove the bad ID or your own account). Do not silently retry without reviewers — the user asked for those reviewers.
 
 ### Step 6: Report
 
-Parse the response JSON: print the PR's web URL (`.links.html.href`) and number (`.id`). Confirm the from → base branches and that the upstream is the same-name remote branch.
+Parse the response JSON: print the PR's web URL (`.links.html.href`) and number (`.id`). Confirm the from → base branches, that the upstream is the same-name remote branch, and — if any were requested — the reviewers Bitbucket actually attached (`.reviewers[].display_name`, falling back to `.account_id`).
 
 ## Red Flags
 
