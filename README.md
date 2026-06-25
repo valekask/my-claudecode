@@ -26,7 +26,7 @@ A few principles fall out of this:
 4. **Plan** - decompose the spec into a bite-sized implementation plan
 5. **Execute** - implement the plan with a fresh subagent per task in isolated context (writes the result file)
 6. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
-7. **Verify** (manual + smoke test) - confirm behavior on the polished code
+7. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
 8. **Ship** - write the product summary + ADR (when warranted), then commit
 9. **Push** (manual)
 
@@ -211,6 +211,17 @@ The **pre-verification quality pass** - the one phase that mutates code after ex
 - **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on
 - **Auto-applies only meaningful fixes** - High-confidence + Critical/High + mechanical. Everything else (Medium/Low, uncertain, judgment-dependent) is surfaced, not changed. Bounded to 3 fix→recheck loops per gate
 - Saves the **full report** (all severities) to `<task>-<slug>-review.md` for rule-tuning; makes no commits
+
+### Verification
+
+#### `smoke-test`
+
+A **browser smoke test** for the Verify phase — drives a real browser (**Playwright CLI** via Bash) through testing scenarios against a running app, compares expected vs actual, and emits a machine-readable verdict. **Verify-and-report only** — never fixes code or ships. **App-agnostic**: the target URL, credentials, and app-map are supplied at invocation, so the same skill serves any web app.
+
+- **Persistent-session auth** - holds one **authenticated browser session** and reuses it across runs (the app refreshes its own token), re-logging in only when the session expires; credentials come from a git-ignored env file
+- **App-map driven** - reads a per-app "user's mental model" (routes, chrome, selector patterns, terminology) to drive the app like a user and **infer** new/variant UI from patterns; a stable baseline with per-run **live fallback** for in-flux screens
+- **Verdict** - `pass` / `fail` / `blocked` rolled up over per-scenario ✅/❌/⚠️/⏭️, with screenshots + console capture on failure; writes a human report and a machine-readable `.json`. **Halts on non-`pass`**
+- **Augments the manual verify checkpoint** - gathers evidence and a verdict; the human still gives final sign-off. Runs the same invoked by hand or driven by an external orchestrator
 
 ### Finishing
 
