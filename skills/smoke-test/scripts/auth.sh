@@ -34,7 +34,13 @@ APP_HOST="$(url_host "$BASE_URL")"
 
 pc()   { playwright-cli -s="$SESSION" "$@"; }
 host() { pc --raw eval '() => location.hostname' 2>/dev/null | tr -d '"' | tail -1; }
+path() { pc --raw eval '() => location.pathname' 2>/dev/null | tr -d '"' | tail -1; }
 has_login_form() { pc --raw eval '() => !!document.querySelector("input[type=password]")' 2>/dev/null | tr -d '"' | tail -1; }
+
+# On the app host but parked on an OIDC callback (…/login/callback) = a failed
+# silent re-auth (stale state/nonce), NOT authenticated — the callback URL is on
+# the app host, so a hostname-only check would read this stranded state as success.
+not_callback() { case "$(path)" in *callback*) return 1 ;; *) return 0 ;; esac; }
 
 # wait until the hostname stabilises (an SPA redirect is client-side, ~2-3s)
 settle() {
@@ -47,6 +53,15 @@ settle() {
   echo "$cur"
 }
 
+# one-shot self-recovery from a stranded callback (stale state/nonce): clear THIS
+# origin's web storage (app-agnostic — current origin only), then ONE clean
+# re-navigation = a single fresh OIDC flow. Echoes the settled hostname.
+recover() {
+  pc eval '() => { localStorage.clear(); sessionStorage.clear(); }' >/dev/null 2>&1
+  pc goto "$BASE_URL" >/dev/null 2>&1   # ONE clean flow — never root-then-route
+  settle
+}
+
 # 1. ensure the session exists; land on the app root
 if playwright-cli list 2>/dev/null | grep -q -- "- ${SESSION}:"; then
   pc goto "$BASE_URL" >/dev/null 2>&1
@@ -55,9 +70,16 @@ else
 fi
 h="$(settle)"
 
-# 2. still on the app host -> token valid -> reuse
-if [ "$h" = "$APP_HOST" ]; then
+# 2. on the app host AND not stranded on a callback -> token valid -> reuse
+if [ "$h" = "$APP_HOST" ] && not_callback; then
   echo "REUSED  session=$SESSION host=$h"; exit 0
+fi
+
+# 2b. on the app host but parked on …/callback (failed silent re-auth) -> recover once
+if [ "$h" = "$APP_HOST" ]; then
+  h="$(recover)"
+  [ "$h" = "$APP_HOST" ] && not_callback && { echo "REUSED  session=$SESSION host=$h (recovered)"; exit 0; }
+  # recovery launched a fresh OIDC flow (or is still stranded) -> fall through to login
 fi
 
 # 3. redirected off the app host (to whatever IdP) -> form, or silent refresh
@@ -68,10 +90,10 @@ if [ "$(has_login_form)" = "true" ]; then
   pc fill "$PASS_SEL" "$SMOKE_PASSWORD" >/dev/null 2>&1
   pc click "$SUBMIT_SEL" >/dev/null 2>&1
   h="$(settle)"
-  [ "$h" = "$APP_HOST" ] && { echo "LOGGED_IN  session=$SESSION host=$h"; exit 0; }
+  [ "$h" = "$APP_HOST" ] && not_callback && { echo "LOGGED_IN  session=$SESSION host=$h"; exit 0; }
 else
   h="$(settle)"   # silent refresh in flight — wait it out
-  [ "$h" = "$APP_HOST" ] && { echo "REUSED  session=$SESSION host=$h (silent refresh)"; exit 0; }
+  [ "$h" = "$APP_HOST" ] && not_callback && { echo "REUSED  session=$SESSION host=$h (silent refresh)"; exit 0; }
 fi
 
 echo "FAILED  session=$SESSION host=${h:-unknown}"; exit 1
