@@ -10,24 +10,24 @@
 #
 # App-specific values come from the environment — the invoker supplies them; this
 # script hard-codes nothing about any app:
-#   SMOKE_BASE_URL      app root that triggers the auth redirect (required; or pass as arg 2)
-#   SMOKE_USERNAME      login username (only needed if a login form appears)
-#   SMOKE_PASSWORD      login password (   "   )
-#   SMOKE_LOGIN_USER    username-field selector (default: #username   — stock Keycloak)
-#   SMOKE_LOGIN_PASS    password-field selector (default: #password   — stock Keycloak)
-#   SMOKE_LOGIN_SUBMIT  submit-button selector  (default: #kc-login   — stock Keycloak)
+#   TEST_BROWSER_BASE_URL      app root that triggers the auth redirect (required; or pass as arg 2)
+#   TEST_BROWSER_USERNAME      login username (only needed if a login form appears)
+#   TEST_BROWSER_PASSWORD      login password (   "   )
+#   TEST_BROWSER_LOGIN_USER    username-field selector (default: #username   — stock Keycloak)
+#   TEST_BROWSER_LOGIN_PASS    password-field selector (default: #password   — stock Keycloak)
+#   TEST_BROWSER_LOGIN_SUBMIT  submit-button selector  (default: #kc-login   — stock Keycloak)
 #
 # Source your project's git-ignored env file first, e.g.:
-#   set -a && . <your-project>/.claude/smoke/.env.local && set +a
+#   set -a && . <your-project>/.test-browser/.env.local && set +a
 #
 # Usage: auth.sh [session] [base_url]
 # Prints REUSED | LOGGED_IN | FAILED and exits 0/1. Never prints the password.
 
 SESSION="${1:-smoke}"
-BASE_URL="${2:-${SMOKE_BASE_URL:?SMOKE_BASE_URL not set (or pass the base URL as arg 2)}}"
-USER_SEL="${SMOKE_LOGIN_USER:-#username}"
-PASS_SEL="${SMOKE_LOGIN_PASS:-#password}"
-SUBMIT_SEL="${SMOKE_LOGIN_SUBMIT:-#kc-login}"
+BASE_URL="${2:-${TEST_BROWSER_BASE_URL:?TEST_BROWSER_BASE_URL not set (or pass the base URL as arg 2)}}"
+USER_SEL="${TEST_BROWSER_LOGIN_USER:-#username}"
+PASS_SEL="${TEST_BROWSER_LOGIN_PASS:-#password}"
+SUBMIT_SEL="${TEST_BROWSER_LOGIN_SUBMIT:-#kc-login}"
 
 url_host() { printf '%s' "$1" | sed -E 's#^[a-z]+://##; s#[:/].*$##'; }
 APP_HOST="$(url_host "$BASE_URL")"
@@ -84,10 +84,10 @@ fi
 
 # 3. redirected off the app host (to whatever IdP) -> form, or silent refresh
 if [ "$(has_login_form)" = "true" ]; then
-  : "${SMOKE_USERNAME:?SMOKE_USERNAME not set — source your env file}"
-  : "${SMOKE_PASSWORD:?SMOKE_PASSWORD not set — source your env file}"
-  pc fill "$USER_SEL" "$SMOKE_USERNAME" >/dev/null 2>&1
-  pc fill "$PASS_SEL" "$SMOKE_PASSWORD" >/dev/null 2>&1
+  : "${TEST_BROWSER_USERNAME:?TEST_BROWSER_USERNAME not set — source your env file}"
+  : "${TEST_BROWSER_PASSWORD:?TEST_BROWSER_PASSWORD not set — source your env file}"
+  pc fill "$USER_SEL" "$TEST_BROWSER_USERNAME" >/dev/null 2>&1
+  pc fill "$PASS_SEL" "$TEST_BROWSER_PASSWORD" >/dev/null 2>&1
   pc click "$SUBMIT_SEL" >/dev/null 2>&1
   h="$(settle)"
   [ "$h" = "$APP_HOST" ] && not_callback && { echo "LOGGED_IN  session=$SESSION host=$h"; exit 0; }
