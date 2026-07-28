@@ -157,6 +157,10 @@ Expected: PASS
 - DRY, YAGNI, TDD
 - No git operations — the user manages all commits manually
 - **Spec test traceability** — every test scenario in the spec's Testing Approach section must map to a concrete plan step with test code. If the spec says "verify X receives Y", the plan must have a step that writes that test.
+- **Acceptance criteria traceability** — read the spec's **Acceptance Criteria** (`AC-1`, `AC-2`, …) and decide, per AC, whether it is provable by a unit test at the level this project tests (ComponentStore / service / util).
+  - **Unit-testable AC** → a concrete plan step whose test proves it, with the AC id cited in the step (`covers AC-2`).
+  - **AC you decline** → list it explicitly in the plan with a one-line reason (e.g. "AC-1: user-visible timing, verify in the browser"; "AC-5: third-party rendering, manual check"). Do NOT drop it silently: `smoke-test` declines AC too, and an AC declined by both must be visible to the human rather than lost between the two skills.
+  - Every AC appears in exactly one of those two lists. An AC in neither is a gap in the plan.
 - **Cleanup after replacement** — when a plan replaces a function call with a new one, add a cleanup step: check if the old function has remaining callers; if not, remove it and update exports. Don't leave dead code behind.
 
 ## Plan Review Loop

@@ -224,7 +224,7 @@ task for its whole lifecycle and use `/clear` as the phase boundary:
 
 - **Always pass the artifact path explicitly** — the cleared session has no memory
   of which task/file it was on. e.g.
-  `/brainstorming on <task-dir>/<task>-proposal.md`.
+  `/brainstorming on <task-dir>/<task>-<slug>-proposal.md`.
 - **Rename the tab to the new phase** (the old label goes stale):
   `herdr tab rename <tab> '<phase> <subject>'`.
 

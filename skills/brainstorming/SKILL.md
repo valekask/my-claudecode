@@ -209,7 +209,22 @@ Read proposal + assets
 - **Max 7 phases.** If more are needed, split into multiple specs — each gets its own brainstorming cycle.
 - Do NOT commit the file — the user manages git operations manually
 
-**What specs define (what + why):** goals and success criteria; constraints and boundaries; scope (in/out); architecture and data flow; error handling strategy; testing approach.
+**What specs define (what + why):** goals and success criteria; **acceptance criteria**; constraints and boundaries; scope (in/out); architecture and data flow; error handling strategy; testing approach.
+
+**Include an *Acceptance Criteria* section.** The list of things that must be true once the task is implemented — the spec's testable core, and the thing downstream skills read to decide what to verify.
+
+- **Numbered `AC-1`, `AC-2`, …** The ids are the traceability spine: `writing-plans` cites them when mapping unit tests, `smoke-test` cites them on browser scenarios, and both report the AC they decline.
+- **Each AC must be observable and falsifiable.** Someone must be able to say "this is true" or "this is false" without interpretation. "A 500-row list renders within 2s" is an AC; "the app feels fast" is not — it can't be checked, so no downstream skill can act on it.
+- **State what must be true, not how it gets verified.** Do NOT label an AC as a unit test, a browser scenario, or a manual check, and do not write click-paths or selectors. Which mechanism proves an AC is a *how* decision that belongs to `writing-plans` (unit) and `smoke-test` (browser) — at spec time you don't yet know whether the logic lands in a store or a component.
+- **Cover the change, not the codebase.** Derive them from the goals and the scope's in-list; a task with one user-visible behaviour has one or two AC, not ten.
+- **Include the failure modes that matter** — error and empty states belong here when the spec's error-handling strategy commits to them, since they're exactly what gets skipped otherwise.
+
+For example:
+
+> ## Acceptance Criteria
+> - **AC-1** — Selecting a currency in the toolbar re-renders the timeline in that currency within 2s.
+> - **AC-2** — Switching currency preserves the current date range and applied filters.
+> - **AC-3** — When the conversion rate is unavailable, the widget shows the "rates unavailable" state and keeps the previous values visible.
 
 **Include an *ADRs Reviewed* section.** Near the top of the spec (after the goals/overview), add a short section that records the ADR scan from step 3: only the ADRs that constrain the direction (with the match count in the header), or a single line stating none do. This is the visible record of the scan and the breadcrumb the plan-writing phase reads before its own guard-level scan. Use ADR IDs and short labels in prose — IDs are not code syntax, so the hard rules above do not apply here. For example:
 

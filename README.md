@@ -49,7 +49,7 @@ Scaffolds what you're about to work on, in one of three modes. Explicit mode (`u
 
 #### `brainstorming`
 
-Turns a proposal into an approved spec - a contract specifying **what + why** (goals, constraints, architecture).
+Turns a proposal into an approved spec - a contract specifying **what + why** (goals, constraints, architecture, acceptance criteria).
 
 **Understanding the proposal:**
 
@@ -71,6 +71,7 @@ Turns a proposal into an approved spec - a contract specifying **what + why** (g
 
 - Present in sections, get approval after each
 - Cover architecture, data flow, error handling, testing approach
+- **Acceptance criteria** - numbered `AC-1`, `AC-2`, … each **observable and falsifiable**, stating what must be true, never _how_ it gets verified. Choosing the mechanism is a downstream decision: `writing-plans` maps the unit-testable ones to test steps, `smoke-test` turns the UI-observable ones into browser scenarios, and **both must account for every AC** - covered or explicitly declined with a reason, so one that falls between them surfaces at manual verify instead of vanishing
 
 **Final review (before handoff):**
 
@@ -103,6 +104,7 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 
 - Each step is bite-sized (2-5 min) with exact file paths, complete code, and verification commands
 - **Comprehensive test coverage** - every scenario in the spec's Testing Approach maps to a concrete plan step
+- **AC traceability** - reads the spec's acceptance criteria and splits them: unit-testable AC get a plan step citing `covers AC-n`; the rest are listed as declined with a reason (never dropped silently). Every AC lands in exactly one list
 
 **Final review (before execution):**
 
@@ -232,7 +234,8 @@ The **scenario-verification layer** for the Verify phase — judges a set of sce
 
 - **App-map driven** - reads a per-app "user's mental model" (routes, chrome, selector patterns, terminology) to drive the app like a user and **infer** new/variant UI from patterns; a stable baseline with per-run **live fallback** for in-flux screens
 - **Scenarios from a diff** - can propose them via the app-map's file→route table, so a change suggests its own coverage
-- **Verdict** - `pass` / `fail` / `blocked` rolled up over per-scenario ✅/❌/⚠️/⏭️, with screenshots + console capture on failure; writes a human report and a machine-readable `.json`. **Halts on non-`pass`**
+- **Scenarios derived from the spec's AC** - the primary source is the acceptance criteria, not the diff: each scenario cites the AC it `covers`, and any AC it **declines** is listed with a reason (so an AC that neither the plan nor the smoke run covers stays visible). Diff-mapping via the app-map's file→route table is the fallback for ad-hoc runs with no spec
+- **Verdict** - `pass` / `fail` / `blocked` rolled up over per-scenario ✅/❌/⚠️/⏭️, with screenshots + console capture on failure. **Two files only** - the scenario file annotated in place with actuals (that _is_ the human-readable record) plus a machine-readable `.json`. **Halts on non-`pass`**
 - **Augments the manual verify checkpoint** - gathers evidence and a verdict; the human still gives final sign-off. Scenarios + verdict live in the task dir (or `.test-browser/.temp/` for ad-hoc runs). Runs the same invoked by hand or driven by an external orchestrator
 
 ### Finishing
@@ -279,9 +282,10 @@ so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timelin
 | ------------------- | -------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Proposal**        | `<task>-<slug>-proposal.md`                                                             | `prepare` (template) + User (content) | Initial feature request, requirements, context. `prepare` scaffolds the template; the user fills it in                                                                                                                   |
 | **Assets**          | `assets/`                                                                        | User                                  | Mockups, screenshots, diagrams, reference material (user creates the dir when needed)                                                                                                                                    |
-| **Spec**            | `<task>-<slug>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how)                                                                                                                                    |
-| **Plan**            | `<task>-<slug>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands                                                                                                                                      |
+| **Spec**            | `<task>-<slug>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how). Carries the numbered **Acceptance Criteria** (`AC-1`, `AC-2`, …) that `writing-plans` and `smoke-test` read                        |
+| **Plan**            | `<task>-<slug>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands. Cites the AC each test step proves, and lists the AC it declines with reasons                                                        |
 | **Result**          | `<task>-<slug>-result.md`                                                               | `executing-plans`                     | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
+| **Smoke scenarios** | `<task>-<slug>-smoke.md` + `<task>-<slug>-smoke-result.json`                             | `smoke-test`                          | Browser scenarios derived from the spec's AC (each citing `covers: AC-n`, declined AC listed with reasons), annotated in place with per-scenario ✅/❌/⚠️/⏭️ + actual, plus the machine-readable verdict an orchestrator reads |
 | **Review**          | `<task>-<slug>-review.md` (`polish`), `<task>-<slug>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-<slug>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-<slug>-checklist-review.md` |
 | **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features (invoked from `ship`)  |
 | **UAT / Follow-ups** | `<task>-<slug>-uat.md`                                                                 | `prepare uat` (template) + User        | Post-ship work ledger: UAT feedback, bugfixes, and change requests on shipped code. Each item tagged `uat` / `bug` / `change` with a status (`open` → `in-progress` → `done` · `wontfix`) and the fixing commit                |

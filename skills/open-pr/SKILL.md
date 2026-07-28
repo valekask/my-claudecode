@@ -46,7 +46,7 @@ Build the draft from what's actually on the branch — do not invent scope:
 
 Draft:
 - **Title** — follow the commit header format `<task>: (<type>:<scope>) <subject>` (see the **Pull request convention** in `docs/CONTRIBUTING.md`), e.g. `FNA-16973: (feat:ilo) reorder timeline toolbar to group time-related controls`. Take `<task>` from the branch name; pick the `<type>` and `<scope>` that best summarize the whole PR. If `docs/CONTRIBUTING.md` is absent, the format still holds: `<type>` ∈ feat|fix|docs|style|refactor|perf|test|build, `<scope>` project-defined.
-- **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains.
+- **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains. When the spec has an **Acceptance Criteria** section, list the AC — they tell the reviewer what should be true, which is the most useful thing the body can carry. List them as criteria only; don't append verification status (that's the verify gate's output, not the PR's).
 
 ### Step 3: Show the preview and ask for approval
 
