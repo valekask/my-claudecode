@@ -28,9 +28,9 @@ A few principles fall out of this:
 6. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
 7. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
 8. **Ship** - write the product summary + ADR (when warranted), then commit
-9. **Push** (manual)
+9. **Open PR** - `open-pr` pushes the branch and opens the PR, both behind your approval
 
-Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes.
+Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes - it hands off to `open-pr`, which owns the push.
 
 **After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, `prepare discuss <task>-<slug>` captures a ticket conversation and a proposed answer (`<task>-<slug>-discussion.md`, no branch) for tickets that need thought, not code.
 
@@ -160,7 +160,7 @@ Writes the **product-facing summary** (`<task>-<slug>-result-product.md`) - a pl
 
 #### `checklist-review`
 
-Checklist-driven review of changes before PR. **194 checks across 14 parallel agents** (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift). End-to-end data-flow tracing now lives in the separate `trace-dataflow` skill.
+Checklist-driven review of changes before PR. **207 checks across 14 parallel agents** (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift). End-to-end data-flow tracing now lives in the separate `trace-dataflow` skill.
 
 **Scoping:**
 
@@ -208,30 +208,43 @@ Applies Prettier and code organization to locally modified files.
 The **pre-verification quality pass** - the one phase that mutates code after execution. Runs after execution and _before_ manual verification, so verification happens on clean, gated code.
 
 - **Format** first (runs `formatting`), then **select gates by risk**: a **pluggable primary reviewer** (CodeRabbit or built-in `/code-review`) always, plus `/security-review`, `trace-workflow`, `trace-dataflow`, `checklist-review`, or `/simplify` (surface-only) when the change warrants them
-- **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on
+- **Effort-tuned primary review** - when the built-in reviewer runs, its effort level (`low` → `max`) is **judged from the diff**, not from file count alone: mechanical diffs get `low`, cross-layer or security-sensitive work `high`, migrations / auth / money math `xhigh`-`max`. A higher level only costs time and tokens — it never widens what polish auto-applies — so unsure means go up a level. The level and its reason land in the ledger
+- **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on; pins the built-in to `medium` so the comparison is apples-to-apples
 - **Auto-applies only meaningful fixes** - High-confidence + Critical/High + mechanical. Everything else (Medium/Low, uncertain, judgment-dependent) is surfaced, not changed. Bounded to 3 fix→recheck loops per gate
 - Saves the **full report** (all severities) to `<task>-<slug>-review.md` for rule-tuning; makes no commits
 
 ### Verification
 
+Browser verification is **layered**: `test-browser` owns the mechanics, `smoke-test` owns scenarios and the verdict. The split keeps driving knowledge in exactly one place.
+
+#### `test-browser`
+
+The **browser-driving primitive** - operates a running web app and observes it: navigate, read the accessibility tree, click/fill/select, capture screenshots + console. **Carries no scenarios, no verdict, and no git/diff knowledge** - those belong to its callers.
+
+- **Driver is the Playwright CLI** (`playwright-cli`) via Bash, no MCP - so it works from any subagent context; `snapshot` returns the accessibility tree as `@e1`-style refs to pass to `click`/`fill`
+- **Context-driven, not app-coded** - everything app-specific (base URL, credentials, login form, app-map) is read from the project's **`.test-browser/` dir**, so the same skill serves any web app
+- **Persistent authenticated session** - holds one named session and reuses it across runs, re-logging in only when it expires; credentials come from a git-ignored env file
+- **Theme-proof selectors** - ARIA role + accessible name first, then `data-testid`, then semantic classes, structural CSS last; framework-generated attributes (`_ngcontent-*`, `mat-*-N`, `cdk-overlay-*`) are avoided because they churn
+
 #### `smoke-test`
 
-A **browser smoke test** for the Verify phase — drives a real browser (**Playwright CLI** via Bash) through testing scenarios against a running app, compares expected vs actual, and emits a machine-readable verdict. **Verify-and-report only** — never fixes code or ships. **App-agnostic**: the target URL, credentials, and app-map are supplied at invocation, so the same skill serves any web app.
+The **scenario-verification layer** for the Verify phase — judges a set of scenarios (steps + expected results) against a running app and emits a machine-readable verdict. **Drives the browser via `test-browser`**; owns only _what to test_ and _what the result means_. **Verify-and-report only** — never fixes code or ships.
 
-- **Persistent-session auth** - holds one **authenticated browser session** and reuses it across runs (the app refreshes its own token), re-logging in only when the session expires; credentials come from a git-ignored env file
 - **App-map driven** - reads a per-app "user's mental model" (routes, chrome, selector patterns, terminology) to drive the app like a user and **infer** new/variant UI from patterns; a stable baseline with per-run **live fallback** for in-flux screens
+- **Scenarios from a diff** - can propose them via the app-map's file→route table, so a change suggests its own coverage
 - **Verdict** - `pass` / `fail` / `blocked` rolled up over per-scenario ✅/❌/⚠️/⏭️, with screenshots + console capture on failure; writes a human report and a machine-readable `.json`. **Halts on non-`pass`**
-- **Augments the manual verify checkpoint** - gathers evidence and a verdict; the human still gives final sign-off. Runs the same invoked by hand or driven by an external orchestrator
+- **Augments the manual verify checkpoint** - gathers evidence and a verdict; the human still gives final sign-off. Scenarios + verdict live in the task dir (or `.test-browser/.temp/` for ad-hoc runs). Runs the same invoked by hand or driven by an external orchestrator
 
 ### Finishing
 
 #### `ship`
 
-The **finalize phase**, run _after_ manual verification + smoke test pass. Documents the verified change and commits it - **no code changes, never pushes**.
+The **finalize phase**, run _after_ manual verification + smoke test pass. Documents the verified change and commits it - **no code changes, never pushes itself**.
 
 - Invokes `writing-result-product` (user-facing changes) and `writing-adr` (when warranted)
 - Shows `git status` / `git diff`, proposes a commit message in the repo's style, then commits on your go-ahead
-- **Never** adds a `Co-Authored-By:` footer, amends, rebases, or pushes - the push is always manual
+- **Hands off to `open-pr`** - after committing it asks whether to open a PR for the branch (offered only on a non-default branch with an `origin` remote); declining leaves the branch local and unpushed
+- **Never** adds a `Co-Authored-By:` footer, amends, rebases, or pushes - pushing belongs to `open-pr`, behind its own approval
 
 #### `open-pr`
 
@@ -241,6 +254,17 @@ Opens a pull request from the current branch. Drafts the PR, shows a **preview**
 - **Safe-push guard** - only ever pushes the current branch to a **same-name** remote branch (`git push -u origin HEAD`) and verifies the upstream afterwards; never pushes to, or tracks, the base branch (guards against the past "branch tracked the base, push landed on it" mistake)
 - **Derives** workspace + repo slug from `origin`; base branch defaults to the repo default (override with `--base`); title/body drafted from the branch's commits and any task artifacts
 - **Auth via env** - reads `BITBUCKET_EMAIL` + `BITBUCKET_API_TOKEN` (Basic auth uses the email, not the username); the token must belong to the identity with repo access. Never edits code, commits, amends, or force-pushes
+
+### Session mechanics
+
+#### `herdr`
+
+Spawns and drives **fresh Claude sessions in their own [Herdr](https://herdr.dev) tabs** - so surfacing a subtask and _starting_ it are one step instead of "now go open a tab by hand". Since the workflow runs each phase in a fresh session, this is the primitive that makes that automatable. **Carries no project knowledge**: which trees are off-limits, which command to run, and where to record the spawn are all caller-supplied policy.
+
+- **Fresh tab = fresh session = clean context** per unit of work; `./herdr-spawn.sh` wraps the one reliable recipe (`--cwd`, `--label`, `--prompt '/<skill>'`, `--no-focus`) and enforces the caller's guardrails
+- **Watch, read, close** - `herdr agent wait <pane>` settles on `idle`/`done`/`blocked` (**omit `--until`** - a finished turn reports `done`, so pinning `idle` times out), then `herdr pane read` picks up the worker's RESULT block; `blocked` means it's asking a human, not finished
+- **Phase boundaries via `/clear`** - a long-lived session can be driven through phases by prompting `/clear` between them; the new `agent_session.value` is the only reliable confirmation the clear landed, and the `agent_prompt_stalled` error it returns is a false failure for client-side slash commands
+- **Requires running inside a Herdr pane** (`HERDR_ENV=1`) - otherwise it stops and says so rather than guessing
 
 ## Artifacts
 
