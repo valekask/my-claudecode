@@ -105,6 +105,13 @@
   → FAIL (overly generic target): `:host ::ng-deep div { ... }` or `:host ::ng-deep .active { ... }` — targets a generic selector that will match far more descendants than intended. Use a specific selector that targets only the intended third-party component (e.g., `:host ::ng-deep .p-dropdown .p-dropdown-label { ... }`).
   → NOTE: `::ng-deep` is deprecated but sometimes necessary for styling encapsulated third-party components (PrimeNG, etc.). The key safety requirements are: (1) always use a parent selector, (2) target specific child selectors, not generic ones.
 
+## Language
+
+- [ ] **ST-14**: "Is all authored text in the template and SCSS English?"
+  → Check: The `.html`/`.scss` counterpart of NM-24 — comments, `aria-label` / `title` / `alt` values, and hardcoded visible copy are written in English. Non-Latin script (Cyrillic, CJK, Greek) is a definite failure; Latin-alphabet non-English is also a failure when recognizable.
+  → NOT a failure: text bound through the i18n pipeline (`| translate`, `i18n` attributes, locale keys) — the translated value legitimately isn't English; and verbatim quotes of third-party content.
+  → FAIL: `<!-- скрываем кнопку -->`, `<button aria-label="Закрыть">`, `/* цвет фона */` in SCSS.
+
 ---
 
-Total items: 13
+Total items: 14
