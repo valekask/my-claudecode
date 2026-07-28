@@ -46,7 +46,7 @@ Build the draft from what's actually on the branch — do not invent scope:
 
 Draft:
 - **Title** — follow the commit header format `<task>: (<type>:<scope>) <subject>` (see the **Pull request convention** in `docs/CONTRIBUTING.md`), e.g. `FNA-16973: (feat:ilo) reorder timeline toolbar to group time-related controls`. Take `<task>` from the branch name; pick the `<type>` and `<scope>` that best summarize the whole PR. If `docs/CONTRIBUTING.md` is absent, the format still holds: `<type>` ∈ feat|fix|docs|style|refactor|perf|test|build, `<scope>` project-defined.
-- **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains.
+- **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains. When the spec has an **Acceptance Criteria** section, list the AC — they tell the reviewer what should be true, which is the most useful thing the body can carry. List them as criteria only; don't append verification status (that's the verify gate's output, not the PR's).
 
 ### Step 3: Show the preview and ask for approval
 
@@ -69,7 +69,8 @@ Reviewers:
 On approval I will:
   1. git push -u origin HEAD   → pushes <from_branch> to origin/<from_branch>
                                   (upstream = same-name remote branch, never <base_branch>)
-  2. create the PR via the Bitbucket REST API (<from_branch> → <base_branch>)
+  2. create the PR via the Bitbucket REST API (<from_branch> → <base_branch>),
+     with "delete <from_branch> after merge" pre-checked
 ```
 
 Then ask the user to reply **"approved" / "proceed" / "do it"** to open it, or to tell you what to change. Iterate on the title/base/description until they approve.
@@ -140,12 +141,13 @@ curl -sS --fail-with-body -X POST \
         --arg t '<title>' --arg d '<description>' \
         --arg s '<from_branch>' --arg b '<base_branch>' \
         --argjson r "$reviewers" \
-        '{title:$t, description:$d,
+        '{title:$t, description:$d, close_source_branch:true,
           source:{branch:{name:$s}}, destination:{branch:{name:$b}}}
          + (if ($r | length) > 0 then {reviewers:$r} else {} end)')"
 ```
 
 - Set `source.branch.name` = `<from_branch>` and `destination.branch.name` = `<base_branch>` **explicitly** — never let either be inferred.
+- **`close_source_branch: true` always.** This pre-checks Bitbucket's "Delete `<branch>` after the pull request is merged" box so merged feature branches don't accumulate. It is a **default, not a guarantee** — whoever merges can still uncheck it, and it deletes nothing until the merge happens.
 - `--fail-with-body` makes curl exit non-zero on an HTTP error while still printing the response body. On error, **STOP** and show the user the body. Common cases:
   - `401` / `403`, or a body about "may not have access to this repository" — token missing or lacks a required scope (`read:repository` + `write:pullrequest`). Scopes are fixed at creation; recreate the token with the full set.
   - `400` — a PR for this source→destination already exists. Don't retry; instead `GET .../pullrequests?q=source.branch.name="<from_branch>"&state=OPEN` and show the user the existing PR.

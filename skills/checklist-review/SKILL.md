@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with the project'
 
 # Code Review
 
-Checklist-driven review with parallel agents. 194 checks across 14 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift).
+Checklist-driven review with parallel agents. 207 checks across 14 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift).
 
 **End-to-end data-flow tracing is a separate skill.** It lives in `trace-dataflow` — run it alongside this review when a change crosses layers (service/store + component, effects/reducers/selectors, or HTTP calls). This skill no longer performs flow tracing.
 
@@ -199,11 +199,11 @@ All checking agents use this mindset:
 
 ### Agent 1: NAMING
 
-**Checklist:** `naming.md` (12) = **12 checks**
+**Checklist:** `naming.md` (24) = **24 checks**
 
-**Focus:** Naming conventions only.
+**Focus:** Naming conventions — symbol names, plus file names for added/renamed files.
 
-**Input:** Diff of all changed `.ts` files + checklist contents.
+**Input:** Diff of all changed `.ts` files + the list of **added and renamed** file paths (NM-13..NM-18 apply to those only) + checklist contents.
 
 ### Agent 2: CLEAN CODE
 
@@ -312,9 +312,9 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 ### Agent 9: STYLING
 
-**Checklist:** `styling.md` (13) = **13 checks**
+**Checklist:** `styling.md` (14) = **14 checks**
 
-**Focus:** Design system usage, CSS variables, Bootstrap utilities, selector specificity, property ordering, template–SCSS class matching.
+**Focus:** Design system usage, CSS variables, Bootstrap utilities, selector specificity, property ordering, template–SCSS class matching, English-only authored text.
 
 **Input:** Diff of all changed `.scss` and `.html` files + checklist contents. Read `libs/ui/src/assets/scss/` variable files when checking if a hardcoded value exists in the design system. For ST-8 (Bootstrap deprecations), check both `.scss` class references and `.html` template class attributes.
 
@@ -652,7 +652,7 @@ Examples:
 
 | Agent | Phase | Checklists | Checks | When |
 |---|---|---|---|---|
-| 1: NAMING | Check | naming | 12 | Any `.ts` file |
+| 1: NAMING | Check | naming | 24 | Any `.ts` file |
 | 2: CLEAN CODE | Check | clean-code | 26 | Any `.ts` file |
 | 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 15 | Any `.ts` file |
 | 4: ARCHITECTURE | Check | architecture | 13 | Component/service/store/module/directive/infra files |
@@ -660,10 +660,10 @@ Examples:
 | 6: STATE MANAGEMENT | Check | state-management | 14 | Store files or `@ngrx` imports |
 | 7: SAFETY | Check | regressions + security | 25 | Always |
 | 8: TEST QUALITY | Check | test-quality | 14 | Service/store/util/pipe/directive/guard/interceptor or spec files changed |
-| 9: STYLING | Check | styling | 13 | Any `.scss` or `.html` file changed |
+| 9: STYLING | Check | styling | 14 | Any `.scss` or `.html` file changed |
 | 10: FORMS | Check | forms | 14 | Files importing form APIs (`FormBuilder`, `FormGroup`, etc.) |
 | 11: PERFORMANCE | Check | performance | 12 | Component/template/store/service files changed |
 | 12: MIGRATION SAFETY | Check | migration-safety | 12 | Migration files or persisted-state code changed |
 | 13: STANDARDS DRIFT | Check | standards-drift | 10 | Always |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 14 checklists | **194** | |
+| **Total** | | 14 checklists | **207** | |

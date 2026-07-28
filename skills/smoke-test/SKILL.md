@@ -29,8 +29,10 @@ means*, never the driving mechanics.
 
 ## Inputs
 
-- **Scenarios** — steps + expected results. Either supplied by the invoker (a path
-  the caller points to), or **proposed from a diff** (see below).
+- **Scenarios** — steps + expected results. In order of preference: supplied by the
+  invoker (a path the caller points to), **derived from the spec's acceptance
+  criteria** (the primary path — see below), or **proposed from a diff** (fallback
+  for ad-hoc runs with no spec).
 - **App context** — resolved by `test-browser` from the project's `.test-browser/`
   dir (base URL, credentials, app-map). This skill doesn't read it directly.
 - **Output dir** — where the verdict + report land. **Invoker-supplied**; defaults
@@ -38,9 +40,33 @@ means*, never the driving mechanics.
   management cockpit) point it at the **task dir** so the verdict travels with the
   task and the cockpit can read it.
 
-### Proposing scenarios from a diff (optional)
+### Deriving scenarios from acceptance criteria (primary)
 
-When asked to "smoke-test the current changes" without a pre-written scenario set:
+When the task dir has a spec with an **Acceptance Criteria** section and no scenario
+set exists yet, derive the scenarios from the AC — not from the diff. The AC state
+what must be true; the diff only shows what was built, so AC are the source that can
+still catch a criterion nobody implemented.
+
+1. Read the numbered AC from `<task>-<slug>-spec.md`.
+2. For each AC, decide whether it is **observable in the UI**. If yes, write one or
+   more scenarios that would prove it — behaviour-level steps + expected results,
+   routes from the app-map (`test-browser` resolves selectors live).
+3. **Every scenario cites the AC it covers** (`covers: AC-2`). One AC may need
+   several scenarios; one scenario may cover several AC.
+4. **Account for every AC — never silently drop one.** An AC you do not turn into a
+   scenario is listed as **declined** with a one-line reason (e.g. "AC-4: store-level
+   logic, no UI surface — expect unit coverage"; "AC-6: perf feel, not
+   machine-observable"). Declined AC go in the scenario file *and* the verdict, so a
+   criterion no one covers is visible rather than lost between skills.
+5. If an AC is observable but you cannot construct a scenario because the UI for it
+   does not appear to exist, that is **not** a decline — record it as a scenario that
+   fails, because a missing implementation is exactly what the AC is there to catch.
+6. Write the set to the scenario file in the output dir and surface it so a human can
+   adjust before/after the run.
+
+### Proposing scenarios from a diff (fallback)
+
+For ad-hoc runs with no spec/AC to work from ("smoke-test the current changes"):
 1. Get the diff (`git diff` — branch/staged/PR per the caller).
 2. Map changed files → affected routes using the **file→route table in the
    app-map** (`.test-browser/app-map.md`). Missing/rough table → note it; test the
@@ -81,10 +107,14 @@ For each scenario, in the same persistent session, using `test-browser` to drive
 
 | File | Content |
 |------|---------|
-| `<name>-smoke.md` | scenarios + expected (input), with per-scenario ✅/❌/⚠️/⏭️ + actual filled in |
-| `<name>-smoke-result.md` | human report: per-scenario expected/actual, evidence links, overall verdict |
-| `<name>-smoke-result.json` | **machine record** the orchestrator parses (shape below) |
+| `<task>-<slug>-smoke.md` | scenarios + expected (input), with per-scenario ✅/❌/⚠️/⏭️ + actual filled in, the `covers: AC-n` mapping, and any **declined AC** with reasons |
+| `<task>-<slug>-smoke-result.json` | **machine record** the orchestrator parses (shape below) |
 | `assets/smoke/*.png`, `*.log` | screenshots + console dumps, referenced by path |
+
+**Two files, no separate human report.** The annotated `<task>-<slug>-smoke.md` *is* the
+human-readable record — scenarios, expected, actual, evidence paths, verdict, all in
+one place. Report the outcome in your response; don't write a third file that
+restates it.
 
 Verdict `.json` shape:
 ```json
@@ -96,14 +126,16 @@ Verdict `.json` shape:
   "counts": { "pass": 0, "fail": 0, "known": 0, "skipped": 0 },
   "scenarios": [
     { "id": "S1", "name": "…", "status": "pass|fail|known|skipped",
+      "covers": ["AC-2"],
       "expected": "…", "actual": "…", "evidence": ["assets/smoke/S1.png"] }
   ],
+  "declined_ac": [ { "id": "AC-4", "reason": "store-level logic, no UI surface" } ],
   "live_fallbacks": [ "…elements resolved live, not in the app-map…" ],
   "started": "ISO-8601", "finished": "ISO-8601"
 }
 ```
 
-Scenarios + verdict/report are **task-scoped** — they belong in the **task dir**
+Scenarios + verdict are **task-scoped** — they belong in the **task dir**
 (with the task's spec/plan/result), not in `.test-browser/`. Only the throwaway
 run artifacts (screenshots, console) sit under `.test-browser/.temp/`.
 
@@ -115,3 +147,5 @@ run artifacts (screenshots, console) sit under `.test-browser/.temp/`.
 - **Autonomous until unsure.** Run the whole scenario set without prompting; only
   stop to escalate on a genuine `fail`/`blocked` or a real ambiguity.
 - **Halt on non-`pass`** — report and stop; the fix loop lives outside this skill.
+- **Account for every acceptance criterion** — covered by a scenario or explicitly
+  declined with a reason. An AC that appears in neither list is a bug in this run.

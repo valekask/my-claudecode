@@ -106,17 +106,33 @@ ones**, don't cache across closes.
 | Need | Command |
 |---|---|
 | List live agents (pane/tab/cwd/status, JSON) | `herdr agent list` |
-| Wait until a session finishes its turn | `herdr wait agent-status <pane> --status idle --timeout <ms>` |
-| Wait until it's blocked on input | `herdr wait agent-status <pane> --status blocked --timeout <ms>` |
+| Wait until a session settles | `herdr agent wait <pane> --timeout <ms>` |
+| Wait until it's blocked on input | `herdr agent wait <pane> --until blocked --timeout <ms>` |
 | Read what a session printed | `herdr pane read <pane> --source recent --lines <n>` |
 | Bring a session forward | `herdr tab focus <tab>` / `herdr agent focus <pane>` |
-| Send a follow-up line (text only) | `herdr agent send <pane> '<text>'` |
+| Send a follow-up prompt | `herdr agent prompt <pane> '<text>' [--wait --timeout <ms>]` |
 | Send a command (text + Enter) | `herdr pane run <pane> '<cmd>'` |
 | Tear a session down | `herdr tab close <tab>` |
 
+**Waiting — read this before writing a watcher** (verified 2026-07-25; earlier
+revisions of this file named a `herdr wait agent-status … --status …` that does
+**not exist**, and an `herdr agent send` that does not exist either):
+
+- The command is **`herdr agent wait <target> [--until <status>] [--timeout <ms>]`**,
+  where `<status>` ∈ `idle | working | blocked | done | unknown`.
+- **A session that has finished its turn reports `done`, not `idle`.** Pinning a
+  watcher to `--until idle` **times out** against an agent that already answered —
+  this was the original cause of the wrong guidance here.
+- **So omit `--until`.** The default matches `idle`, `done`, *or* `blocked`, which is
+  exactly what a watcher wants. Then check *which* state you settled into: `blocked`
+  means **waiting on human input**, not finished — don't read its output as a final
+  result.
+
 `agent list` JSON, per agent: `pane_id`, `tab_id`, `workspace_id`, `agent`,
-`agent_status` (`idle`/`working`/`blocked`/`unknown`), `cwd`. Parse with
-`python3`/`jq`. The env inside any pane exposes `HERDR_WORKSPACE_ID` /
+`agent_status` (`idle`/`working`/`blocked`/`done`/`unknown`), `cwd`, plus
+`agent_session.value` (the session id) and `state_change_seq` (a monotonic counter
+— useful to detect that a human typed into the pane since you last looked). Parse
+with `python3`/`jq`. The env inside any pane exposes `HERDR_WORKSPACE_ID` /
 `HERDR_TAB_ID` / `HERDR_PANE_ID` / `HERDR_SOCKET_PATH`.
 
 **Why not `herdr agent start`?** It treats `-- <argv>` as the *whole* command and
@@ -147,8 +163,9 @@ do one job and report back. Keep it lightweight:
   Reserve **files** for results a downstream step must *parse* (e.g. `smoke-test`'s
   verdict `.json`); for everything else the terminal block keeps file sprawl down.
 - **Read it safely (wait, then confirm).** Spawn `--no-focus`; wait for the pane to
-  go **idle** (`herdr wait agent-status <pane> --status idle`), **then** read the
-  RESULT block (`herdr pane read <pane> --source recent`). If the block isn't there
+  **settle** (`herdr agent wait <pane> --timeout <ms>` — no `--until`; see "Waiting"
+  above), **then** read the RESULT block (`herdr pane read <pane> --source recent`).
+  If you settled into `blocked`, the worker is asking a question, not done. If the block isn't there
   yet, the session either hadn't started (a spurious early idle) or is still
   composing — **wait again and re-read.** Don't parse a half-written result.
 - **Fire-and-complete.** A task session does its job, prints its result, and
@@ -182,14 +199,32 @@ task for its whole lifecycle and use `/clear` as the phase boundary:
   artifact, so nothing is lost:
 
   ```sh
-  herdr pane run <pane> '/clear'                            # then wait for idle
-  herdr wait agent-status <pane> --status idle --timeout 30000
-  herdr pane run <pane> '/<next-skill> on <artifact-path>'
+  # capture the session id first — it changes on clear, which is your confirmation
+  before=$(herdr agent list | jq -r '.result.agents[]|select(.pane_id=="<pane>")|.agent_session.value')
+  herdr agent prompt <pane> '/clear'        # exits non-zero with agent_prompt_stalled — expected, see below
+  after=$(herdr agent list | jq -r '.result.agents[]|select(.pane_id=="<pane>")|.agent_session.value')
+  [ "$before" != "$after" ] || echo "WARNING: clear did not land"
+  herdr agent prompt <pane> '/<next-skill> on <artifact-path>' --wait --timeout 600000
   ```
+
+  **Two gotchas, both verified — an automated driver must handle them:**
+
+  - **`/clear` reports a false failure.** It returns
+    `agent_prompt_stalled: agent prompt produced no observed state change`. A
+    client-side slash command never puts the agent into `working`, so there is no
+    state change to observe — **the command did execute.** Whitelist this specific
+    error for slash commands, or your driver will conclude every clear failed.
+  - **A clear mints a new `agent_session.value`.** That id change is the only
+    reliable *confirmation* the clear landed, so compare it rather than trusting the
+    send. (Verified by planting a codeword before the clear and finding it gone
+    after.)
+
+  Driving `/clear` in from outside genuinely works, which is what makes this phase
+  axis automatable instead of a manual step.
 
 - **Always pass the artifact path explicitly** — the cleared session has no memory
   of which task/file it was on. e.g.
-  `/brainstorming on <task-dir>/<task>-proposal.md`.
+  `/brainstorming on <task-dir>/<task>-<slug>-proposal.md`.
 - **Rename the tab to the new phase** (the old label goes stale):
   `herdr tab rename <tab> '<phase> <subject>'`.
 
@@ -218,7 +253,7 @@ the defaults):**
 ```sh
 ./herdr-spawn.sh --cwd ~/project --no-focus \
   --label 'verify FNA-16973' --prompt '/smoke-test'
-herdr wait agent-status <pane> --status idle --timeout 300000   # give slow work headroom
+herdr agent wait <pane> --timeout 300000   # give slow work headroom; no --until (see "Waiting")
 ```
 
 ## Rules

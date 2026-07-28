@@ -45,9 +45,25 @@ Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run 
 The primary reviewer is **configurable** — currently being evaluated. Two options:
 
 - **CodeRabbit** (`coderabbit:coderabbit-review`) — different engine (independent signal), tuned with project-specific custom rules.
-- **Built-in `/code-review`** — Claude-based, effort-tunable (low→max; pick by risk), broader scope (bugs + reuse/simplification), no external dependency.
+- **Built-in `/code-review`** — Claude-based, effort-tunable (low→max; pick by risk), broader scope (bugs + reuse/simplification), no external dependency. Invoke the **built-in** skill — not the plugin skill named `coderabbit:code-review`, which is a different reviewer despite the similar name.
 
 **Default:** CodeRabbit, unless the user specifies otherwise (e.g., `polish --reviewer=builtin`).
+
+**Effort level (built-in reviewer only).** The built-in reviewer takes an effort level — `/code-review low` through `max`. **Judge the level from the diff, don't just count files.** The table is the starting point; risk overrides it.
+
+| Diff shape | Start at |
+|---|---|
+| ≤3 files, no service/store logic, no security-sensitive surface | `low` |
+| 4–8 files, or any service/store/effect logic | `medium` |
+| 9+ files, structural component/service/store/module changes, or security-sensitive surface (auth, guards, interceptors, input handling, secrets, external HTTP) | `high` |
+| Complex multi-layer change (component + store + HTTP in one diff), persisted-state/schema migration, or non-trivial logic on a security-sensitive surface | `xhigh` |
+| Highest-consequence work: auth/permission logic, data migrations that can corrupt or lose data, money/currency math, or any change that is hard to roll back — plus a final pass over a large feature branch before PR | `max` |
+
+Escalate a level above the table when the diff is small but consequential — a two-line change to an auth guard, a persisted-state migration, or anything whose failure is silent rather than loud. Drop to `low` for mechanical diffs (renames, config, generated code) regardless of file count. **State the level you picked and why** as part of announcing your gate selection.
+
+The only cost of a higher level is time and tokens, and it does not widen what polish will change on its own — the Step 5 triage rules (High/Critical + high confidence + mechanical) still bound auto-fix, so deeper review produces more *surfaced* findings, not more autonomous mutation. Prefer going a level up when genuinely unsure.
+
+Under `--compare`, pin the built-in reviewer to `medium` — comparing it against CodeRabbit is meaningless if its effort varies between runs.
 
 **Compare mode** (opt-in, e.g. `polish --compare`): run **both**, then report each reviewer's findings side by side, highlighting **unique catches** (what each found that the other missed) and overlap. Use this to evaluate which reviewer gives better signal on this codebase before standardizing on one. Note: compare mode is for evaluation — don't run both as the steady state (double latency/noise).
 
@@ -80,7 +96,7 @@ Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<tas
 
 Lead with the **review ledger** — every gate listed in this order, each as a short prose line (not a table, so nothing interesting gets squeezed out): **status** + the info that matters for that gate. For a gate that ran, give its result — findings count, notable catches, what was auto-fixed vs surfaced. For a skipped gate, give the reason its trigger didn't fire. Every gate appears exactly once, even when skipped.
 
-1. **Primary reviewer** — always runs; name which one actually ran per the chosen option (CodeRabbit by default, the built-in `/code-review` under `--reviewer=builtin`, or both under `--compare`) and report its findings and notable catches.
+1. **Primary reviewer** — always runs; name which one actually ran per the chosen option (CodeRabbit by default, the built-in `/code-review` under `--reviewer=builtin`, or both under `--compare`) and report its findings and notable catches. When the built-in reviewer ran, state the **effort level** used and the reason for it — the level is part of the record, since it bounds how much the gate could have caught.
 2. **checklist-review** — ran (result) or skipped (why, e.g. small generic diff below the threshold).
 3. **trace-workflow** — ran (result) or skipped (why, e.g. no conditional logic touched).
 4. **trace-dataflow** — ran (result) or skipped (why, e.g. change stays within one layer).
@@ -99,6 +115,7 @@ End with the handoff: the change is ready for **manual verification + smoke test
 **Never:**
 - Auto-apply Medium/Low findings or anything needing judgment — surface them
 - Run all gates indiscriminately — select by risk and say why
+- Run the built-in reviewer without deliberately choosing an effort level — judge it from the diff and state the choice
 - Report only the gates that ran — every gate appears in the review ledger, skipped ones with a reason
 - Loop fix→recheck more than 3 times on one gate — escalate instead
 - Drop Low/Medium findings from the saved report
