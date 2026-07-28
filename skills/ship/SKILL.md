@@ -5,7 +5,7 @@ description: Finalize a verified change — capture the product summary and ADR 
 
 # Ship
 
-The **finalize phase**. Run it after the change has been polished, manually verified, and smoke-tested. Ship documents the verified result and commits it — it does **not** change code (polish already did) and it **never pushes** (you push manually).
+The **finalize phase**. Run it after the change has been polished, manually verified, and smoke-tested. Ship documents the verified result and commits it — it does **not** change code (polish already did) and it **never pushes** — after committing it offers to hand off to `open-pr`, which owns the push and the PR.
 
 **Announce at start:** "I'm using the ship skill to capture docs and commit the verified change."
 
@@ -39,19 +39,23 @@ Invoke the `writing-adr` skill **only** when the change involved non-obvious con
 **Commit rules (MANDATORY — from the project's git restrictions):**
 - Commit only as part of running ship (this is the explicit request); show the message first.
 - **Do NOT add a `Co-Authored-By:` trailer or any other footer.**
-- **NEVER push.** The push is always the user's, run manually.
+- **NEVER push from ship.** Pushing is `open-pr`'s job — hand off to it (Step 5) instead.
 - Do not amend, rebase, reset, or touch git config/hooks.
 
 ### Step 5: Hand off
 
-Report what was committed (files, message, ADR/product-summary if written) and remind the user to **push manually** when ready.
+1. Report what was committed (files, message, ADR/product-summary if written).
+2. **Ask about the next step:** offer to continue with the `open-pr` skill to open a PR for this branch. Offer it only when the commit landed on a **non-default** branch and the repo has an `origin` remote — otherwise just report and stop.
+3. If the user says yes, invoke `open-pr` — it drafts, previews, and waits for its **own** approval before pushing the feature branch and creating the PR. If the user declines, stop there; the branch stays local and unpushed.
+
+Ship never pushes, not even when handing off — each skill owns its own task, and the push belongs to `open-pr`.
 
 ## Red Flags
 
 **Never:**
 - Change code in ship — bounce back to polish + verify instead
 - Ship code that hasn't been manually verified
-- Push, amend, rebase, or reset
+- Push, amend, rebase, or reset — even while handing off to `open-pr`
 - Add a `Co-Authored-By:` or any commit footer
 - Auto-write an ADR for straightforward work
 - Write a product summary for a pure internal refactor
