@@ -16,7 +16,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 - You have an implementation plan (`.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`)
 - Tasks are mostly independent
 - You want automated review gates per task
-- For simpler tasks or when subagents aren't needed, use executing-plans instead
+- A plan exists. If there's a spec but **no** plan, the task never needed one — use `executing-simple`, which implements the spec inline
 
 ## The Process
 

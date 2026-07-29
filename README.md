@@ -24,7 +24,7 @@ A few principles fall out of this:
 2. **Proposal** (manual) - fill in the proposal; drop reference assets (mockups, screenshots, diagrams) into `assets/`
 3. **Brainstorm** - turn the proposal into an approved spec
 4. **Plan** - decompose the spec into a bite-sized implementation plan
-5. **Execute** - implement the plan with a fresh subagent per task in isolated context (writes the result file)
+5. **Execute** - implement the plan with a fresh subagent per task in isolated context (writes the result file). **Simple tasks skip step 4** and run `executing-simple` straight from the spec instead
 6. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
 7. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
 8. **Ship** - write the product summary + ADR (when warranted), then commit
@@ -34,13 +34,13 @@ Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verifica
 
 ### `--agentic` mode
 
-`brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `ship`, and `open-pr` accept **`--agentic`** — for tasks driven by an orchestrator with little human attention. It raises the bar for **interrupting you**; it never lowers the bar for the work. Every review loop, exploration step, and quality gate runs exactly as normal.
+`brainstorming`, `writing-plans`, `executing-simple`, `subagent-driven-development`, `ship`, and `open-pr` accept **`--agentic`** — for tasks driven by an orchestrator with little human attention. It raises the bar for **interrupting you**; it never lowers the bar for the work. Every review loop, exploration step, and quality gate runs exactly as normal.
 
 | Skill | Without the flag | With `--agentic` |
 | --- | --- | --- |
 | `brainstorming` | clarifying questions, design walk-through, Final Review menu | digest presented as one block; **spec approval always required, at every tier** |
 | `writing-plans` | 1-3 surfaced decisions across all categories, Final Review menu | surfaces only critical surface / backend contract / genuine design fork / spec gap / scope growth / ADR conflict — decides the rest and records the reasoning in the plan; no Final Review menu |
-| `executing-plans` | pause + approval after every task | no pause; same **structural** stop triggers as below, plus a verification failing twice or a materially ambiguous instruction. No review stages exist here, so prefer `subagent-driven-development --agentic` for anything past small |
+| `executing-simple` | may ask one focused question when a single small ambiguity blocks | never asks — the same ambiguity becomes a **bail** (`needs full flow`). Every bail trigger is unchanged; autonomy buys fewer interruptions, never licence to improvise past the spec |
 | `subagent-driven-development` | checkpoint after every task | no per-task checkpoint; stops only on a **structural** departure from the approved plan (unplanned file, unauthorized boundary crossing, shared-code edit, unscoped refactor, critical surface, backend contract), anything irreversible, a review failing twice, or a materially ambiguous spec |
 | `ship` | asks that verification passed, asks for the commit go-ahead, offers the `open-pr` hand-off | reads `smoke-test`'s verdict file instead of asking (**stops** on non-`pass` or a missing verdict); decides the product summary + ADR by the documented criteria; the invocation is the commit go-ahead; chains or stops instead of offering |
 | `open-pr` | preview, then waits for "approved" before the push and the PR | the flag **is** the advance authorization; preview is saved as a record; adds a hard preflight (clean tree, commits ahead of base, from ≠ base, env present) and never guesses the base |
@@ -58,7 +58,7 @@ Two ideas behind it: the human's leverage is **structural** (where code lives, w
 Scaffolds what you're about to work on, in one of two modes. The mode is **stated, never inferred**: `uat` as the first argument, otherwise a new task.
 
 - **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
-- **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development`).
+- **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-simple` for a small round, `writing-plans` → `subagent-driven-development` when the round needs a plan).
 - **Decides, never prompts** - acts where the state is unambiguous (folder + branch already there → report and write nothing; folder without a branch → create it and reuse the files, never overwriting a proposal) and **refuses** where it isn't (a shipped task, or `uat` with no result file). A refusal is terminal: a human can read it, an orchestrator can handle it, where a prompt would just hang an unattended run. The only thing it asks for is a missing task name.
 - **Branch/files only** - creates and switches; never fetches, pulls, or commits, so the base is whatever your local default branch is. Name check is advisory; the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`.
 
@@ -125,7 +125,7 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 
 - Same size-aware digest pattern as brainstorm - sectioned summary grouped by natural seams
 - Five-option menu: walk by section / show full digest / approve / save / discuss
-- **Approve routes** to `subagent-driven-development` (the default for now) - no second menu, with a `switch to inline` override to `executing-plans`
+- **Approve routes** to `subagent-driven-development` - once a plan exists, that's the executor (no second menu). The inline lane is `executing-simple`, which skips planning entirely and works from the spec
 
 #### `subagent-driven-development`
 
@@ -147,15 +147,17 @@ The **default executor**. Implements the plan task-by-task. Each task is impleme
 
 - Write a result summary with files changed, review history, and test results
 
-#### `executing-plans`
+#### `executing-simple`
 
-The **inline alternative** - executes the same plan in the current session, with no subagents and no review stages. For plans small enough that a bad task is obvious in the diff; reached via the `switch to inline` override.
+The **inline alternative for simple tasks** - works directly from the **spec**, with no plan phase, no subagents, and no review stages. For work where decomposing it into a plan would cost more than doing it.
 
-- Read plan + spec, review the plan critically, and raise concerns **before** starting
-- Follow each step exactly and run the verifications the plan specifies - nothing else checks the work here, which is the trade for the lower overhead
-- Pause and report after every task, waiting for approval before the next (`--agentic` drops the pause - see [`--agentic` mode](#--agentic-mode))
-- Stop rather than guess: a blocker, a plan gap, an unclear instruction, or a verification that keeps failing
-- Write the same result file, then hand off to `polish` in a fresh session. **No git operations** - commits stay manual
+**Which executor is unambiguous - it's the artifact, not a judgment call:** a plan exists → `subagent-driven-development`; a spec but no plan → `executing-simple`.
+
+- **Input is the spec** (`<task>-<slug>-spec.md`, typically from `brainstorming --agentic`), which must already carry numbered **AC** and a ratified **tier**. This skill reads both and writes neither - `brainstorming` owns that artifact
+- Locate the code, make the change, add unit tests where the project expects them, run the tests covering what you touched, write `<task>-<slug>-result.md`, and emit `Result saved to <abs path>` verbatim so an orchestrator can detect completion
+- **Bails** (`needs full flow`, changing nothing further) when reality departs from the spec - unplanned file or location, unauthorized boundary crossing, shared-code edit, unscoped refactor, a one-way escalator surfacing mid-flight (auth, migration/persisted state, money math), or an ambiguity where two readings produce materially different code. **A bail is a success condition**, not a failure; improvising past one is the failure
+- **AC aren't traced in this lane** - mapping each AC to a test is the plan phase's job, so here they're browser-proven or waived. Unit tests are still written; the result file says which is which, because downstream `ship` gates read that ledger
+- Owns nothing else: no branch/worktree, no gates or formatting (`polish`), no browser verification (`smoke-test`), no commit/push/PR (`ship` / `open-pr`)
 
 #### `writing-adr`
 
@@ -311,7 +313,7 @@ so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timelin
 | **Assets**          | `assets/`                                                                        | User                                  | Mockups, screenshots, diagrams, reference material (user creates the dir when needed)                                                                                                                                    |
 | **Spec**            | `<task>-<slug>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how). Carries the numbered **Acceptance Criteria** (`AC-1`, `AC-2`, …) that `writing-plans` and `smoke-test` read                        |
 | **Plan**            | `<task>-<slug>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands. Cites the AC each test step proves, and lists the AC it declines with reasons                                                        |
-| **Result**          | `<task>-<slug>-result.md`                                                               | `executing-plans`                     | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
+| **Result**          | `<task>-<slug>-result.md`                                                               | `subagent-driven-development` / `executing-simple` | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
 | **Smoke scenarios** | `<task>-<slug>-smoke.md` + `<task>-<slug>-smoke-result.json`                             | `smoke-test`                          | Browser scenarios derived from the spec's AC (each citing `covers: AC-n`, declined AC listed with reasons), annotated in place with per-scenario ✅/❌/⚠️/⏭️ + actual, plus the machine-readable verdict an orchestrator reads |
 | **Review**          | `<task>-<slug>-review.md` (`polish`), `<task>-<slug>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-<slug>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-<slug>-checklist-review.md` |
 | **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - written for user-facing changes at `Medium` / `Complex` tier, skipped for `Simple` tier and internal refactors, always available on request (invoked from `ship`)  |

@@ -160,7 +160,7 @@ Write `.claude/temp/<task>-<slug>/<task>-<slug>-uat.md` from the [UAT ledger tem
 
 Report the branch and ledger. Tell the user to:
 1. List the follow-up items in `<task>-<slug>-uat.md`, each tagged `uat` / `bug` / `change`.
-2. Implement them (`executing-plans` / `subagent-driven-development`).
+2. Implement them (`executing-simple` straight from the spec for a small round, or `writing-plans` → `subagent-driven-development` when the round needs a plan).
 3. Update each item's **Status** and record the commit under **Fixed by** as it lands; then `polish` → verify → `ship` as usual.
 
 In worktree mode, also report the worktree path and tell the user to `cd` into it (or open a fresh session there) first.
