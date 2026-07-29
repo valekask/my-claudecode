@@ -192,7 +192,7 @@ pattern.
 ## Phase advances within one unit of work — reuse the tab, `/clear` between phases
 
 A task's lifecycle often runs through several phases (e.g.
-`prepare → brainstorming → writing-plans → executing-plans → ship`). **Don't
+`prepare → brainstorming → writing-plans → subagent-driven-development → ship`). **Don't
 spawn a fresh tab per phase** — that proliferates tabs. Instead keep one tab per
 task for its whole lifecycle and use `/clear` as the phase boundary:
 
@@ -252,7 +252,7 @@ the defaults):**
 ```sh
 # invoked from ~/driver-project; target lives elsewhere → widen the base with --allow
 ./herdr-spawn.sh --cwd ~/other-repo/.worktrees/my-slug --focus \
-  --label 'implement FNA-16973' --prompt '/executing-plans' \
+  --label 'implement FNA-16973' --prompt '/executing-simple' \
   --allow ~/other-repo
 ```
 

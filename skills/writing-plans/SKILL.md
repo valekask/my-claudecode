@@ -114,7 +114,7 @@ Apply user answers when writing tasks. Bake the decision into the relevant phase
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** Implemented via `subagent-driven-development` (the default), or `executing-plans` for simple inline execution. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Implemented via `subagent-driven-development` — once a plan exists, that's the executor. (`executing-simple` is the *no-plan* lane: it works straight from the spec, so it never runs on a plan.) Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -232,7 +232,7 @@ If the user has feedback at any point — during the walk, after a section, or b
 
 **Walk by section:** show one section, then AskUserQuestion (Next / Save). After the last section, auto-emit the Save handoff. If the user types feedback instead of picking Next or Save, treat it as discussion — revise and re-enter Final Review.
 
-**Save:** emit this exact text and stop. Do NOT auto-invoke `subagent-driven-development` or `executing-plans` in this session — execution belongs in a fresh session.
+**Save:** emit this exact text and stop. Do NOT auto-invoke `subagent-driven-development` in this session — execution belongs in a fresh session.
 
 > Plan saved to `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`.
 > Use subagent-driven-development skill to execute plan at `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`.
