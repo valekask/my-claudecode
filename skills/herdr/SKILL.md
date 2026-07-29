@@ -53,9 +53,16 @@ and enforces any caller-supplied guardrails. Prefer it over hand-rolling the CLI
   to a temp brief file and launched via a short `Read <file> and follow it.`
   pointer — because `pane run` truncates a long typed line, which would leave an
   unclosed quote and silently fail to start claude. The `SPAWNED` line then
-  includes `brief=<file>`. (Slash commands are always sent inline, verbatim.) You
-  can also hand-author a brief file yourself and pass a short pointer prompt when
-  you want the brief to live somewhere durable.
+  includes `brief=<file>`. You can also hand-author a brief file yourself and pass
+  a short pointer prompt when you want the brief to live somewhere durable.
+  **Slash commands are the exception — they are sent inline, verbatim, and so
+  cannot be rescued by stashing** (the session would receive the pointer text
+  instead of the command). One longer than **400 chars is rejected** (exit 2)
+  rather than truncated silently. Keep a slash prompt to the command plus paths —
+  real ones are well under that — and put anything longer in a file the session
+  reads. **A project skill isn't reachable from another cwd:** project skills load
+  from the *cwd's* `.claude/skills/`, so to run one in a tab opened elsewhere, pass
+  `'Follow <abs path>/SKILL.md for <subject>.'` instead of its slash name.
 - **`--workspace`** — which Herdr *space* the tab is created in. **Defaults to the
   spawning session's own workspace (`$HERDR_WORKSPACE_ID`)** — "where it was
   requested" — so the tab lands in the caller's space, **not** whatever space

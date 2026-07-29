@@ -31,10 +31,12 @@
 # kick off the work; open it manually when you need it. Pass --focus to bring the
 # new tab forward.
 #
-# Long prompts are handled automatically: a prompt that is long, multi-line, or
-# contains a double-quote is written to a temp brief file and launched with a
-# short "Read <file> and follow it." pointer (a raw long prompt gets truncated by
-# `pane run` and never starts claude). Slash commands are always sent inline.
+# Long prompts are handled automatically: a plain-text prompt that is long,
+# multi-line, or contains a double-quote is written to a temp brief file and
+# launched with a short "Read <file> and follow it." pointer (a raw long prompt
+# gets truncated by `pane run` and never starts claude). A SLASH command must be
+# sent literally, so it can't be stashed — an over-long one is REJECTED (exit 2)
+# rather than silently truncated. Keep slash prompts to the command + paths.
 #
 # Example:
 #   herdr-spawn.sh --cwd ~/project --label 'ticket FNA-16973' \
@@ -66,6 +68,24 @@ done
 [ -n "$CWD" ]    || { echo "herdr-spawn: --cwd is required" >&2; exit 2; }
 [ -n "$LABEL" ]  || { echo "herdr-spawn: --label is required" >&2; exit 2; }
 [ -n "$PROMPT" ] || { echo "herdr-spawn: --prompt is required" >&2; exit 2; }
+
+# A slash command is sent inline, verbatim (see step 2) — it cannot be stashed to
+# a brief file, because the session would then receive the pointer text instead of
+# the command. `pane run` truncates long typed lines, so an over-long slash prompt
+# would silently fail to start claude. Reject it here, BEFORE creating the tab, so
+# a refusal leaves nothing behind. Real commands are far shorter (~180 chars for
+# the longest phase invocation).
+case "$PROMPT" in
+  /*)
+    if [ "${#PROMPT}" -gt 400 ]; then
+      echo "herdr-spawn: slash prompt is ${#PROMPT} chars; pane run truncates long lines" >&2
+      echo "  and a slash command cannot be stashed to a brief file (it must be literal)." >&2
+      echo "  Shorten it: keep the command + paths, and move context into a file the" >&2
+      echo "  session reads. Or spawn with a plain-text prompt, which IS auto-stashed." >&2
+      exit 2
+    fi
+    ;;
+esac
 
 # Expand a leading ~ and resolve to an absolute, real path.
 CWD="${CWD/#\~/$HOME}"
@@ -139,12 +159,19 @@ print(r["tab"]["tab_id"], r["root_pane"]["pane_id"])
 # breaks the typed `claude "<prompt>"` command — an unclosed quote means claude
 # never starts (this bit us on a ~700-char analysis brief). So for prompts that
 # are long, multi-line, or contain a double-quote, stash the prompt in a temp
-# brief file and launch claude with a SHORT pointer prompt that reads it. Slash
-# commands must be sent literally (and are always short), so they stay inline.
+# brief file and launch claude with a SHORT pointer prompt that reads it.
+#
+# A slash command must be sent literally — stashing it would hand claude the
+# pointer text instead of the command — so it CANNOT be rescued that way. It is
+# therefore rejected when long, rather than truncated silently: a caller cramming
+# context into a slash prompt has a caller-side fix (put the context in a file and
+# reference it by path). Real commands are well under this: the longest phase
+# invocation is ~180 chars.
 LAUNCH_PROMPT="$PROMPT"
 BRIEF_FILE=""
 case "$PROMPT" in
-  /*) : ;;                                  # slash command — send inline, verbatim
+  /*) : ;;                                  # slash command — inline, verbatim
+                                            # (length already validated up top)
   *)
     if [ "${#PROMPT}" -gt 200 ] \
        || [ "$PROMPT" != "${PROMPT//$'\n'/}" ] \
