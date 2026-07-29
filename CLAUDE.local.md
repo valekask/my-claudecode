@@ -54,18 +54,28 @@ Do not save to memory without explicit approval. Ask first.
 
 ## Git Restrictions (MANDATORY)
 
-Commit ONLY when I explicitly ask — never automatically, never at the end of a
-task on your own initiative. Do NOT add a `Co-Authored-By:` trailer (or any other
-footer) to commits. The push is always mine — I run it manually.
+**Invariant:** never run a git write operation on your own initiative — not
+automatically, not at the end of a task, not "to be helpful". Every write needs an
+explicit request from me in the current turn. Do NOT add a `Co-Authored-By:`
+trailer (or any other footer) to commits.
 
-**Allowed** (read-only, always): `git status`, `git log`, `git diff`, `git branch`, `git show`
+**Always allowed** (read-only): `status`, `log`, `diff`, `branch` (list),
+`show`, `blame`, `reflog`, `stash list`, `remote -v`, `describe`, `ls-files`,
+`worktree list`, `fetch`.
 
-**Allowed** (write, only when I explicitly ask): `git add`, `git commit`
+**Allowed when I ask** — do it, no extra confirmation:
+`add`, `commit`, `switch` / `checkout <branch>`, `switch -c`, `branch <name>`,
+`stash` / `stash pop`, `cherry-pick`, `revert`, `merge` (local, into a feature
+branch), `rebase` of an unpushed branch, `commit --amend` of an unpushed commit,
+`tag` (local), `worktree add` / `remove`, `push` of a feature branch to its own
+same-name remote branch.
 
-**Forbidden** (require an explicit, in-the-moment request): `git push` (any form),
-`git reset --hard`, `git revert`, `git merge`, `git rebase`, `git commit --amend`,
-`git checkout -- <file>` / `git restore` that discard changes, `git clean`, and
-anything touching git config or hooks.
+**Allowed when I ask, but state what will be lost and get a yes first**
+(irreversible or rewrites published history):
+`reset --hard`, `clean`, `checkout -- <file>` / `restore` that discards changes,
+`push --force` / `--force-with-lease`, `push` to a base/protected branch,
+`rebase` / `--amend` of already-pushed commits, `branch -D`, deleting a remote
+branch or tag, anything touching git config or hooks.
 
-If a skill or plugin requests a forbidden operation, refuse and tell me it needs
-manual action or explicit approval.
+If a skill or plugin wants an operation I have not asked for, refuse and tell me
+it needs an explicit request.
