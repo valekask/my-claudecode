@@ -54,10 +54,11 @@ Two ideas behind it: the human's leverage is **structural** (where code lives, w
 
 Scaffolds what you're about to work on, in one of two modes. The mode is **stated, never inferred**: `uat` as the first argument, otherwise a new task.
 
-- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`. Stops and asks if the task directory already exists.
+- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
 - **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development`).
 - **Discussion files aren't a mode** - a `<task>-<slug>-discussion.md` (ticket conversation + proposed answer, no branch) is written on direct request; `prepare` keeps the template so the convention stays documented.
-- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — warns, doesn't block); the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`, and the project's `CLAUDE.md` supplies the scope values.
+- **Decides, never prompts** - on existing state it acts where the answer is unambiguous (folder + branch already there → report and write nothing; folder without a branch → create the branch and reuse the files, never overwriting a proposal) and **refuses** where it isn't (a shipped task, or `uat` on a task with no result file → stop, report, write nothing). A refusal is a terminal state a human can read and an orchestrator can handle; a prompt would just hang an unattended run. The only question it ever asks is for a task name that wasn't supplied.
+- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — notes a mismatch in one line and continues); the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`, and the project's `CLAUDE.md` supplies the scope values.
 
 #### `brainstorming`
 
