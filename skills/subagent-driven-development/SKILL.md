@@ -9,7 +9,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) + user checkpoint = high quality, controlled iteration
+**Core principle:** Fresh subagent per task + two-stage review (spec then quality) + user checkpoint = high quality, controlled iteration. Under `--agentic` the per-task checkpoint is replaced by structural triggers (see below); the subagent-per-task and both reviews never change.
 
 ## When to Use
 
@@ -66,6 +66,26 @@ Implementer subagents report one of four statuses:
 3. If the plan itself is wrong, escalate to the user
 
 **Never** ignore an escalation or force retry without changes. If the implementer said it's stuck, something needs to change.
+
+## `--agentic` mode
+
+Invoked as `subagent-driven-development --agentic` (used by an orchestrator running tasks with little human attention). It removes the **per-task** checkpoint only — the fresh subagent per task and both review stages run exactly as normal, because those are the quality mechanism, not the ceremony.
+
+**In `--agentic` mode:**
+
+- **No checkpoint between tasks.** Run the plan through to the end, reporting each task's completion without waiting for approval.
+- **Stop and ask when execution departs from the approved plan's structure:**
+  - a file needs creating that the plan didn't list, or code needs to live somewhere the plan didn't name
+  - an import crosses a boundary the plan didn't authorize
+  - shared code (global utils, shared UI, anything with consumers outside this task) needs editing and the plan didn't say so
+  - the work turns out to need a **refactor** the plan didn't scope
+  - a **critical surface** (auth/permissions, migrations/persisted state, money math) or a **backend contract** (API shape, shared models) is involved and the plan didn't already settle the approach
+- **Also stop** on anything irreversible, on a review loop that fails twice on the same task, and on a genuinely ambiguous spec where two readings produce materially different code.
+- **Report, don't ask, at the end** — write the result file and hand off, exactly as normal.
+
+Rationale: the value of a human at this stage is **structural** judgment (where code lives, what it may touch), not re-reviewing logic that two review stages already checked. So the trigger is a departure from the approved structure — not the passage of another task.
+
+Without the flag, the per-task checkpoint below applies unchanged.
 
 ## User Checkpoint
 
@@ -227,7 +247,8 @@ Do **not** offer or write an ADR here. ADR creation belongs to the `ship` phase 
 - Accept "close enough" on spec compliance
 - **Start code quality review before spec compliance is ✅**
 - Move to next task while either review has open issues
-- **Move to next task without user approval at checkpoint**
+- **Move to next task without user approval at checkpoint** (except in `--agentic` mode, where the per-task checkpoint is deliberately dropped — the structural triggers replace it)
+- **Change the plan's structure on your own in `--agentic` mode** — a new file, a new boundary crossing, or an edit to shared code the plan didn't scope is a stop-and-ask, not a judgment call
 - Perform any git operations — the user manages all commits manually
 
 **If subagent asks questions:**

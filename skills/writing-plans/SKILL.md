@@ -16,6 +16,19 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** The spec should already exist in the task's working directory (produced by brainstorming skill).
 
+## `--agentic` mode
+
+Invoked as `writing-plans --agentic` (used by an orchestrator running tasks with little human attention). It changes **how high the bar is for interrupting the user** — not what the skill produces. The plan, the review loop, and the quality of the work are identical.
+
+**In `--agentic` mode:**
+
+- **Surface only these**, from the *Surface Decisions* scan below: **critical surface** (auth/permissions, migrations/persisted state, money math), **backend contract** change, a **genuine design fork** (two structurally different approaches that are actually comparable), a **spec gap** the plan cannot resolve without guessing, **scope growth** beyond the spec, or an **ADR conflict**.
+- **Decide everything else yourself** — reuse vs new, logic location, convention questions, simpler alternatives — and write the decision plus its reasoning into the relevant phase's rationale so it is reviewable after the fact rather than asked about beforehand.
+- **Skip the Final Review menu.** When nothing surfaced, save the plan and emit the handoff directly. If something did surface, ask about it, apply the answer, then save.
+- **Never skip** the *Scope Check*, the reuse/behaviour-confirmation reads, or the plan review loop. Autonomy is about who gets asked, not about doing less work.
+
+Without the flag, behave exactly as documented below — the interactive path is unchanged.
+
 **Save plans to:** `.claude/temp/<task>-<slug>/<task>-<slug>-plan.md`
 - Plans live alongside the proposal and spec in the same task directory
 
@@ -69,12 +82,14 @@ Pause between mapping files and writing tasks. Scan for high-leverage decisions 
 - **Structural ambiguities** — spec gaps the plan would resolve by guessing (where a new utility lives, whether to split a service, how to wire two pieces together). Ask rather than guess.
 - **Scope concerns** — phases that look bigger than the spec implies, or implementations that pull in items adjacent to but not in the spec. Flag and ask: split, defer, or keep together?
 - **Convention deviation** — when the obvious implementation would break an existing codebase pattern. Surface the choice rather than silently follow either path.
+- **Critical surface** — the plan touches authentication/permissions, a data migration or persisted state, or money/currency math. These fail silently and expensively, so the approach gets confirmed even when it looks obvious.
+- **Backend contract** — the plan changes an API call shape, a request/response model, or anything else shared with the backend. A contract change has consumers the plan can't see, so it is never a silent decision.
 
 **How to surface:**
 
-1. Compile 1-3 highest-leverage items across the six categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
+1. Compile 1-3 highest-leverage items across the categories — exhaustive lists become noise. Skip categories where nothing material is flagged.
 2. Use AskUserQuestion (one question at a time). Multiple-choice when there's a clear set of options, open-ended when not.
-3. If nothing material is flagged across all six categories, say "no surface decisions needed" and proceed straight to task writing.
+3. If nothing material is flagged, say "no surface decisions needed" and proceed straight to task writing.
 
 **What not to ask:**
 
