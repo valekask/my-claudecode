@@ -1,19 +1,37 @@
 ---
 name: open-pr
-description: Draft a pull request, show a preview (from → to, title, description), open it only after you approve, then create it via the Bitbucket Cloud REST API. Pushes the feature branch to a same-name remote branch on approval — never to the base branch. Use when asked to "make a PR", "open a PR", "create a PR", or "raise a PR".
+description: Draft a pull request, show a preview (from → to, title, description), open it only after you approve — or unattended with `--agentic` — then create it via the Bitbucket Cloud REST API. Pushes the feature branch to a same-name remote branch, never to the base branch. Use when asked to "make a PR", "open a PR", "create a PR", or "raise a PR".
 ---
 
 # Open PR
 
-Turns the current branch into a **Bitbucket Cloud** pull request. The skill **drafts** the PR, shows you a **preview**, and waits for your **approval** before touching the remote. On approval it pushes the feature branch safely and creates the PR via the Bitbucket REST API — in that order, never before.
+Turns the current branch into a **Bitbucket Cloud** pull request. The skill **drafts** the PR, shows you a **preview**, and waits for your **approval** before touching the remote. On approval it pushes the feature branch safely and creates the PR via the Bitbucket REST API — in that order, never before. With `--agentic` the approval is supplied at invocation and the preview becomes a record instead of a gate.
 
 **Announce at start:** "I'm using the open-pr skill to draft a PR and show you a preview before opening it."
 
 **Runs only when you invoke it** — never proactively.
 
 **The two non-negotiables:**
-1. **Nothing reaches the remote before your approval.** No push, no PR creation until you say "approved" / "proceed" / "do it".
-2. **The push only ever targets a remote branch of the same name as the current branch.** Never push to, or set upstream to, the base branch. This is the guard against the past mistake where a branch tracked the base and a push landed directly on it.
+1. **Nothing reaches the remote before your authorization.** No push, no PR creation until you say "approved" / "proceed" / "do it" — or until you supply it in advance with `--agentic` (see [`--agentic` mode](#--agentic-mode)), which is the *only* thing that stands in for the reply.
+2. **The push only ever targets a remote branch of the same name as the current branch.** Never push to, or set upstream to, the base branch. This is the guard against the past mistake where a branch tracked the base and a push landed directly on it. **No flag relaxes this one.**
+
+## `--agentic` mode
+
+Invoked as `open-pr --agentic` (used by an orchestrator shipping a verified change with little human attention). The flag is your **advance authorization** for the push and the PR creation: it replaces the Step 3 approval reply, and nothing else.
+
+**In `--agentic` mode:**
+
+- **Preflight — every one of these must hold, or STOP and report** before any remote contact:
+  - the Step 1 guards pass: repo guard, non-detached HEAD, from-branch ≠ base/default branch
+  - the branch has at least one commit the base doesn't (`git log <base>..HEAD --oneline` is non-empty)
+  - `git status --porcelain` is **clean** — an unattended run never publishes a branch with uncommitted work sitting beside it
+  - the Step 5 env preflight passes: `BITBUCKET_API_TOKEN`, `BITBUCKET_EMAIL`, `origin` on `bitbucket.org`
+- **Write the preview instead of waiting for it (Step 3).** Build the same block, save it to the task dir as `<task>-<slug>-pr-preview.md` when that dir exists, and include it verbatim in the final report. It becomes the record of what was opened, not a gate.
+- **Never guess the base.** It is the repo default branch unless the caller passed `--base`. If the branch's task artifacts point at a different target (a release line), **stop and ask** — a silently retargeted PR is the one content error nothing downstream catches.
+- **Steps 4-6 run unchanged** — same-name push, upstream verification, `close_source_branch: true`, then the report with the PR URL and number.
+- **Never retry a failed create.** Every Step 5 error case still stops and surfaces the response body. Unattended is a reason to be stricter there, not looser.
+
+**Reviewers, unattended.** In this mode `BITBUCKET_REVIEWERS` is expected to hold **automation** accounts (e.g. a CodeRabbit bot) — a bot reviewer costs no human attention on an auto-opened PR. If the list holds humans you'd rather brief yourself first, run without the flag.
 
 ## Prerequisites
 
@@ -50,6 +68,8 @@ Draft:
 
 ### Step 3: Show the preview and ask for approval
 
+(In `--agentic` mode: build this same block, save it, and proceed without waiting — see [`--agentic` mode](#--agentic-mode).)
+
 Present exactly this shape, then **stop and wait**:
 
 ```
@@ -75,7 +95,7 @@ On approval I will:
 
 Then ask the user to reply **"approved" / "proceed" / "do it"** to open it, or to tell you what to change. Iterate on the title/base/description until they approve.
 
-**Do NOT push or create the PR until the user explicitly approves.** That approval is the explicit, in-the-moment authorization for the push (the project's git rules require this for any push — the preview makes it informed).
+**Do NOT push or create the PR until the user explicitly approves.** That approval is the explicit, in-the-moment authorization for the push (the project's git rules require this for any push — the preview makes it informed). The one exception is `--agentic`, where the user supplied that authorization when invoking the skill.
 
 ### Step 4: On approval — push the feature branch safely
 
@@ -160,12 +180,12 @@ Parse the response JSON: print the PR's web URL (`.links.html.href`) and number 
 ## Red Flags
 
 **Never:**
-- Push or create the PR before the user's explicit approval
+- Push or create the PR before the user's authorization — an in-the-moment approval, or `--agentic` supplied at invocation
 - Push to, or set the upstream to, the **base branch** — only `origin/<from_branch>`
 - Use a `HEAD:<base>` refspec or any refspec whose target isn't the from-branch's own name
 - Force-push
 - Open a PR from the default branch
-- Create the PR with a different head/base than the approved `<from_branch>` → `<base_branch>`, or with a title/body other than the approved draft
+- Create the PR with a different head/base than the approved `<from_branch>` → `<base_branch>`, or with a title/body other than the approved draft (in `--agentic` mode: than the drafted and recorded preview)
 - Reach for a GitHub tool (`gh`) — this is **Bitbucket Cloud**; the PR is created via its REST API (Step 5)
 - Echo, log, or pass `BITBUCKET_API_TOKEN` as a command argument — read it only from the environment
 - Edit code, commit, amend, rebase, or reset — this skill only pushes the existing branch and opens the PR

@@ -28,23 +28,26 @@ A few principles fall out of this:
 6. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
 7. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
 8. **Ship** - write the product summary + ADR (when warranted), then commit
-9. **Open PR** - `open-pr` pushes the branch and opens the PR, both behind your approval
+9. **Open PR** - `open-pr` pushes the branch and opens the PR, both behind your approval (or unattended with `--agentic`)
 
 Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes - it hands off to `open-pr`, which owns the push.
 
 ### `--agentic` mode
 
-`brainstorming`, `writing-plans`, and `subagent-driven-development` accept **`--agentic`** — for tasks driven by an orchestrator with little human attention. It raises the bar for **interrupting you**; it never lowers the bar for the work. Every review loop, exploration step, and quality gate runs exactly as normal.
+`brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `ship`, and `open-pr` accept **`--agentic`** — for tasks driven by an orchestrator with little human attention. It raises the bar for **interrupting you**; it never lowers the bar for the work. Every review loop, exploration step, and quality gate runs exactly as normal.
 
 | Skill | Without the flag | With `--agentic` |
 | --- | --- | --- |
 | `brainstorming` | clarifying questions, design walk-through, Final Review menu | digest presented as one block; **spec approval always required, at every tier** |
 | `writing-plans` | 1-3 surfaced decisions across all categories, Final Review menu | surfaces only critical surface / backend contract / genuine design fork / spec gap / scope growth / ADR conflict — decides the rest and records the reasoning in the plan; no Final Review menu |
+| `executing-plans` | pause + approval after every task | no pause; same **structural** stop triggers as below, plus a verification failing twice or a materially ambiguous instruction. No review stages exist here, so prefer `subagent-driven-development --agentic` for anything past small |
 | `subagent-driven-development` | checkpoint after every task | no per-task checkpoint; stops only on a **structural** departure from the approved plan (unplanned file, unauthorized boundary crossing, shared-code edit, unscoped refactor, critical surface, backend contract), anything irreversible, a review failing twice, or a materially ambiguous spec |
+| `ship` | asks that verification passed, asks for the commit go-ahead, offers the `open-pr` hand-off | reads `smoke-test`'s verdict file instead of asking (**stops** on non-`pass` or a missing verdict); decides the product summary + ADR by the documented criteria; the invocation is the commit go-ahead; chains or stops instead of offering |
+| `open-pr` | preview, then waits for "approved" before the push and the PR | the flag **is** the advance authorization; preview is saved as a record; adds a hard preflight (clean tree, commits ahead of base, from ≠ base, env present) and never guesses the base |
 
 Two ideas behind it: the human's leverage is **structural** (where code lives, what it may touch), not re-reviewing logic that two review stages already checked; and the **spec is the one gate that never disappears**, because autonomous planning and execution both trust it — if it's wrong and everything below is unattended, you find out at verify with the whole change built on it. The complexity tier (`Simple` / `Medium` / `Complex`) is shown in the spec digest for **your** ratification, with one-way escalators — auth, migrations/persisted state, money math, shared code, 9+ files — that can raise it but never lower it.
 
-**After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, a `<task>-<slug>-discussion.md` captures a ticket conversation and a proposed answer (no branch) for tickets that need thought, not code — written on request, not via a `prepare` mode.
+**After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, a `<task>-<slug>-discussion.md` captures a ticket conversation and a proposed answer (no branch) for tickets that need thought, not code — written on request from the template `prepare` keeps, not via a `prepare` mode.
 
 ## Skills
 
@@ -56,9 +59,8 @@ Scaffolds what you're about to work on, in one of two modes. The mode is **state
 
 - **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
 - **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development`).
-- **Discussion files aren't a mode** - a `<task>-<slug>-discussion.md` (ticket conversation + proposed answer, no branch) is written on direct request; `prepare` keeps the template so the convention stays documented.
-- **Decides, never prompts** - on existing state it acts where the answer is unambiguous (folder + branch already there → report and write nothing; folder without a branch → create the branch and reuse the files, never overwriting a proposal) and **refuses** where it isn't (a shipped task, or `uat` on a task with no result file → stop, report, write nothing). A refusal is a terminal state a human can read and an orchestrator can handle; a prompt would just hang an unattended run. The only question it ever asks is for a task name that wasn't supplied.
-- **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — notes a mismatch in one line and continues); the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`, and the project's `CLAUDE.md` supplies the scope values.
+- **Decides, never prompts** - acts where the state is unambiguous (folder + branch already there → report and write nothing; folder without a branch → create it and reuse the files, never overwriting a proposal) and **refuses** where it isn't (a shipped task, or `uat` with no result file). A refusal is terminal: a human can read it, an orchestrator can handle it, where a prompt would just hang an unattended run. The only thing it asks for is a missing task name.
+- **Branch/files only** - creates and switches; never fetches, pulls, or commits, so the base is whatever your local default branch is. Name check is advisory; the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`.
 
 #### `brainstorming`
 
@@ -125,9 +127,9 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 - Five-option menu: walk by section / show full digest / approve / save / discuss
 - **Approve routes** to `subagent-driven-development` (the default for now) - no second menu, with a `switch to inline` override to `executing-plans`
 
-#### `executing-plans`
+#### `subagent-driven-development`
 
-Implements the plan task-by-task. Each task is implemented by a fresh subagent in isolated context, then reviewed in two stages, with a user checkpoint before the next task.
+The **default executor**. Implements the plan task-by-task. Each task is implemented by a fresh subagent in isolated context, then reviewed in two stages, with a user checkpoint before the next task.
 
 **Setup:**
 
@@ -144,6 +146,16 @@ Implements the plan task-by-task. Each task is implemented by a fresh subagent i
 **Wrapping up:**
 
 - Write a result summary with files changed, review history, and test results
+
+#### `executing-plans`
+
+The **inline alternative** - executes the same plan in the current session, with no subagents and no review stages. For plans small enough that a bad task is obvious in the diff; reached via the `switch to inline` override.
+
+- Read plan + spec, review the plan critically, and raise concerns **before** starting
+- Follow each step exactly and run the verifications the plan specifies - nothing else checks the work here, which is the trade for the lower overhead
+- Pause and report after every task, waiting for approval before the next (`--agentic` drops the pause - see [`--agentic` mode](#--agentic-mode))
+- Stop rather than guess: a blocker, a plan gap, an unclear instruction, or a verification that keeps failing
+- Write the same result file, then hand off to `polish` in a fresh session. **No git operations** - commits stay manual
 
 #### `writing-adr`
 
@@ -168,7 +180,7 @@ Captures an **Architecture Decision Record** - a committed snapshot under `docs/
 
 Writes the **product-facing summary** (`<task>-<slug>-result-product.md`) - a plain-language companion to the result file for managers / PMs / stakeholders, with no file paths or code. Reads the spec (what + why) and the result file (what shipped, edge cases).
 
-- **Opt-in** - on request, or offered for user-facing features; skipped for pure internal refactors
+- **Opt-in** - written for user-facing changes at `Medium` / `Complex` tier; **skipped for `Simple`-tier changes** (a one-screen tweak needs no stakeholder document) and for pure internal refactors at any tier. Always available on request
 - Invoked from `ship`; moved out of `subagent-driven-development` to keep execution lighter
 
 ### Quality gates
@@ -257,9 +269,10 @@ The **scenario-verification layer** for the Verify phase — judges a set of sce
 
 The **finalize phase**, run _after_ manual verification + smoke test pass. Documents the verified change and commits it - **no code changes, never pushes itself**.
 
-- Invokes `writing-result-product` (user-facing changes) and `writing-adr` (when warranted)
-- Shows `git status` / `git diff`, proposes a commit message in the repo's style, then commits on your go-ahead
-- **Hands off to `open-pr`** - after committing it asks whether to open a PR for the branch (offered only on a non-default branch with an `origin` remote); declining leaves the branch local and unpushed
+- Invokes `writing-result-product` (user-facing changes at `Medium` / `Complex` tier - `Simple` skips it) and `writing-adr` (when warranted)
+- Shows `git status` / `git diff`, proposes a commit message in the repo's style, then commits on your go-ahead (with `--agentic`, the invocation is that go-ahead - the commit is local and revertible, which is what makes it the one git write a flag may authorize)
+- **Hands off to `open-pr`** - after committing it asks whether to open a PR for the branch (offered only on a non-default branch with an `origin` remote); declining leaves the branch local and unpushed. With `--agentic` it chains or stops instead of asking
+- **Verification is read, not assumed** - with `--agentic` it takes `smoke-test`'s verdict file from the task dir and **stops** on non-`pass` or a missing verdict, rather than trusting an unattended pipeline
 - **Never** adds a `Co-Authored-By:` footer, amends, rebases, or pushes - pushing belongs to `open-pr`, behind its own approval
 
 #### `open-pr`
@@ -267,6 +280,7 @@ The **finalize phase**, run _after_ manual verification + smoke test pass. Docum
 Opens a pull request from the current branch. Drafts the PR, shows a **preview** (`from → base`, title, description), and waits for your **approval** before anything touches the remote - then pushes the branch and creates the PR via the **Bitbucket Cloud REST API** (`gh` has no Bitbucket equivalent).
 
 - **Preview-then-approve** - nothing is pushed or opened until you reply "approved" / "proceed"; that approval is the explicit, in-the-moment push authorization
+- **`--agentic`** - the flag supplies that authorization in advance, so the preview becomes a saved record instead of a gate. In exchange it adds a hard preflight (clean working tree, at least one commit ahead of the base, from-branch ≠ base, env vars present), refuses to guess a non-default base, and never retries a failed create. `BITBUCKET_REVIEWERS` is expected to hold **automation** accounts in this mode - a bot reviewer costs no human attention on an auto-opened PR. The same-name push guard is not relaxed by any flag
 - **Safe-push guard** - only ever pushes the current branch to a **same-name** remote branch (`git push -u origin HEAD`) and verifies the upstream afterwards; never pushes to, or tracks, the base branch (guards against the past "branch tracked the base, push landed on it" mistake)
 - **Derives** workspace + repo slug from `origin`; base branch defaults to the repo default (override with `--base`); title/body drafted from the branch's commits and any task artifacts
 - **Auth via env** - reads `BITBUCKET_EMAIL` + `BITBUCKET_API_TOKEN` (Basic auth uses the email, not the username); the token must belong to the identity with repo access. Never edits code, commits, amends, or force-pushes
@@ -300,7 +314,7 @@ so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timelin
 | **Result**          | `<task>-<slug>-result.md`                                                               | `executing-plans`                     | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
 | **Smoke scenarios** | `<task>-<slug>-smoke.md` + `<task>-<slug>-smoke-result.json`                             | `smoke-test`                          | Browser scenarios derived from the spec's AC (each citing `covers: AC-n`, declined AC listed with reasons), annotated in place with per-scenario ✅/❌/⚠️/⏭️ + actual, plus the machine-readable verdict an orchestrator reads |
 | **Review**          | `<task>-<slug>-review.md` (`polish`), `<task>-<slug>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-<slug>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-<slug>-checklist-review.md` |
-| **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features (invoked from `ship`)  |
+| **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - written for user-facing changes at `Medium` / `Complex` tier, skipped for `Simple` tier and internal refactors, always available on request (invoked from `ship`)  |
 | **UAT / Follow-ups** | `<task>-<slug>-uat.md`                                                                 | `prepare uat` (template) + User        | Post-ship work ledger: UAT feedback, bugfixes, and change requests on shipped code. Each item tagged `uat` / `bug` / `change` with a status (`open` → `in-progress` → `done` · `wontfix`) and the fixing commit                |
 | **Discussion**      | `<task>-<slug>-discussion.md`                                                            | On request (`prepare` holds the template) + User | Optional conversation + proposed answer for a ticket that needs thought, not (yet) code. 1–2 topics per file; no branch                                                                                        |
 
