@@ -1,19 +1,20 @@
 ---
 name: prepare
-description: Scaffold what you're about to work on — a new task (branch + directory + proposal), a UAT/follow-up round (branch + uat ledger), or a discussion (discussion file, no branch). Routes by explicit mode (`uat` / `discuss`) or infers from the task-folder state and confirms. Use at the start of a Jira task, when opening post-ship follow-ups, or to capture a ticket conversation.
+description: Scaffold what you're about to work on — a new task (branch + directory + proposal) or a UAT/follow-up round (branch + uat ledger). Routes by the explicit `uat` mode, defaulting to a new task. Use at the start of a Jira task or when opening post-ship follow-ups.
 ---
 
 # Prepare
 
-The **scaffolding skill**. It sets up the right artifacts for one of three things you're about to start, then hands off. It creates branches and files only — it never commits.
+The **scaffolding skill**. It sets up the right artifacts for the work you're about to start, then hands off. It creates branches and files only — it never commits.
 
 | Mode | Trigger | Creates | Branch? |
 |------|---------|---------|---------|
 | **new** | `prepare <task>-<slug>` (default) | `<task>-<slug>/` + `<task>-<slug>-proposal.md` | yes — `<task>-<slug>` |
 | **uat** | `prepare uat <task>-<slug>` | `<task>-<slug>-uat.md` ledger | yes — `<task>-<slug>-uat` |
-| **discuss** | `prepare discuss <task>-<slug>` | `<task>-<slug>-discussion.md` | no |
 
-**Announce at start:** "I'm using the prepare skill to scaffold this \<new task / UAT round / discussion>."
+**Announce at start:** "I'm using the prepare skill to scaffold this \<new task / UAT round>."
+
+**Discussion files are not a mode.** A `<task>-<slug>-discussion.md` is written on direct request ("capture this ticket conversation") — no branch, no scaffolding ceremony. The format lives in the [discussion template](#discussion-template) below so the convention stays documented.
 
 ## Naming conventions
 
@@ -34,8 +35,8 @@ Throughout this skill, `<task>-<slug>` is the identifier the user supplies (e.g.
 
 ## Inputs
 
-- **Mode** (optional): the literal token `uat` or `discuss` as the first argument. Omit it for a new task, or to let the skill infer from folder state and confirm. See [Step 1](#step-1-resolve-the-mode).
-- **Task name** in the form `<task>-<slug>` (e.g., `FNA-1234-timeline-hover`). Accept it as an argument; if missing, ask for it via AskUserQuestion. Validation is **advisory**: it should look like the convention above — a ticket number plus a `<scope>-<subject>` slug. If it doesn't match, warn and confirm with the user rather than blocking.
+- **Mode** (optional): the literal token `uat` as the first argument. Omit it for a new task. See [Step 1](#step-1-resolve-the-mode).
+- **Task name** in the form `<task>-<slug>` (e.g., `FNA-1234-timeline-hover`). Accept it as an argument; if missing, ask for it via AskUserQuestion. Validation is **advisory**: it should look like the convention above — a ticket number plus a `<scope>-<subject>` slug. If it doesn't match, note it in one line and continue — never block on it.
 - **Base branch** (optional, modes that branch): defaults to the repo's default branch. Accept `--base <branch>` to branch off a release/integration branch instead.
 - **Isolation** (optional, modes that branch): how the branch is checked out — **branch** (default, in-place) or **worktree** (its own directory). Opt into a worktree with the `--worktree` flag or natural language ("…using a worktree"). See [Isolation](#isolation-branch-default-or-worktree).
 
@@ -45,23 +46,25 @@ Throughout this skill, `<task>-<slug>` is the identifier the user supplies (e.g.
 
 ### Step 1: Resolve the mode
 
-**Explicit wins.** If the first argument is `uat` or `discuss`, use that mode — no guessing. This is your escape hatch when inference would get it wrong.
+**`uat` as the first argument selects the UAT round. Anything else is a new task.** No inference from folder state — the mode is either stated or it's `new`.
 
-**Otherwise infer from the task folder, then confirm — never act on a silent guess:**
+**Existing-state guard for new mode — decide, don't prompt.** An orchestrator may be driving this with nobody at the keyboard, so a question is a stall. Two of the three states are decidable on their own; the third refuses to act instead of asking:
 
-- **No `.claude/temp/<task>-<slug>/` folder** → **new** task. Unambiguous; proceed without asking.
-- **Folder exists with a `<task>-<slug>-result*.md`** → you're past shipping, so intent is ambiguous (fixing vs. talking). Ask via AskUserQuestion: **uat** or **discuss**?
-- **Folder exists but no result** → you're likely resuming mid-flight. Ask whether you meant **discuss** (add a discussion to this task) or something else, rather than assuming.
+| State of `.claude/temp/<task>-<slug>/` | What to do |
+|---|---|
+| Folder **and** branch already exist | The task is already prepared. Report that and write nothing. |
+| Folder exists, branch does not | Create the branch, keep the existing files — **never** overwrite an existing proposal. Report which artifacts were reused vs created. |
+| Folder contains a `<task>-<slug>-result*.md` (already shipped) | **Stop. Report the state and write nothing** — new round versus `uat` is a real decision, and branching off the wrong base is precisely what must not happen on a guess. Whoever is driving restates the intent. |
 
-A wrong inference then costs one confirmation, not a stray branch.
+Refusing to act is not the same as asking: it leaves a clear terminal state ("not prepared, needs a decision") that a human can read and an orchestrator can handle, instead of hanging on a prompt.
 
 ### Step 2: Resolve the task name
 
-Take it from the argument or ask. Check it looks like the `<task>-<slug>` convention above; if it doesn't, warn and confirm rather than block.
+Take it from the argument; ask only when it wasn't supplied at all (it can't be invented). Check it looks like the `<task>-<slug>` convention above — validation is **advisory**: if it doesn't match, **say so in one line and proceed**. A naming nit is not worth a prompt, and never worth a stall on the autonomous path.
 
 ### Isolation: branch (default) or worktree
 
-Both **new** and **uat** modes create a branch. *How* that branch is checked out is the isolation choice (the **discuss** mode creates no branch, so it never applies):
+Both modes create a branch. *How* that branch is checked out is the isolation choice:
 
 - **branch (default)** — `git switch -c <branch> <base>` checks the branch out **in place**, in the current working directory. Use it unless asked otherwise.
 - **worktree** — `git worktree add <path> -b <branch> <base>` creates the branch in its **own directory**, leaving the current working tree where it is. Opt in with the `--worktree` flag or natural language ("prepare FNA-1234 using a worktree").
@@ -126,10 +129,12 @@ Opens a **post-ship follow-up round** — UAT feedback, bugfixes, and change req
 
 ### Step U1: Check the task state
 
-The folder `.claude/temp/<task>-<slug>/` should already exist (this is post-ship work).
-- If it does **not** exist, stop and tell the user — `prepare uat` is for an existing task, not a new one.
-- If it exists but has **no** `<task>-<slug>-result*.md`, warn that nothing has shipped yet and confirm before continuing (they may have meant `discuss`, or to keep building on the original branch).
-- If `<task>-<slug>-uat.md` already exists, do **not** overwrite it — the round is already open; just report it and stop.
+The folder `.claude/temp/<task>-<slug>/` should already exist (this is post-ship work). Same rule as new mode: **decide where the state is unambiguous, refuse where it isn't — never prompt**, since an orchestrator may be driving.
+
+- Folder does **not** exist → **stop and report**, write nothing. `prepare uat` is for an existing task; a missing folder means the task name is wrong or the work was never prepared here.
+- Folder exists with a `<task>-<slug>-result*.md` → proceed; this is the expected case.
+- Folder exists but has **no** result file → **stop and report**, write nothing. Nothing has shipped, so a follow-up round off the integration base is probably not what was meant (more likely: keep building on the original branch). Branching off the wrong base is exactly the error not to commit on a guess.
+- `<task>-<slug>-uat.md` already exists → the round is already open. Report it and stop; never overwrite it.
 
 ### Step U2: Create the UAT branch
 
@@ -155,31 +160,21 @@ Write `.claude/temp/<task>-<slug>/<task>-<slug>-uat.md` from the [UAT ledger tem
 
 Report the branch and ledger. Tell the user to:
 1. List the follow-up items in `<task>-<slug>-uat.md`, each tagged `uat` / `bug` / `change`.
-2. Implement them (use `executing-plans` / `subagent-driven-development`, or the management `fast-track` skill for small, already-clear fixes).
+2. Implement them (`executing-plans` / `subagent-driven-development`).
 3. Update each item's **Status** and record the commit under **Fixed by** as it lands; then `polish` → verify → `ship` as usual.
 
 In worktree mode, also report the worktree path and tell the user to `cd` into it (or open a fresh session there) first.
 
 ---
 
-## Mode: discuss
+## Discussion files (no mode)
 
-Captures a **conversation and a proposed answer** for a ticket that needs thought, not (yet) code. No branch — discussion-only tickets stay out of git. Keep it to 1–2 topics per file; the file is optional and lightweight.
+A `<task>-<slug>-discussion.md` captures a **conversation and a proposed answer** for a ticket that needs thought, not (yet) code. There's no `prepare` mode for it — write it when asked directly. The conventions:
 
-### Step D1: Ensure the task folder
-
-Create `.claude/temp/<task>-<slug>/` if it doesn't already exist. (A discussion can be the very first artifact for a ticket, or sit alongside an existing task's files.)
-
-### Step D2: Scaffold the discussion file
-
-Write `.claude/temp/<task>-<slug>/<task>-<slug>-discussion.md` from the [discussion template](#discussion-template). If the file already exists, do **not** overwrite it — append a new `## Topic:` section instead (or tell the user it's there, if there's nothing new to add).
-
-### Step D3: Hand off
-
-Report the file. Tell the user to:
-1. Fill in the topic(s) and the proposed answer.
-2. Paste the proposed answer into the ticket when settled.
-3. If it turns into code work, run `prepare <task>-<slug>` to add the branch and proposal.
+- Lives at `.claude/temp/<task>-<slug>/<task>-<slug>-discussion.md`; create the folder if it isn't there. **No branch** — discussion-only tickets stay out of git.
+- Keep it to 1–2 topics per file, in the [discussion template](#discussion-template) format.
+- If the file already exists, **append** a new `## Topic:` section rather than overwriting.
+- If it turns into code work, run `prepare <task>-<slug>` to add the branch and proposal.
 
 ---
 
@@ -245,6 +240,6 @@ Keep it to 1–2 topics per file.
 
 - **No commits.** Prepare creates branches and writes files only — it does not stage or commit anything.
 - **Branch is the default isolation; worktree is opt-in** (`--worktree` / NL). In worktree mode, never reuse or clobber an existing worktree path, and don't tear worktrees down — teardown is the user's manual step after merge.
-- **Explicit mode always wins** over inference; inference never acts on a silent guess — it confirms first.
+- **Mode is stated, never inferred** — `uat` as the first argument, otherwise a new task. New mode stops and asks if the task folder already exists.
 - Never overwrite an existing branch, proposal, UAT ledger, or discussion file without telling the user. (Discussion is the one exception: append a new topic section rather than overwrite.)
-- **discuss** never creates a branch.
+- **Discussion files never create a branch**, and they aren't a `prepare` mode — write one on direct request.

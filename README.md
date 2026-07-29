@@ -44,7 +44,7 @@ Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verifica
 
 Two ideas behind it: the human's leverage is **structural** (where code lives, what it may touch), not re-reviewing logic that two review stages already checked; and the **spec is the one gate that never disappears**, because autonomous planning and execution both trust it — if it's wrong and everything below is unattended, you find out at verify with the whole change built on it. The complexity tier (`Simple` / `Medium` / `Complex`) is shown in the spec digest for **your** ratification, with one-way escalators — auth, migrations/persisted state, money math, shared code, 9+ files — that can raise it but never lower it.
 
-**After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, `prepare discuss <task>-<slug>` captures a ticket conversation and a proposed answer (`<task>-<slug>-discussion.md`, no branch) for tickets that need thought, not code.
+**After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, a `<task>-<slug>-discussion.md` captures a ticket conversation and a proposed answer (no branch) for tickets that need thought, not code — written on request, not via a `prepare` mode.
 
 ## Skills
 
@@ -52,11 +52,11 @@ Two ideas behind it: the human's leverage is **structural** (where code lives, w
 
 #### `prepare`
 
-Scaffolds what you're about to work on, in one of three modes. Explicit mode (`uat` / `discuss`) wins; with no mode it infers from the task-folder state and confirms before acting — never on a silent guess.
+Scaffolds what you're about to work on, in one of two modes. The mode is **stated, never inferred**: `uat` as the first argument, otherwise a new task.
 
-- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
-- **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development` / `fast-track`).
-- **discuss** (`prepare discuss <task>-<slug>`) - captures a ticket conversation and a proposed answer in `<task>-<slug>-discussion.md`. **No branch** - discussion-only tickets stay out of git.
+- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`. Stops and asks if the task directory already exists.
+- **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-plans` / `subagent-driven-development`).
+- **Discussion files aren't a mode** - a `<task>-<slug>-discussion.md` (ticket conversation + proposed answer, no branch) is written on direct request; `prepare` keeps the template so the convention stays documented.
 - **Branch/files only** - creates and switches; does not fetch, pull, or commit. Checks the name against the naming convention (advisory — warns, doesn't block); the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`, and the project's `CLAUDE.md` supplies the scope values.
 
 #### `brainstorming`
@@ -301,6 +301,6 @@ so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timelin
 | **Review**          | `<task>-<slug>-review.md` (`polish`), `<task>-<slug>-checklist-review.md` (`checklist-review`) | `polish` / `checklist-review`         | `polish` saves the consolidated findings (all severities) to `<task>-<slug>-review.md` for rule-tuning. `checklist-review` run standalone tracks item status (Open / Fixed / Skipped / Wontfix) in `<task>-<slug>-checklist-review.md` |
 | **Product Summary** | `<task>-<slug>-result-product.md`                                                       | `writing-result-product`              | Product-facing summary for managers / stakeholders - what shipped and how it behaves, in plain language (no file paths or code). Opt-in - produced on request or offered for user-facing features (invoked from `ship`)  |
 | **UAT / Follow-ups** | `<task>-<slug>-uat.md`                                                                 | `prepare uat` (template) + User        | Post-ship work ledger: UAT feedback, bugfixes, and change requests on shipped code. Each item tagged `uat` / `bug` / `change` with a status (`open` → `in-progress` → `done` · `wontfix`) and the fixing commit                |
-| **Discussion**      | `<task>-<slug>-discussion.md`                                                            | `prepare discuss` (template) + User    | Optional conversation + proposed answer for a ticket that needs thought, not (yet) code. 1–2 topics per file; no branch                                                                                                  |
+| **Discussion**      | `<task>-<slug>-discussion.md`                                                            | On request (`prepare` holds the template) + User | Optional conversation + proposed answer for a ticket that needs thought, not (yet) code. 1–2 topics per file; no branch                                                                                        |
 
 > **ADRs are the exception.** Unlike the temp artifacts above, an Architecture Decision Record (`writing-adr`) is **committed** and lives in `docs/adr/`, not `.claude/temp/`. It's a durable record of _why_, not a per-task working file.
