@@ -27,6 +27,17 @@ All brainstorming artifacts live in a task directory:
 
 - The `assets/` directory may contain images, mockups, Figma exports, PDFs, or any reference material. Check it early — these assets often answer questions before you need to ask them.
 
+## `--agentic` mode
+
+Invoked as `brainstorming --agentic` (used by an orchestrator running tasks with little human attention). It strips ceremony, **not** the approval:
+
+- **The spec is always approved by the user — at every tier, including Simple.** Present the digest and stop. Everything downstream (an autonomous plan, autonomous execution) trusts this document, so it is the one gate that never disappears. Do not self-approve, and do not hand off to `writing-plans` without an explicit go-ahead.
+- **Skip the Final Review menu.** Show the full digest as one block and ask for approval directly, at every tier — no Walk-by-section / Save option ping-pong. The user still gets the whole digest and can ask for any section in full.
+- **Ask only what changes the spec** — the uncertainty rule below applies with a higher bar: ask when a wrong guess would produce a materially different spec, decide the rest and record the decision in the spec so it is reviewable at the digest.
+- **Never skip** the codebase exploration, the ADR scan, the acceptance criteria, or the spec review loop. Autonomy is about who gets interrupted, not about doing less work.
+
+Without the flag, behave exactly as documented below — the interactive path is unchanged.
+
 ## Complexity Classification
 
 After reading the proposal and exploring the codebase, classify the task:
@@ -39,9 +50,11 @@ After reading the proposal and exploring the codebase, classify the task:
 
 Classification determines ceremony level:
 
-- **Simple** — flat checklist spec, 1-2 clarifying questions, skip approach comparison, skip pre-mortem, skip web research
-- **Medium** — full process, 3-4 clarifying questions minimum, 2-3 approaches with trade-offs, web research when relevant
-- **Complex** — full process, 5+ clarifying questions, 2-3 approaches with pre-mortem, web research when relevant
+- **Simple** — flat checklist spec, skip approach comparison, skip pre-mortem, skip web research
+- **Medium** — full process, 2-3 approaches with trade-offs, web research when relevant
+- **Complex** — full process, **3+ materially different approaches** with pre-mortem, web research when relevant. "Materially different" means a different architecture or a different place the logic lives — not the same design with a flag flipped. If only two genuinely distinct approaches exist, present two and say why there isn't a third; never pad the count with filler options.
+
+**Questions are driven by uncertainty, not by tier.** There is no minimum count — asking a question you already know the answer to spends the user's attention for nothing. Ask when a gap would **materially change the spec** (a different answer means a different design, scope, or set of AC); ask nothing if the proposal, assets, and codebase already answer everything. Equally, there is no ceiling: a Simple-looking task with a genuinely ambiguous requirement gets the question it needs. The tier sets how much *process* runs, not how many times the user is interrupted.
 
 State the classification and reasoning to the user before proceeding.
 
@@ -65,7 +78,7 @@ When nothing matches, a single line is the whole block — it is the proof the s
 Forcing the block keeps the scan from being skipped and makes the result visible rather than silent. If `docs/adr/README.md` doesn't exist, say so once in the block and note that in the spec section.
 4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
 5. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
-6. **Ask clarifying questions** — one at a time, fill gaps not covered by the proposal, assets, or codebase. Minimum question count depends on track.
+6. **Ask clarifying questions** — one at a time, only for gaps that would materially change the spec and aren't answered by the proposal, assets, or codebase. No minimum count; none is a valid number.
 7. **Research before proposing (Medium/Complex only)** — use WebSearch/WebFetch when technology choices, new integrations, or unfamiliar patterns are involved. Apply the Convention Wins Rule (see Key Principles).
 8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
 9. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
@@ -181,9 +194,9 @@ Read proposal + assets
 
 **Presenting the design:**
 
-- Once you understand what you're building, present the design
+- Once you understand what you're building, present the design **as one block** — not section-by-section with an approval after each. Invite feedback on any part of it; the user drills into what interests them rather than acknowledging every section.
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
+- **Stop mid-design only for a genuine fork** — two structurally different approaches that are comparable, where picking silently would commit the user to something they might not want. Otherwise state your choice and the reasoning, and keep going.
 - Cover: architecture, components, data flow, error handling, testing approach
 - **Testing approach default:** test the ComponentStore / service / util that holds the logic, not the component. Do not propose component unit tests — the user requests them explicitly when needed.
 - Be ready to go back and clarify if something doesn't make sense
@@ -290,6 +303,8 @@ After the spec review loop passes, the spec is on disk. Walk the user through a 
 Specs cap at 7 phases — most reviews are Tiny/Small/Medium. Large means the spec needs splitting upstream rather than a bigger menu here.
 
 **Step 2 — Build the digest.** Summarize the saved spec into sections grouped by **natural seams** — model picks the seams each time. Examples: Goals & scope / Architecture / Data flow / Error & edges / Testing. Each section: short headline + 1-3 lines of substance. Skim-able under 30 seconds. The full file is on disk; the digest is the review surface. **Always include the *ADRs Reviewed* result as a one-line entry** (which ADRs constrain the direction, or "none relevant") so the user sees what was taken into account.
+
+**Also include the complexity tier as a one-line entry** — `Simple` / `Medium` / `Complex`, plus any **escalator** that raised it: the change touches auth/permissions, a migration or persisted state, money math, shared code many projects import, or spans 9+ files. Escalators only ever raise the tier, never lower it, and a tie between tiers goes to the higher one. The tier drives how much autonomy the downstream skills take, so it is ratified here — at the gate the user already reads — rather than self-assigned and never seen.
 
 **Step 3 — Tiny tier flow.** Show the full digest as one block, then emit the Save handoff (see Save below). No menu needed at this size.
 

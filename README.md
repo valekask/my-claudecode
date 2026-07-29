@@ -32,6 +32,18 @@ A few principles fall out of this:
 
 Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes - it hands off to `open-pr`, which owns the push.
 
+### `--agentic` mode
+
+`brainstorming`, `writing-plans`, and `subagent-driven-development` accept **`--agentic`** — for tasks driven by an orchestrator with little human attention. It raises the bar for **interrupting you**; it never lowers the bar for the work. Every review loop, exploration step, and quality gate runs exactly as normal.
+
+| Skill | Without the flag | With `--agentic` |
+| --- | --- | --- |
+| `brainstorming` | clarifying questions, design walk-through, Final Review menu | digest presented as one block; **spec approval always required, at every tier** |
+| `writing-plans` | 1-3 surfaced decisions across all categories, Final Review menu | surfaces only critical surface / backend contract / genuine design fork / spec gap / scope growth / ADR conflict — decides the rest and records the reasoning in the plan; no Final Review menu |
+| `subagent-driven-development` | checkpoint after every task | no per-task checkpoint; stops only on a **structural** departure from the approved plan (unplanned file, unauthorized boundary crossing, shared-code edit, unscoped refactor, critical surface, backend contract), anything irreversible, a review failing twice, or a materially ambiguous spec |
+
+Two ideas behind it: the human's leverage is **structural** (where code lives, what it may touch), not re-reviewing logic that two review stages already checked; and the **spec is the one gate that never disappears**, because autonomous planning and execution both trust it — if it's wrong and everything below is unattended, you find out at verify with the whole change built on it. The complexity tier (`Simple` / `Medium` / `Complex`) is shown in the spec digest for **your** ratification, with one-way escalators — auth, migrations/persisted state, money math, shared code, 9+ files — that can raise it but never lower it.
+
 **After ship**, `prepare uat <task>-<slug>` opens a follow-up round (its own branch + a `<task>-<slug>-uat.md` ledger) for UAT feedback, bugfixes, and change requests on shipped work; the items run back through Execute → Polish → Verify → Ship. **Off to the side**, `prepare discuss <task>-<slug>` captures a ticket conversation and a proposed answer (`<task>-<slug>-discussion.md`, no branch) for tickets that need thought, not code.
 
 ## Skills
