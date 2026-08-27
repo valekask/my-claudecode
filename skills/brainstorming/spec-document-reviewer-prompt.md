@@ -57,6 +57,7 @@ Agent tool (general-purpose):
     | Convention alignment | Proposed approach follows existing codebase patterns. Any deviation has explicit rationale and is justified by a concrete defect. |
     | Validation placement | If the spec includes forms or user input validation: does it specify which rules are domain-owned (shared validator/service — rules that would need to be enforced from a second entry point) vs presentation-only (component — rules that are only about this form's UX)? |
     | Component-test discipline | Testing Approach must test stores/services/utils, not components. Flag any component unit tests in Testing Approach as an issue — component tests are not a brainstorm-time decision; the user requests them explicitly when needed. |
+    | Decisions record | A *Decisions* section must be present: each entry names what was decided, why, and what settled it (the user, a codebase precedent, an ADR, or agent judgement) — or an explicit one-line "nothing to record". A design choice the spec relies on but that appears in no entry, or an entry with no settling reason, is an issue. |
     | ADR review | An *ADRs Reviewed* section must be present, listing each ADR weighed during the codebase search with a direction-level conclusion — or an explicit "none relevant" / "no ADR index" line. A missing section, or an entry with no conclusion, is an issue. |
 
     ## CRITICAL
@@ -67,7 +68,7 @@ Agent tool (general-purpose):
     - Sections noticeably less detailed than others
     - Units that lack clear boundaries or interfaces
     - Requirements that can't be tested or verified
-    - Assumptions not stated explicitly
+    - Assumptions not stated explicitly — a choice the design rests on that appears in no *Decisions* entry is a silent assumption
     - Implementation details masquerading as spec requirements (pseudocode, function signatures, exact file paths)
     - New patterns or approaches introduced without justification against existing codebase conventions
 

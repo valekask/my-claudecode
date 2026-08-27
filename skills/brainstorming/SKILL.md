@@ -33,7 +33,7 @@ Invoked as `brainstorming --agentic` (used by an orchestrator running tasks with
 
 - **The spec is always approved by the user — at every tier, including Simple.** Present the digest and stop. Everything downstream (an autonomous plan, autonomous execution) trusts this document, so it is the one gate that never disappears. Do not self-approve, and do not hand off to `writing-plans` without an explicit go-ahead.
 - **Skip the Final Review menu.** Show the full digest as one block and ask for approval directly, at every tier — no Walk-by-section / Save option ping-pong. The user still gets the whole digest and can ask for any section in full.
-- **Ask only what changes the spec** — the uncertainty rule below applies with a higher bar: ask when a wrong guess would produce a materially different spec, decide the rest and record the decision in the spec so it is reviewable at the digest.
+- **Ask only what changes the spec** — the uncertainty rule below applies with a higher bar: ask when a wrong guess would produce a materially different spec, decide the rest and record the decision in the spec's *Decisions* section so it is reviewable at the digest.
 - **Never skip** the codebase exploration, the ADR scan, the acceptance criteria, or the spec review loop. Autonomy is about who gets interrupted, not about doing less work.
 
 Without the flag, behave exactly as documented below — the interactive path is unchanged.
@@ -83,7 +83,7 @@ Forcing the block keeps the scan from being skipped and makes the result visible
 8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
 9. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
 10. **Present design** — in sections scaled to complexity, get user approval after each section
-11. **Write spec file** — save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
+11. **Write spec file** — run the open-decisions audit first (see After the Design), then save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
 13. **Final review** — walk user through a size-aware digest of the saved spec (size assessment → digest → menu: walk by section / save). See Final Review section.
 
@@ -160,6 +160,7 @@ Read proposal + assets
 **Clarifying gaps:**
 
 - Ask questions one at a time to fill gaps not already covered by the proposal, assets, and codebase
+- **Order by dependency** — ask the question whose answer unlocks the most others first, and never ask one whose premise a pending answer could invalidate. A question asked out of order gets re-asked.
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message
 - Focus on: purpose, constraints, success criteria, edge cases
@@ -215,6 +216,13 @@ Read proposal + assets
 
 ## After the Design
 
+**Closing open decisions (before writing the spec):**
+
+- List the decisions the design rests on. Each one is **answered by the user**, **decided by you** (with the reason), or **still open**.
+- Only spec-changing openings matter: if an open decision would materially change the spec, ask it — one at a time — and close it. Decide the rest yourself.
+- **Nothing silently assumed.** Every decision that survives the audit lands in the spec's *Decisions* section, so the digest gate reviews the choices instead of discovering them at verify.
+- Keep it proportional — with nothing open this is a single line, not an interrogation. It is an audit of what the design already committed to, not a new round of questions.
+
 **Writing the spec:**
 
 - Write the validated design to `<task>-<slug>-spec.md` in the task directory
@@ -245,6 +253,12 @@ For example:
 > - FNA-15102 (property coloring) — constrains the render path. Proposed direction does not conflict.
 
 If `docs/adr/README.md` doesn't exist, the section says so in one line.
+
+**Include a *Decisions* section.** The record of every choice the design rests on that the spec text alone doesn't justify — one line each: **what** was decided, **why**, and **what settled it** (the user, a codebase precedent, an ADR, or your own judgement). This is the trail the digest gate reads, and in `--agentic` mode it is the only place a decision made without asking becomes reviewable. A choice discussed in the design but missing here is a silent assumption. Keep it tiny when it's tiny — with nothing to record, one line saying so. For example:
+
+> ## Decisions
+> - Currency selector lives in the existing toolbar rather than a new control — matches the filter controls already there (codebase precedent).
+> - Rates are re-fetched per view instead of cached — the user chose freshness over the extra call.
 
 **Hard rules — do NOT write any of these in the spec.** The reviewer rejects on sight; write the spec right the first time rather than cleaning up afterward.
 
