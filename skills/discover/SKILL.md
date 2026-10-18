@@ -31,7 +31,9 @@ Each workflow skill answers a different question, and this one stops at its own:
   *should* does not belong in the discovery file.
 - **Read-only everywhere.** No code edits, no app or dashboard configuration changes (not even on
   an editable dashboard — a shared environment is someone else's test bed), no git writes, and no
-  branch switches in any repo, including related ones.
+  branch switches in any repo, including related ones. **No installs either** — never run
+  `npm ci` / `npm install` or any setup step to make a source work; a Storybook that won't serve
+  is a *Not checked* item, not a problem to fix.
 - **Never blocks, never asks mid-run.** A missing or unfit target, a failed login, a feature behind
   a profile — each becomes a *Not checked* item with its reason, and a *Targets needed* entry when
   a better target would settle it. The caller (or the user, at the next pause) supplies the target
@@ -67,6 +69,12 @@ In `--fast`, almost every fact is single-source — that's expected, not a defec
 Read the proposal and list the **checks**: the behaviours the change touches or assumes ("what
 happens today when…", "which views show…", "how do neighbouring controls look…"). Include the
 edge states the proposal's area has — empty, error, loading, boundary values, filters, timezones.
+
+**Include every surface that renders what changes**, not just the one the proposal names: for a
+setting or data change, that means the chart or table itself, its **legend**, hover **tooltip**,
+axis and tick labels, the settings panel, and **exports** (CSV / XLSX / image) — whichever of them
+show the changed value. Each gets at least one check; a surface you rule out is listed under
+*Affected surfaces* as "doesn't show it", so the reader sees it was considered.
 
 **Quick exit:** if the change has no observable surface and nothing worth confirming (a pure
 config bump, a copy fix), write a three-line file with verdict `trivial` and stop.
@@ -179,7 +187,8 @@ they were considered.
 ## Rules
 
 - **Facts only** — no *should*, no approaches, no scope calls, no AC. Those are `brainstorming`'s.
-- **Read-only** — code, app configuration, git, related repos.
+- **Read-only** — code, app configuration, git, related repos; no dependency installs.
+- **Every rendering surface considered** — chart/table, legend, tooltip, axis labels, settings, exports.
 - **Every fact has evidence and a strength level**; no evidence → *Not checked*.
 - **Questions are intent-only** — a behaviour question is a check, not a question for the user.
 - **Never ask mid-run** — gaps become *Not checked* / *Targets needed*.
