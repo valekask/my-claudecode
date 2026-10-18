@@ -83,7 +83,7 @@ Both modes create a branch. *How* that branch is checked out is the isolation ch
 
 ## Mode: new task
 
-The **kickoff phase** of the build workflow. Creates the branch, the task directory, and an empty proposal for the user to fill in. After this, the user writes the proposal, then runs `brainstorming` in a fresh session.
+The **kickoff phase** of the build workflow. Creates the branch, the task directory, and an empty proposal for the user to fill in. After this, the user writes the proposal, runs `discover`, then runs `brainstorming` in a fresh session.
 
 ### Step N1: Determine the base branch
 
@@ -116,8 +116,9 @@ Create `.claude/temp/<task>-<slug>/` containing `<task>-<slug>-proposal.md` (fro
 ### Step N4: Hand off
 
 Report the branch created and the proposal scaffolded, and tell the user to:
-1. Fill in `<task>-<slug>-proposal.md`
-2. Run `brainstorming` (fresh session) on the proposal
+1. Fill in `<task>-<slug>-proposal.md` — including **Verification targets** (links to the app screens / Storybook stories that show the area)
+2. Run `discover` (`--fast` for a simple task) on the proposal
+3. Run `brainstorming` (fresh session) on the proposal + discovery
 
 In worktree mode, also report the worktree path and tell the user to `cd` into it (or open a fresh session there) first — the proposal and all later work live inside the worktree.
 
@@ -195,6 +196,9 @@ Kept light, because `brainstorming` re-explores intent.
 
 ## Technical notes
 <Any constraints, hints, exact names/values, or implementation notes to honor.>
+
+## Verification targets
+<Where the area can be seen today — app URLs/routes, Storybook stories, environment — one per line, with what each is for and any setup it needs (e.g. "editable", "beta profile"). Read by `discover` early and reused by `smoke-test` at verify.>
 ```
 
 ### UAT ledger template

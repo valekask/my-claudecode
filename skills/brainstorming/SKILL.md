@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Reads the proposal, explores intent and requirements, and produces a spec before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Reads the proposal and the discovery facts, explores intent and requirements, and produces a spec before implementation."
 effort: xhigh
 ---
 
@@ -21,11 +21,13 @@ All brainstorming artifacts live in a task directory:
 ```
 .claude/temp/<task>-<slug>/
   ├── <task>-<slug>-proposal.md   # input (user provides)
+  ├── <task>-<slug>-discovery.md  # input (from `discover`, when it ran)
   ├── assets/               # mockups, screenshots, diagrams, references (optional)
   └── <task>-<slug>-spec.md        # output (this skill produces)
 ```
 
 - The `assets/` directory may contain images, mockups, Figma exports, PDFs, or any reference material. Check it early — these assets often answer questions before you need to ask them.
+- The **discovery file** holds facts about how the app behaves today, each numbered `F-n` with evidence and a strength level (`confirmed` / `single source` / `conflict`). Decide from it: a `confirmed` fact is settled; a `single source` fact is usable, but read the code before a decision that depends on *why* it happens; a `conflict` is never decided silently — it becomes a question (or, in `--agentic`, an `unconfirmed` decision). Its *Open questions* join your own question list.
 
 ## `--agentic` mode
 
@@ -33,7 +35,7 @@ Invoked as `brainstorming --agentic` (used by an orchestrator running tasks with
 
 - **The spec is always approved by the user — at every tier, including Simple.** Present the digest and stop. Everything downstream (an autonomous plan, autonomous execution) trusts this document, so it is the one gate that never disappears. Do not self-approve, and do not hand off to `writing-plans` without an explicit go-ahead.
 - **Skip the Final Review menu.** Show the full digest as one block and ask for approval directly, at every tier — no Walk-by-section / Save option ping-pong. The user still gets the whole digest and can ask for any section in full.
-- **Ask only what changes the spec** — the uncertainty rule below applies with a higher bar: ask when a wrong guess would produce a materially different spec, decide the rest and record the decision in the spec's *Decisions* section so it is reviewable at the digest.
+- **Ask only what changes the spec** — the uncertainty rule below applies with a higher bar: ask when a wrong guess would produce a materially different spec, decide the rest and record the decision in the spec's *Decisions* section so it is reviewable at the digest. **Scope is the exception:** a scope cut, non-goal or "locked" choice made on your own judgement is never decided silently — record it as `unconfirmed` so the digest shows it as a question, not a settled fact.
 - **Never skip** the codebase exploration, the ADR scan, the acceptance criteria, or the spec review loop. Autonomy is about who gets interrupted, not about doing less work.
 
 Without the flag, behave exactly as documented below — the interactive path is unchanged.
@@ -62,9 +64,9 @@ State the classification and reasoning to the user before proceeding.
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Read proposal and assets** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided
+1. **Read proposal, assets and discovery** — read the proposal file, scan `assets/` directory if it exists, review any images or references provided, and read `<task>-<slug>-discovery.md` when it exists (conflicts first)
 2. **Clarify intent** — confirm you understand the problem the proposal is trying to solve. If the proposal is clear, skip. If not, ask one focused question via AskUserQuestion. Goal: a confirmed problem statement before any codebase exploration.
-3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). If `docs/adr/README.md` exists, scan it for ADRs relevant to this area **through the brainstorming lens: does any ADR constrain the *direction* I'm about to propose?** ADRs carry the settled *why* — decisions you must not silently re-litigate. (The *guard-level* lens — which specific code guards a change must preserve — belongs to plan-writing, not here.) **Report what you found in conversation AND record it in the spec's *ADRs Reviewed* section (see Writing the spec)** — list only the ADRs that constrain the direction, with the match count in the header. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
+3. **Search the codebase (targeted)** — explore how the area being touched currently works. Goal: understand the functionality you'll create or update, not catalogue patterns and conventions (those matter at plan-writing time). **After a full-mode discovery, only fill its gaps** (its *Not checked* items, and anything a decision needs that it doesn't cover); after a `--fast` discovery or none, run the search plus the **"who else reads this?" sweep** — every screen, mode and feature that shows or consumes what the change touches. If `docs/adr/README.md` exists, scan it for ADRs relevant to this area **through the brainstorming lens: does any ADR constrain the *direction* I'm about to propose?** ADRs carry the settled *why* — decisions you must not silently re-litigate. (The *guard-level* lens — which specific code guards a change must preserve — belongs to plan-writing, not here.) **Report what you found in conversation AND record it in the spec's *ADRs Reviewed* section (see Writing the spec)** — list only the ADRs that constrain the direction, with the match count in the header. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
 
 > **ADRs reviewed** (direction lens — 2 matches):
 > - `0001` auth — constrains the session flow I'm proposing. No conflict.
@@ -78,10 +80,10 @@ When nothing matches, a single line is the whole block — it is the proof the s
 Forcing the block keeps the scan from being skipped and makes the result visible rather than silent. If `docs/adr/README.md` doesn't exist, say so once in the block and note that in the spec section.
 4. **Classify complexity** — use the classification table above to determine Simple / Medium / Complex track
 5. **Assess scope** — if the proposal describes multiple independent subsystems, flag this immediately and help decompose before diving into details
-6. **Ask clarifying questions** — one at a time, only for gaps that would materially change the spec and aren't answered by the proposal, assets, or codebase. No minimum count; none is a valid number.
+6. **Ask clarifying questions** — one at a time, only for gaps that would materially change the spec and aren't answered by the proposal, assets, discovery, or codebase. The discovery's *Open questions* and conflicts join the list; ask in order of impact. No minimum count; none is a valid number. A question left unasked becomes an `unconfirmed` decision, never a silent one.
 7. **Research before proposing (Medium/Complex only)** — use WebSearch/WebFetch when technology choices, new integrations, or unfamiliar patterns are involved. Apply the Convention Wins Rule (see Key Principles).
 8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
-9. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
+9. **Edge states (every tier)** — state how the new behaviour handles the edge states that apply (empty, error, loading, boundary values, filters, timezones), starting from the discovery's *Edge states today*. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
 10. **Present design** — in sections scaled to complexity, get user approval after each section
 11. **Write spec file** — run the open-decisions audit first (see After the Design), then save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
@@ -90,7 +92,7 @@ Forcing the block keeps the scan from being skipped and makes the result visible
 ## Process Flow
 
 ```
-Read proposal + assets
+Read proposal + assets + discovery
         │
    Clarify intent (confirm problem statement)
         │
@@ -109,7 +111,7 @@ Read proposal + assets
    [Medium/Complex] Propose 2-3 approaches
    [Simple] State single approach
         │
-   [Complex] Pre-mortem: failure modes per approach
+   Edge states (every tier) · [Complex] Pre-mortem: failure modes per approach
         │
    Present design sections
         │
@@ -149,6 +151,9 @@ Read proposal + assets
 - Explore the area the change will touch — the functionality you'll create or update
 - Goal: understand how it currently works, not catalogue patterns or conventions (those matter at plan-writing time)
 - Look at: the files involved, their callers, recent commits in that area
+- **Start from the discovery file when it exists** — after a full-mode run, search only what it doesn't cover; after `--fast` or none, also run the "who else reads this?" sweep (other screens, view modes, settings sections, exports that read the value you're changing)
+- **Verify a premise before locking a decision on it.** A decision that rests on how existing code behaves cites the code you read, or the discovery fact that confirms it — never a belief about the code
+- **Behaviour the discovery didn't cover:** when a chosen approach rests on observable behaviour nobody checked, dispatch a behaviour-checker subagent (the `discover` skill's `behaviour-checker-prompt.md`, with its model and effort) with that one check rather than guessing (it needs a target — the proposal's *Verification targets*, or the discovery's)
 - Skip questions that the code already answers
 
 **Assessing scope:**
@@ -193,6 +198,12 @@ Read proposal + assets
 - Focus on: integration risks, performance under load, edge cases, maintenance burden
 - Keep it lightweight — bullet points, not essays
 
+**Edge states (every tier):**
+
+- Whatever the tier, state how the new behaviour handles each edge state that applies — empty, error, loading, boundary values, filters / partial selections, timezones
+- Start from the discovery's *Edge states today*: say for each whether the change keeps, alters or newly introduces it
+- One line per state; skip states that genuinely don't apply. The ones that matter become AC (see Writing the spec)
+
 **Presenting the design:**
 
 - Once you understand what you're building, present the design **as one block** — not section-by-section with an approval after each. Invite feedback on any part of it; the user drills into what interests them rather than acknowledging every section.
@@ -220,6 +231,7 @@ Read proposal + assets
 
 - List the decisions the design rests on. Each one is **answered by the user**, **decided by you** (with the reason), or **still open**.
 - Only spec-changing openings matter: if an open decision would materially change the spec, ask it — one at a time — and close it. Decide the rest yourself.
+- **Scope is never silent.** A scope cut, non-goal or "locked" choice settled by your own judgement is asked — or, in `--agentic`, recorded as `unconfirmed`. The same goes for a decision resting on a discovery `conflict` you couldn't resolve. These are exactly the calls UAT overturns most often.
 - **Nothing silently assumed.** Every decision that survives the audit lands in the spec's *Decisions* section, so the digest gate reviews the choices instead of discovering them at verify.
 - Keep it proportional — with nothing open this is a single line, not an interrogation. It is an audit of what the design already committed to, not a new round of questions.
 
@@ -254,7 +266,7 @@ For example:
 
 If `docs/adr/README.md` doesn't exist, the section says so in one line.
 
-**Include a *Decisions* section.** The record of every choice the design rests on that the spec text alone doesn't justify — one line each: **what** was decided, **why**, and **what settled it** (the user, a codebase precedent, an ADR, or your own judgement). This is the trail the digest gate reads, and in `--agentic` mode it is the only place a decision made without asking becomes reviewable. A choice discussed in the design but missing here is a silent assumption. Keep it tiny when it's tiny — with nothing to record, one line saying so. For example:
+**Include a *Decisions* section.** The record of every choice the design rests on that the spec text alone doesn't justify — one line each: **what** was decided, **why**, and **what settled it** (the user, a discovery fact `F-n`, a codebase precedent, an ADR, or your own judgement). A scope call or a `conflict`-based call settled by your own judgement is tagged **`unconfirmed`**, so the digest shows it as an open question. This is the trail the digest gate reads, and in `--agentic` mode it is the only place a decision made without asking becomes reviewable. A choice discussed in the design but missing here is a silent assumption. Keep it tiny when it's tiny — with nothing to record, one line saying so. For example:
 
 > ## Decisions
 > - Currency selector lives in the existing toolbar rather than a new control — matches the filter controls already there (codebase precedent).

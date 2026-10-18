@@ -35,6 +35,10 @@ means*, never the driving mechanics.
   for ad-hoc runs with no spec).
 - **App context** — resolved by `test-browser` from the project's `.test-browser/`
   dir (base URL, credentials, app-map). This skill doesn't read it directly.
+- **Targets** — where to run the scenarios. Prefer the task's own: the proposal's
+  *Verification targets* and the discovery file's *Targets → Used* (screens and
+  Storybook stories already known to show the area). The discovery's *Edge states
+  today* and *Conflicts* are good scenario seeds. Fall back to app-map routes.
 - **Output dir** — where the verdict + report land. **Invoker-supplied**; defaults
   to `<project>/.test-browser/.temp/` for ad-hoc runs. Orchestrators (e.g. a
   management cockpit) point it at the **task dir** so the verdict travels with the

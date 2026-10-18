@@ -8,7 +8,8 @@ Custom skills and configuration for Claude Code, designed around a structured de
 
 Each skill operates at one level of abstraction and defends its boundary:
 
-- **Brainstorm** - _what & why_: goals, constraints, architecture at a high level
+- **Discover** - _what is_: how the app behaves today, each fact with evidence - never a decision
+- **Brainstorm** - _what & why_: goals, constraints, architecture at a high level, decided from the proposal and the discovered facts
 - **Plan** - _structural how_: files, callers, reuse, where new code lands
 - **Execute** - _coding how_: conventions, exact code, verification
 
@@ -21,16 +22,17 @@ A few principles fall out of this:
 ## Development Workflow
 
 1. **Prepare** - create the branch, task directory, and an empty proposal template
-2. **Proposal** (manual) - fill in the proposal; drop reference assets (mockups, screenshots, diagrams) into `assets/`
-3. **Brainstorm** - turn the proposal into an approved spec
-4. **Plan** - decompose the spec into a bite-sized implementation plan
-5. **Execute** - implement the plan with a fresh subagent per task in isolated context (writes the result file). **Simple tasks skip step 4** and run `executing-simple` straight from the spec instead
-6. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
-7. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
-8. **Ship** - write the product summary + ADR (when warranted), then commit
-9. **Open PR** - `open-pr` pushes the branch and opens the PR, both behind your approval (or unattended with `--agentic`)
+2. **Proposal** (manual) - fill in the proposal, including **verification targets** (links to the screens / Storybook stories that show the area); drop reference assets (mockups, screenshots, diagrams) into `assets/`
+3. **Discover** - establish how the app behaves today in that area (full mode by default, `--fast` for simple tasks); writes the discovery file
+4. **Brainstorm** - turn the proposal + discovery into an approved spec
+5. **Plan** - decompose the spec into a bite-sized implementation plan
+6. **Execute** - implement the plan with a fresh subagent per task in isolated context (writes the result file). **Simple tasks skip step 5** and run `executing-simple` straight from the spec instead
+7. **Polish** - format, build, run the relevant reviews, and auto-apply only meaningful fixes
+8. **Verify** (manual + `smoke-test`) - confirm behavior on the polished code
+9. **Ship** - write the product summary + ADR (when warranted), then commit
+10. **Open PR** - `open-pr` pushes the branch and opens the PR, both behind your approval (or unattended with `--agentic`)
 
-Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes - it hands off to `open-pr`, which owns the push.
+Steps 3-7 each run in a **fresh session**. Polish mutates code _before_ verification so verification is meaningful; ship makes no code changes and never pushes - it hands off to `open-pr`, which owns the push.
 
 ### `--agentic` mode
 
@@ -38,7 +40,7 @@ Steps 3-6 each run in a **fresh session**. Polish mutates code _before_ verifica
 
 | Skill | Without the flag | With `--agentic` |
 | --- | --- | --- |
-| `brainstorming` | clarifying questions, design walk-through, Final Review menu | digest presented as one block; **spec approval always required, at every tier** |
+| `brainstorming` | clarifying questions, design walk-through, Final Review menu | digest presented as one block; **spec approval always required, at every tier**; scope cuts / non-goals made on agent judgement are tagged `unconfirmed` in the digest instead of decided silently |
 | `writing-plans` | 1-3 surfaced decisions across all categories, Final Review menu | surfaces only critical surface / backend contract / genuine design fork / spec gap / scope growth / ADR conflict — decides the rest and records the reasoning in the plan; no Final Review menu |
 | `executing-simple` | may ask one focused question when a single small ambiguity blocks | never asks — the same ambiguity becomes a **bail** (`needs full flow`). Every bail trigger is unchanged; autonomy buys fewer interruptions, never licence to improvise past the spec |
 | `subagent-driven-development` | checkpoint after every task | no per-task checkpoint; stops only on a **structural** departure from the approved plan (unplanned file, unauthorized boundary crossing, shared-code edit, unscoped refactor, critical surface, backend contract), anything irreversible, a review failing twice, or a materially ambiguous spec |
@@ -57,29 +59,44 @@ Two ideas behind it: the human's leverage is **structural** (where code lives, w
 
 Scaffolds what you're about to work on, in one of two modes. The mode is **stated, never inferred**: `uat` as the first argument, otherwise a new task.
 
-- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes) for the user to fill in. Hands off to `brainstorming`.
+- **new task** (`prepare <task>-<slug>`, default) - creates the working branch (off the repo's default branch, or a release branch via `--base`), the task directory, and a light `<task>-<slug>-proposal.md` (ticket / title / description / technical notes / **verification targets**) for the user to fill in. Hands off to `discover`, then `brainstorming`.
 - **uat** (`prepare uat <task>-<slug>`) - opens a post-ship follow-up round on an existing task: a `<task>-<slug>-uat` branch off the integration base (the original branch is usually merged) and a `<task>-<slug>-uat.md` ledger for UAT feedback, bugfixes, and change requests. Hands off to execution (`executing-simple` for a small round, `writing-plans` → `subagent-driven-development` when the round needs a plan).
 - **Decides, never prompts** - acts where the state is unambiguous (folder + branch already there → report and write nothing; folder without a branch → create it and reuse the files, never overwriting a proposal) and **refuses** where it isn't (a shipped task, or `uat` with no result file). A refusal is terminal: a human can read it, an orchestrator can handle it, where a prompt would just hang an unattended run. The only thing it asks for is a missing task name.
 - **Branch/files only** - creates and switches; never fetches, pulls, or commits, so the base is whatever your local default branch is. Name check is advisory; the grammar (`<task>-<slug>[-<branch-type>]`) lives in `docs/CONTRIBUTING.md`.
 
+#### `discover`
+
+**Establishes how the app behaves today** in the area a proposal touches, so the spec is decided from facts rather than assumptions about existing behaviour. Writes `<task>-<slug>-discovery.md`. **Facts only** - no approaches, scope calls or AC; those are `brainstorming`'s.
+
+- **Two modes** - **full** (default): observe in the running app and Storybook, then confirm against code, unit tests, ADRs, git lineage, past task artifacts and related repos (e.g. the backend). **`--fast`**: app + Storybook only, for simple tasks
+- **Targets** - the proposal's verification targets first, then ticket links, `.test-browser/` defaults and app-map navigation. A target that doesn't show the thing (a dashboard without the widget in question) is recorded as a mismatch, and a precise **Targets needed** entry asks for a better one - it never blocks or asks mid-run
+- **Every fact has evidence and a strength level** - `confirmed` (two sources agree), `single source` (the evidence line says which), or `conflict` (sources disagree - listed first, never decided silently downstream). No evidence → *Not checked*
+- **Read-only everywhere** - no code edits, no app/dashboard configuration changes, no git writes or branch switches, in any repo
+- **Browser observation runs in a behaviour-checker subagent** (`behaviour-checker-prompt.md`, dispatched on `sonnet` at `medium` effort - observation is mechanical, and every claim needs evidence). It drives `test-browser`, confirms each target actually shows the thing before trusting it, never saves settings or edits a dashboard, and reports symptoms only - no screenshot means `not checked`. `brainstorming` reuses the same template for a single behaviour nobody checked
+
+Why it exists: in a review of past UAT rounds, most spec misses were knowable at spec time - an untested premise about existing behaviour, a screen that reads the changed value, a nearby UI pattern - and the verification links the user already supplied were only used at smoke-test time.
+
 #### `brainstorming`
 
-Turns a proposal into an approved spec - a contract specifying **what + why** (goals, constraints, architecture, acceptance criteria).
+Turns a proposal into an approved spec - a contract specifying **what + why** (goals, constraints, architecture, acceptance criteria). **Decides from the discovery file** when one exists: confirmed facts are settled, conflicts become questions, and its open questions join the question list.
 
 **Understanding the proposal:**
 
-- Read the proposal file and any reference assets (mockups, screenshots, diagrams)
+- Read the proposal file, any reference assets (mockups, screenshots, diagrams), **and the discovery file**
 - **Clarify intent** - confirm the problem statement; ask one focused question only if the proposal is unclear
-- **Targeted codebase exploration** - understand how the area being touched currently works (not generic pattern hunting)
+- **Targeted codebase exploration** - understand how the area being touched currently works (not generic pattern hunting). **After a full discovery, only its gaps; otherwise also a "who else reads this?" sweep** of the screens, modes and features that consume what changes. **A decision that rests on existing behaviour cites the code or fact that proves it**; behaviour nobody checked goes to a behaviour-checker subagent (`discover`'s template) rather than a guess
 - **Classify task complexity (Simple / Medium / Complex)** - sets ceremony level
 - Assess scope - flag and decompose if multiple subsystems
-- Ask clarifying questions one at a time to fill any remaining gaps
+- Ask clarifying questions one at a time to fill any remaining gaps - **the discovery's open questions and conflicts included, in order of impact**
+
+**Never silent on scope:** a scope cut, non-goal or "locked" choice made on the agent's own judgement is asked, or (with `--agentic`) tagged `unconfirmed` in the *Decisions* section so the digest shows it as an open question. These are the calls UAT overturned most often.
 
 **Exploring approaches:**
 
 - Research best practices when relevant (Medium / Complex)
 - Propose 2-3 approaches with trade-offs; lead with the recommended one
 - **Each approach states its scope and hardest part**
+- **Edge states at every tier** - how the new behaviour handles empty / error / loading / boundary / filters / timezones, starting from the discovery's *Edge states today*
 - **Convention wins** - codebase consistency over "best practice" unless there's a concrete defect
 
 **Presenting the design:**
@@ -259,6 +276,7 @@ The **browser-driving primitive** - operates a running web app and observes it: 
 
 The **scenario-verification layer** for the Verify phase — judges a set of scenarios (steps + expected results) against a running app and emits a machine-readable verdict. **Drives the browser via `test-browser`**; owns only _what to test_ and _what the result means_. **Verify-and-report only** — never fixes code or ships.
 
+- **Reuses the task's targets** - runs on the proposal's verification targets and the screens / stories `discover` already found, and seeds scenarios from the discovery's edge states and conflicts
 - **App-map driven** - reads a per-app "user's mental model" (routes, chrome, selector patterns, terminology) to drive the app like a user and **infer** new/variant UI from patterns; a stable baseline with per-run **live fallback** for in-flux screens
 - **Scenarios from a diff** - can propose them via the app-map's file→route table, so a change suggests its own coverage
 - **Scenarios derived from the spec's AC** - the primary source is the acceptance criteria, not the diff: each scenario cites the AC it `covers`, and any AC it **declines** is listed with a reason (so an AC that neither the plan nor the smoke run covers stays visible). Diff-mapping via the app-map's file→route table is the fallback for ad-hoc runs with no spec
@@ -311,6 +329,7 @@ so a full path looks like `.claude/temp/FNA-1234-timeline-hover/FNA-1234-timelin
 | ------------------- | -------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Proposal**        | `<task>-<slug>-proposal.md`                                                             | `prepare` (template) + User (content) | Initial feature request, requirements, context. `prepare` scaffolds the template; the user fills it in                                                                                                                   |
 | **Assets**          | `assets/`                                                                        | User                                  | Mockups, screenshots, diagrams, reference material (user creates the dir when needed)                                                                                                                                    |
+| **Discovery**       | `<task>-<slug>-discovery.md` + `assets/discovery/`                                       | `discover`                            | How the app behaves today in the area the proposal touches: facts `F-1`, `F-2`, … each with evidence and a strength level (`confirmed` / `single source` / `conflict`), affected surfaces, nearby patterns, edge states today, proposal-vs-reality, targets used/needed, open intent questions. Read by `brainstorming`; its targets are reused by `smoke-test` |
 | **Spec**            | `<task>-<slug>-spec.md`                                                                 | `brainstorming`                       | Approved specification: goals, constraints, architecture, scope (what + why, not how). Carries the numbered **Acceptance Criteria** (`AC-1`, `AC-2`, …) that `writing-plans` and `smoke-test` read                        |
 | **Plan**            | `<task>-<slug>-plan.md`                                                                 | `writing-plans`                       | Implementation plan: file structure, bite-sized tasks, code snippets, test commands. Cites the AC each test step proves, and lists the AC it declines with reasons                                                        |
 | **Result**          | `<task>-<slug>-result.md`                                                               | `subagent-driven-development` / `executing-simple` | Summary of implementation: files changed, decisions made, test results                                                                                                                                                   |
