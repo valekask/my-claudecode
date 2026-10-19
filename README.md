@@ -215,8 +215,8 @@ Checklist-driven review of changes before PR. **207 checks across 14 parallel ag
 
 **Checking:**
 
-- Agents flag broadly in parallel - false positives are fine
-- **Investigation phase** verifies each flag with full file context, classifies severity, and dismisses false positives
+- Agents flag broadly in parallel - false positives are fine. **Pattern checks** (naming, clean code, test quality, styling, standards drift) run on `sonnet`, **judgment checks** (defensive, architecture, data flow, state, safety, forms, performance, migration) on the session model - both at `medium`, never lower, since a missed flag can't be recovered later
+- **Investigation phase** verifies each flag with full file context, classifies severity, and dismisses false positives - at `high` effort, because it decides what's real
 
 **Reporting:**
 
@@ -254,6 +254,7 @@ Applies Prettier and code organization to locally modified files.
 The **pre-verification quality pass** - the one phase that mutates code after execution. Runs after execution and _before_ manual verification, so verification happens on clean, gated code.
 
 - **Format** first (runs `formatting`), then **select gates by risk**: a **pluggable primary reviewer** (CodeRabbit or built-in `/code-review`) always, plus `/security-review`, `trace-workflow`, `trace-dataflow`, `checklist-review`, or `/simplify` (surface-only) when the change warrants them
+- **Each gate dispatched with an explicit model + effort** matched to the thinking it does - `trace-*` at `xhigh`, `/security-review` at `high`, `checklist-review` and `/simplify` at `medium`, the CodeRabbit wrapper on `sonnet` - rather than inheriting whatever the session runs at
 - **Effort-tuned primary review** - when the built-in reviewer runs, its effort level (`low` → `max`) is **judged from the diff**, not from file count alone: mechanical diffs get `low`, cross-layer or security-sensitive work `high`, migrations / auth / money math `xhigh`-`max`. A higher level only costs time and tokens — it never widens what polish auto-applies — so unsure means go up a level. The level and its reason land in the ledger
 - **Compare mode** (`--compare`) runs both reviewers and reports each one's unique catches — for evaluating which to standardize on; pins the built-in to `medium` so the comparison is apples-to-apples
 - **Auto-applies only meaningful fixes** - High-confidence + Critical/High + mechanical. Everything else (Medium/Low, uncertain, judgment-dependent) is surfaced, not changed. Bounded to 3 fix→recheck loops per gate

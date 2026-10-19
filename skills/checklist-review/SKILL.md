@@ -190,6 +190,13 @@ If ≤3 files changed AND no store/service files:
 
 Launch activated checking agents **in parallel**. Checking agents have ONE job: **flag anything suspicious**. They do NOT need to be certain — if in doubt, flag it. The investigation phase will verify.
 
+**Model and effort per agent — set them on each Agent call.** Two kinds of checking:
+
+- **Pattern checks** — matching the diff against a concrete checklist: Agent 1 NAMING, 2 CLEAN CODE, 8 TEST QUALITY, 9 STYLING, 13 STANDARDS DRIFT → `model: sonnet`, `effort: medium`.
+- **Judgment checks** — reasoning about behaviour and design: Agent 3 DEFENSIVE PROGRAMMING, 4 ARCHITECTURE, 5 DATA FLOW, 6 STATE MANAGEMENT, 7 SAFETY, 10 FORMS, 11 PERFORMANCE, 12 MIGRATION SAFETY → session model (Opus), `effort: medium`.
+
+Don't drop below `medium` here: these agents exist to flag broadly, and a flag missed in this phase can't be recovered by the investigation that follows.
+
 ### Checking agent instructions
 
 All checking agents use this mindset:
@@ -416,7 +423,7 @@ Gather all flags from all checking agents into a single list. Group them **by fi
 
 ### Step 4.2: Launch investigation agents
 
-Batch raw findings **by file** — all findings for the same file go to the same investigation agent. If a file has many findings (>8), split into two batches. Launch investigation agents **in parallel**.
+Batch raw findings **by file** — all findings for the same file go to the same investigation agent. If a file has many findings (>8), split into two batches. Launch investigation agents **in parallel**, on the session model (Opus) at `effort: high` — this phase decides what's real, and in testing it carried most of the review's value.
 
 Each investigation agent reads the **full source file** (not just the diff) with **20+ lines of context** around each flagged line.
 
