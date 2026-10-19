@@ -71,6 +71,19 @@ Under `--compare`, pin the built-in reviewer to `medium` — comparing it agains
 
 The selected gates are independent reviewers, so **dispatch them concurrently** — launch them in a single batch rather than one after another, and gather findings as they return. (Some gates, like `checklist-review`, fan out their own internal agents; that's fine — they parallelize underneath.) Collect all findings into one list with: source gate, file:line, severity, and confidence.
 
+**Dispatch each gate as a subagent with an explicit model and effort** — set them on the Agent call, never leave them to the session default. A gate's depth should match the kind of thinking it does, not whatever effort the session happens to run at:
+
+| Gate | Model | Effort | Why |
+|------|-------|--------|-----|
+| `trace-workflow`, `trace-dataflow` | session (Opus) | `xhigh` | deep reasoning across functions and layers — where the subtle bugs are |
+| `/security-review` | session (Opus) | `high` | low volume, high consequence |
+| `checklist-review` | session (Opus) | `medium` | orchestrates and merges; it sets its own per-agent levels inside |
+| `/simplify` | session (Opus) | `medium` | judgment-level proposals, surfaced only |
+| Primary reviewer — CodeRabbit | `sonnet` | `medium` | runs an external tool and parses its output |
+| Primary reviewer — built-in `/code-review` | session | its own level (the table above) | the level argument controls its depth |
+
+The subagent invokes the gate's skill through the Skill tool, so a skill's own `effort:` still applies while it runs — keep the two in step.
+
 ### Step 5: Triage and auto-fix (bounded, meaningful-only)
 
 For each finding, classify:
