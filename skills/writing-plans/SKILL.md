@@ -50,9 +50,10 @@ If the spec covers multiple independent subsystems, it should have been broken i
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
 
-- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
-- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
+- **Follow `module-design.md`** (in this skill directory) — read it before mapping files. Each behaviour has one owner; its steps stay private inside it.
+- Keep one flow in few files. Give a part its own file only when it is a complete job with its own contract and moving it out makes the owner easier to understand — never a file that only passes calls through.
 - Files that change together should live together. Split by responsibility, not by technical layer.
+- **Flow map** — write one for the main user question(s) the plan serves (format in `module-design.md`), with the count next to the discovery's *Reading path today*. It goes in the plan header.
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
 - **Impact tracing** — when modifying a function's signature or behavior, grep for ALL callers to build the complete file list. Include indirect callers through shared services and utilities, not just direct callers in the target area. When adding state that depends on another piece of state, trace ALL triggers that can change the source state, not just the primary use case. When several symbols or state sources need tracing, this is independent read-only work — fan it out to parallel search agents (one per symbol/area), each returning its caller/trigger list, then merge the results.
 - **ADR constraints** — if `docs/adr/README.md` exists, scan it for ADRs relevant to the files you'll create or modify **through the plan-writing lens: does any ADR name a guard in these files that the plan must preserve, not remove?** Their *Edge cases & non-obvious constraints* section names those guards — carry each into the relevant task's rationale. The spec's *ADRs Reviewed* section (written during brainstorming) already cleared the *direction* level; start from it, then run this guard-level scan against the live files. **Report what you found in conversation AND record it in the plan's *ADRs Reviewed* section (see Plan Document Header)** — list only the ADRs that impose a guard, with the match count in the header: the guard each imposes and the task that preserves it. In conversation, emit it as a **discrete labeled block**, never woven into other narration (a result buried mid-paragraph is not "visible"):
@@ -78,7 +79,7 @@ Pause between mapping files and writing tasks. Scan for high-leverage decisions 
 
 - **Reuse candidates** — before planning any new file/function/service/util (including ones the spec proposes), grep for existing similar functionality. Two common misses: (a) spec-proposed services that could extend something existing — a spec naming `FooService` doesn't force net-new code; (b) duplicate utils under different names — a planned `formatCurrency` may already exist as `currencyFormatter`. For utils, grep by capability (`format`, `parse`, `validate`, `normalize`), not by exact target name, and check the project's typical util homes (`*.utils.ts`, `*.helpers.ts`, `lib/utils/`). If matches exist, ask: extend the existing one, or create new? **Before treating any match as a reuse or modification target, read it deeply enough to confirm it actually behaves the way the plan assumes** — a similar name, shape, or nearby location is a hypothesis, not proof of equivalent behavior. If it looks similar but works differently, say so and leave it alone rather than planning a change to it. Confirm before proposing to touch it — don't defer the deep read until someone questions the change. When you have several planned units to check, fan out the *locating* step — parallel search agents grepping by capability, one per unit, each reporting whether a candidate exists and where — but do the behavior-confirmation read yourself, inline: that judgment is the part that must not be delegated to a summary.
 - **Simpler alternative** — when the spec (or your draft plan) calls for a new service, global singleton, DI token, app-module init hook, or other architectural machinery, ask: could this be done with local component state plus existing primitives instead? If yes, surface as a decision. Example: a global service holding a `BehaviorSubject` initialised at app start may be replaceable by local state loaded on open and persisted on close.
-- **Logic location** — for each file the plan will touch, ask: does the logic naturally belong here, or is it being piled onto a generic file (e.g. adding feature-specific code to a shared `binder.ts`)? If wrong home, propose moving it to a service or util in the feature's natural directory.
+- **Logic location** — for each file the plan will touch, ask: does the logic naturally belong here, or is it being piled onto a generic file (e.g. adding feature-specific code to a shared `binder.ts`)? If wrong home, propose moving it to its owner (ComponentStore or service) in the feature's natural directory; to a util only when it is a pure calculation that decides nothing.
 - **Structural ambiguities** — spec gaps the plan would resolve by guessing (where a new utility lives, whether to split a service, how to wire two pieces together). Ask rather than guess.
 - **Scope concerns** — phases that look bigger than the spec implies, or implementations that pull in items adjacent to but not in the spec. Flag and ask: split, defer, or keep together?
 - **Convention deviation** — when the obvious implementation would break an existing codebase pattern. Surface the choice rather than silently follow either path.
@@ -121,6 +122,9 @@ Apply user answers when writing tasks. Bake the decision into the relevant phase
 **Architecture:** [2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
+
+**Flow map:**
+- **"[main user question]"** — N files (today: M): 1. `[file]` — [its role in the flow] · 2. …
 
 **ADRs Reviewed (N matches):**
 - [ADR ID + label] — guard it imposes; the task that preserves it. (Carried forward from the spec's *ADRs Reviewed* section, then refreshed against the live files.)
@@ -183,7 +187,7 @@ Expected: PASS
 After writing the complete plan:
 
 1. Dispatch a single plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
-   - Provide: path to the plan document, path to spec document
+   - Provide: path to the plan document, path to spec document, absolute path to this skill's `module-design.md`
 2. If ❌ Issues Found: fix the issues, re-dispatch reviewer for the whole plan
 3. If ✅ Approved: proceed to Final Review
 

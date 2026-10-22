@@ -14,6 +14,7 @@ Task tool (general-purpose):
 
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
+    **Module design rules:** [MODULE_DESIGN_PATH] (absolute path to this skill's `module-design.md`)
 
     ## What to Check
 
@@ -26,6 +27,7 @@ Task tool (general-purpose):
     | Impact Completeness | When a function's signature or behavior is modified, are ALL callers (including indirect through shared services) accounted for in the plan? When new state depends on existing state, are all triggers that change the source state covered? |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Module Design | Read the module design rules file. A *Flow map* must be present. Flag a plan that breaks one of its rules: a file in the flow that only passes calls through, behaviour placed in a util, an input taken from a global or a caller-set field, job state spread across several fields, an outcome only shown as a notification, or an export or layer added only for tests. Judge the arrangement, not the count. |
     | ADR review | An *ADRs Reviewed* section must be present, listing each relevant ADR, the guard it imposes, and the task that preserves it — or an explicit "none relevant" / "no ADR index" line. Flag if a named guard isn't carried into any task. |
 
     ## Calibration

@@ -118,6 +118,11 @@ can confirm it or explain it:
 
 - **Code** — the branch or template that produces the behaviour; the modes and branches the browser
   couldn't reach; the other screens and features that read the same value.
+- **Reading path** — for the main user question the proposal changes ("what happens when I click
+  Export?"), the production files a reader opens to follow it, in order, with one line on each
+  file's role in that flow. One flow, not all. Add a sibling feature's count when a similar one
+  exists. Record files and counts only — no judgment words like "too many" or "tangled". Skip on a
+  trivial verdict.
 - **Unit tests** — a test name or assertion that records the intended behaviour or a known edge case.
 - **ADRs** — a documented constraint on this area (state it as a fact; `brainstorming` weighs it).
 - **Git lineage** — the ticket that introduced the behaviour (`git log --follow` / `-L`), which
@@ -170,6 +175,10 @@ Date: <YYYY-MM-DD>
 
 ## Nearby patterns
 <How similar controls look and behave today — placement, iconography, wording.>
+
+## Reading path today
+<user question> — N files: 1. <file> — <role> · 2. … (or "none — new flow"; "not traced" in fast mode)
+Sibling: <similar feature> — M files (when one exists)
 
 ## Edge states today
 <Empty · error · loading · boundary · filters · timezone — what happens now, per state checked.>

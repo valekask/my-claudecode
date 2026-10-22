@@ -49,14 +49,14 @@ Agent tool (general-purpose):
     | Clarity | Ambiguous requirements that could be interpreted multiple ways |
     | YAGNI | Unrequested features, over-engineering, gold-plating |
     | Scope | Focused enough for a single implementation cycle — not covering multiple independent subsystems |
-    | Architecture | Units with clear boundaries, well-defined interfaces, independently understandable and testable |
+    | Architecture | Each behaviour names one owner (store or service) and its public contract; inputs come through the contract, not globals or caller-set fields; the job's state is one named value and outcomes reach the caller as state or data; decisions stay with the owner, and utils only compute |
     | Testability | Can each requirement be verified? Are acceptance criteria clear? |
     | Phase count | No more than 7 phases — if exceeded, must be split into separate specs |
     | What vs How | Spec should define goals/constraints/architecture, NOT pseudocode, function signatures, exact file paths, or implementation steps |
     | Location altitude | Directory references written in prose ("the shared utils directory"), not slash-path notation (`shared/utils`) — flag path notation even without a file extension |
     | Convention alignment | Proposed approach follows existing codebase patterns. Any deviation has explicit rationale and is justified by a concrete defect. |
     | Validation placement | If the spec includes forms or user input validation: does it specify which rules are domain-owned (shared validator/service — rules that would need to be enforced from a second entry point) vs presentation-only (component — rules that are only about this form's UX)? |
-    | Component-test discipline | Testing Approach must test stores/services/utils, not components. Flag any component unit tests in Testing Approach as an issue — component tests are not a brainstorm-time decision; the user requests them explicitly when needed. |
+    | Component-test discipline | Testing Approach must test the owner (store/service) through its public contract, not components. Flag any component unit tests in Testing Approach as an issue — component tests are not a brainstorm-time decision; the user requests them explicitly when needed. |
     | Decisions record | A *Decisions* section must be present: each entry names what was decided, why, and what settled it (the user, a discovery fact `F-n`, a codebase precedent, an ADR, or agent judgement) — or an explicit one-line "nothing to record". A design choice the spec relies on but that appears in no entry, or an entry with no settling reason, is an issue. A scope cut / non-goal settled by agent judgement and not tagged `unconfirmed` is an issue. |
     | Discovery use | If a discovery file exists in the task dir: a decision that contradicts a `confirmed` fact without saying why, or that rests on a `conflict` fact without being asked or tagged `unconfirmed`, is an issue. |
     | Edge states | The spec states how the new behaviour handles the applicable edge states (empty, error, loading, boundary, filters, timezones) at every tier — missing for a state that clearly applies is an issue. |
@@ -68,7 +68,7 @@ Agent tool (general-purpose):
     - Any TODO markers or placeholder text
     - Sections saying "to be defined later" or "will spec when X is done"
     - Sections noticeably less detailed than others
-    - Units that lack clear boundaries or interfaces
+    - A behaviour with no named owner, or decided in more than one place
     - Requirements that can't be tested or verified
     - Assumptions not stated explicitly — a choice the design rests on that appears in no *Decisions* entry is a silent assumption
     - Implementation details masquerading as spec requirements (pseudocode, function signatures, exact file paths)
