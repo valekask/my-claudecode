@@ -38,7 +38,7 @@
 
 - [ ] **AR-7**: "Does any component inject >5 dependencies?"
   → Check: Count constructor parameters.
-  → FAIL: Component or service has >5 injected dependencies. Consider introducing a facade service to group related dependencies.
+  → FAIL: Component or service has >5 injected dependencies. Check whether it is one owner doing two jobs, and split by responsibility (a complete job with its own contract). Don't add a facade that only forwards calls.
 
 - [ ] **AR-8**: "Are there pass-through methods that just delegate to another with the same API?"
   → Check: Method receives arguments and forwards them unchanged to another method with the same signature.
@@ -48,9 +48,7 @@
   → Check: Shared services, utils, and UI libs should not contain feature-specific logic or imports.
   → FAIL: A shared utility function imports from a specific feature module, or contains `if (feature === 'dashboard')` branches.
 
-- [ ] **AR-10**: "Is the interface simpler than the implementation (deep module)?"
-  → Check: Public API of a service/module should be smaller and simpler than its internal logic.
-  → FAIL: A service has many small public methods that each do trivial work (shallow module). Callers need to know internal details to use it correctly.
+AR-10 (deep module) moved to `module-design.md` as MD-4.
 
 ## Project Constraints
 
@@ -68,4 +66,4 @@
 
 ---
 
-Total items: 13
+Total items: 12

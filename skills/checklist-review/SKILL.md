@@ -5,7 +5,7 @@ description: Checklist-driven review of code changes before PR with the project'
 
 # Code Review
 
-Checklist-driven review with parallel agents. 207 checks across 14 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift).
+Checklist-driven review with parallel agents. 216 checks across 15 checklists (naming, clean code, defensive programming, architecture, data flow, state management, regressions, security, test quality, styling, forms, performance, migration safety, standards drift, module design).
 
 **End-to-end data-flow tracing is a separate skill.** It lives in `trace-dataflow` — run it alongside this review when a change crosses layers (service/store + component, effects/reducers/selectors, or HTTP calls). This skill no longer performs flow tracing.
 
@@ -172,6 +172,7 @@ Determine which agents to activate based on changed files. Use a fast model (hai
 | Agent 11: PERFORMANCE | component, template, store, or service files changed |
 | Agent 12: MIGRATION SAFETY | migration files changed, OR any changed file touches persisted state (`localStorage`, `sessionStorage`, `indexedDB`, state hydration/rehydration, or DB schema/migrations) |
 | Agent 13: STANDARDS DRIFT | Always |
+| Agent 14: MODULE DESIGN | component, service, store or template files changed, OR any `*.utils.ts` file or any file in a utils library |
 
 ### Lightweight mode
 
@@ -182,7 +183,11 @@ If ≤3 files changed AND no store/service files:
 - **Add Agent 10** if any changed `.ts` file imports form APIs
 - **Add Agent 11** if a `.html` template or rendering-heavy component changed
 - **Add Agent 12** if a migration file or persisted-state code changed
-- **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management)
+- **Skip:** Agent 4 (architecture), Agent 5 (data flow), Agent 6 (state management), Agent 14 (module design)
+
+### Single-agent mode
+
+`--only=module-design` runs Agent 14 alone, whatever the diff size — `polish` uses it on medium diffs that don't warrant the full review. Phase 2 activates only that agent; every other phase runs as usual, and the report covers that agent only. Its verdict is a **design verdict**, not merge readiness: replace *Ready to merge?* with **Design verdict:** Clean / Worth fixing (any confirmed Medium or above) / Rework (any High or above).
 
 ---
 
@@ -193,7 +198,7 @@ Launch activated checking agents **in parallel**. Checking agents have ONE job: 
 **Model and effort per agent — set them on each Agent call.** Two kinds of checking:
 
 - **Pattern checks** — matching the diff against a concrete checklist: Agent 1 NAMING, 2 CLEAN CODE, 8 TEST QUALITY, 9 STYLING, 13 STANDARDS DRIFT → `model: sonnet`, `effort: medium`.
-- **Judgment checks** — reasoning about behaviour and design: Agent 3 DEFENSIVE PROGRAMMING, 4 ARCHITECTURE, 5 DATA FLOW, 6 STATE MANAGEMENT, 7 SAFETY, 10 FORMS, 11 PERFORMANCE, 12 MIGRATION SAFETY → session model (Opus), `effort: medium`.
+- **Judgment checks** — reasoning about behaviour and design: Agent 3 DEFENSIVE PROGRAMMING, 4 ARCHITECTURE, 5 DATA FLOW, 6 STATE MANAGEMENT, 7 SAFETY, 10 FORMS, 11 PERFORMANCE, 12 MIGRATION SAFETY, 14 MODULE DESIGN → session model (Opus), `effort: medium`.
 
 Don't drop below `medium` here: these agents exist to flag broadly, and a flag missed in this phase can't be recovered by the investigation that follows.
 
@@ -230,7 +235,7 @@ All checking agents use this mindset:
 
 ### Agent 4: ARCHITECTURE
 
-**Checklist:** `architecture.md` (13) = **13 checks**
+**Checklist:** `architecture.md` (12) = **12 checks**
 
 **Focus:** Component split, layer boundaries, module design, Angular 17 constraints.
 
@@ -357,7 +362,15 @@ If an in-scope implementation file has no corresponding spec file, output a sing
 
 **Input:** Full diff + checklist contents. **Must also read** `docs/adr/README.md` (and any relevant ADR), the project `CLAUDE.md`, and a sample of files adjacent to the change — drift can only be judged against these sources.
 
-### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13)
+### Agent 14: MODULE DESIGN
+
+**Checklist:** `module-design.md` (10) = **10 checks**
+
+**Focus:** Deep modules — inputs through the contract, one owner per behaviour, state as one named value, outcomes returned as data, utils that only compute, few files per flow, tests through the contract.
+
+**Input:** Diff of component, service, store, template (`.html`), `*.utils.ts` and utils-library files + checklist contents + the absolute path to the `writing-plans` skill's `module-design.md` (the rules the checklist cites) + the task's `<task>-<slug>-plan.md` when one exists in `.claude/temp/<task>-<slug>/` (its *Flow map* is the planned reading path). **Must read across files:** each changed owner in full, its consumers (Grep for imports), the utils it calls and its specs — these checks are about how files relate, not single lines. For MD-9, report the traced path as one extra line: `Reading path: "<user question>" — actual N files (base B), planned M | no plan`, counted by the rule in `module-design.md`.
+
+### Checking agent prompt template (for agents 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14)
 
 ```
 You are a checking agent reviewing code changes for the Angular project.
@@ -519,6 +532,7 @@ Merge CONFIRMED findings that describe the same underlying problem:
 - **Target**: {what was reviewed}
 - **Files**: {count} files changed
 - **Agents run**: {list of activated agents}
+- **Reading path**: {only when Agent 14 ran — "<user question>" — actual N files (base B), planned M | no plan}
 
 ## Strengths
 {What's well done — be specific. Reference file:line where good patterns are used.}
@@ -572,7 +586,7 @@ Merge CONFIRMED findings that describe the same underlying problem:
 | CLEAN CODE | 26 | X | X | {brief summary or "All passed"} |
 | DEFENSIVE | 15 | X | X | {brief summary or "All passed"} |
 | FORMS | 13 | X | X | {brief summary or "All passed"} |
-| ARCHITECTURE | 13 | X | X | {brief summary or "All passed"} |
+| ARCHITECTURE | 12 | X | X | {brief summary or "All passed"} |
 | DATA FLOW | 14 | X | X | {brief summary or "All passed"} |
 | STATE MGMT | 14 | X | X | {brief summary or "All passed"} |
 | SAFETY | 25 | X | X | {brief summary or "All passed"} |
@@ -581,6 +595,7 @@ Merge CONFIRMED findings that describe the same underlying problem:
 | PERFORMANCE | 12 | X | X | {brief summary or "All passed"} |
 | MIGRATION SAFETY | 12 | X | X | {brief summary or "All passed"} |
 | STANDARDS DRIFT | 10 | X | X | {brief summary or "All passed"} |
+| MODULE DESIGN | 10 | X | X | {brief summary or "All passed"} |
 
 {Only include rows for activated agents. "Failed" = confirmed findings, not raw flags.}
 
@@ -662,7 +677,7 @@ Examples:
 | 1: NAMING | Check | naming | 24 | Any `.ts` file |
 | 2: CLEAN CODE | Check | clean-code | 26 | Any `.ts` file |
 | 3: DEFENSIVE PROGRAMMING | Check | defensive-programming | 15 | Any `.ts` file |
-| 4: ARCHITECTURE | Check | architecture | 13 | Component/service/store/module/directive/infra files |
+| 4: ARCHITECTURE | Check | architecture | 12 | Component/service/store/module/directive/infra files |
 | 5: DATA FLOW | Check | data-flow | 14 | Component/service/store/module/infra files |
 | 6: STATE MANAGEMENT | Check | state-management | 14 | Store files or `@ngrx` imports |
 | 7: SAFETY | Check | regressions + security | 25 | Always |
@@ -672,5 +687,6 @@ Examples:
 | 11: PERFORMANCE | Check | performance | 12 | Component/template/store/service files changed |
 | 12: MIGRATION SAFETY | Check | migration-safety | 12 | Migration files or persisted-state code changed |
 | 13: STANDARDS DRIFT | Check | standards-drift | 10 | Always |
+| 14: MODULE DESIGN | Check | module-design | 10 | Component/service/store/template, `*.utils.ts` or utils-library files |
 | Investigation | Investigate | (verifies raw findings) | — | Always (after Check phase) |
-| **Total** | | 14 checklists | **207** | |
+| **Total** | | 15 checklists | **216** | |

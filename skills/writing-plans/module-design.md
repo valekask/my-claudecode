@@ -61,6 +61,10 @@ opens to follow it, in reading order, with one line on what each file does in th
 3. ...
 ```
 
+**What counts:** production `.ts` files and templates (`.html`) a reader opens to answer the
+question. Not counted: specs, pure type/model files, barrel `index.ts` files and styles. Count the
+same way for every option so the numbers compare.
+
 Use it to **compare options**, never as a score. A count means something only next to another:
 today's path (from the discovery file), an alternative approach, or a sibling feature that reads
 well. Never meet a lower count by merging unrelated jobs into one file — rule 5 cuts both ways.

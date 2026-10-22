@@ -47,7 +47,7 @@
 
 - [ ] **CC-10**: "Does any class have >7 data members (fields/properties)?"
   → Check: Count class fields (excluding injected dependencies).
-  → FAIL: Class has >7 data fields. Consider grouping related fields into a sub-object or splitting the class.
+  → FAIL: Class has >7 data fields. First check whether several fields encode one state (replace them with one named state union); otherwise group related fields or split the class by responsibility.
 
 ## Method Ordering
 
@@ -86,7 +86,7 @@
 
 - [ ] **CC-18**: "Is there duplicated logic across methods or files?"
   → Search: Look for similar code patterns in the changed files and their neighbors.
-  → FAIL: Same logic (>3 lines) appears in multiple places. Extract to a shared function or service.
+  → FAIL: Same logic (>3 lines) appears in multiple places. Move it to the behaviour's owner (service or store); extract a shared util only when it is a pure calculation that decides nothing.
 
 ## RxJS Patterns
 

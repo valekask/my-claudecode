@@ -38,6 +38,7 @@ Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run 
 | **`trace-workflow`** | Diff adds or modifies conditional logic (branches/switches/guards in services, stores, utils, effects, reducers, selectors) |
 | **`trace-dataflow`** | Diff crosses layers: service/store **and** component, or effects/reducers/selectors, or HTTP calls |
 | **`checklist-review`** (project-specific Angular agents) | Larger or architectural changes (roughly 9+ files, or structural component/service/store/module changes). Skip for small, generic diffs — the primary reviewer + built-ins cover that ground |
+| **`checklist-review --only=module-design`** | Medium diffs (roughly 4–8 files) that add or restructure component, service, store or `.utils.ts` logic, when the full `checklist-review` isn't selected (it already includes this agent). Skip for small or mechanical diffs |
 | **`/simplify`** (simplification pass — **surface-only**) | Diff adds or substantially changes logic. Skip for trivial or config-only diffs. **Run it review-only** — collect its proposals; do NOT let it mutate code here. Its findings are always *surfaced*, never auto-applied (simplification is judgment-level — see Step 5) |
 
 #### Primary code reviewer (pluggable)
@@ -78,6 +79,7 @@ The selected gates are independent reviewers, so **dispatch them concurrently** 
 | `trace-workflow`, `trace-dataflow` | session (Opus) | `xhigh` | deep reasoning across functions and layers — where the subtle bugs are |
 | `/security-review` | session (Opus) | `high` | low volume, high consequence |
 | `checklist-review` | session (Opus) | `medium` | orchestrates and merges; it sets its own per-agent levels inside |
+| `checklist-review --only=module-design` | session (Opus) | `medium` | one judgment agent reading across files |
 | `/simplify` | session (Opus) | `medium` | judgment-level proposals, surfaced only |
 | Primary reviewer — CodeRabbit | `sonnet` | `medium` | runs an external tool and parses its output |
 | Primary reviewer — built-in `/code-review` | session | its own level (the table above) | the level argument controls its depth |
