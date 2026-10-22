@@ -45,6 +45,7 @@ carries none of it.
 ├── README.md      # committed — purpose + "create .env.local with your creds"
 ├── app-map.md     # committed — the app's user-model: routes, chrome, selectors,
 │                  #   terminology, file→route table, default base URL, login selectors
+├── app-map-<app>.md  # optional, committed — the same for another app in this repo
 ├── .env.local     # GIT-IGNORED — credentials only (+ optional base-URL override)
 └── .temp/         # GIT-IGNORED — throwaway run artifacts (screenshots, console, session)
 ```
@@ -140,6 +141,11 @@ scripts/auth.sh <session> "$TEST_BROWSER_BASE_URL"   # prints REUSED | LOGGED_IN
 - Read the **`app-map.md`** the project supplies (see its own conventions). It's a
   **user's mental model** — routes, chrome, selector patterns, terminology — that
   lets you **infer** new/variant UI from patterns rather than re-crawling.
+- **Several apps in one repo:** `app-map.md` is the default map; a sibling
+  `app-map-<app-id>.md` maps another app in the same repo (`app-map.md` names it at
+  the top). Load the one whose URL grammar matches the target URL (or the app the
+  scenario names); load both only for a cross-app flow. They share `.env.local`
+  unless a map says otherwise.
 - **On a miss** (an element the map names won't resolve, or an unmapped screen):
   resolve it **live for this run only** via `snapshot` — note it as a "live
   fallback"; **do not silently rewrite the app-map.**

@@ -1,6 +1,6 @@
 ---
 name: discover
-description: Establish how the application behaves TODAY in the area a proposal touches — observed in the running app and Storybook, and (full mode, the default) confirmed against code, unit tests, ADRs, git history, past task artifacts and related repos — and write the facts, each with evidence and a strength level, to `<task>-<slug>-discovery.md` so `brainstorming` decides from facts instead of assumptions. Facts only — never decisions, approaches or acceptance criteria. Read-only everywhere. Use after the proposal and before brainstorming; `--fast` limits it to the app + Storybook for simple tasks.
+description: Establish how the application behaves TODAY in the area a proposal touches — observed in the running app and Storybook, and (full mode, the default) confirmed against code, unit tests, ADRs, git history, past task artifacts and related repos — and write the facts, each with evidence and a strength level, to `<task>-<slug>-discovery.md` so `brainstorming` decides from facts instead of assumptions. Facts only — never decisions, approaches or acceptance criteria. Read-only everywhere except a sandbox the app-map declares. Use after the proposal and before brainstorming; `--fast` limits it to the app + Storybook for simple tasks.
 effort: high
 ---
 
@@ -29,7 +29,10 @@ Each workflow skill answers a different question, and this one stops at its own:
   out of scope" is a decision — it belongs to `brainstorming`. No approaches, no scope calls, no
   acceptance criteria, no file-level change lists, no recommendations. A sentence containing
   *should* does not belong in the discovery file.
-- **Read-only everywhere.** No code edits, no app or dashboard configuration changes (not even on
+- **Read-only everywhere** — with one exception: a **sandbox** the project's `.test-browser/`
+  app-map declares (e.g. `agent-*` workspaces). On a target inside it you may do what observing
+  needs — switch to an edit mode, open and change settings — since it's a disposable copy; never
+  delete there either. Everywhere else: no code edits, no app or dashboard configuration changes (not even on
   an editable dashboard — a shared environment is someone else's test bed), no git writes, and no
   branch switches in any repo, including related ones. **No installs either** — never run
   `npm ci` / `npm install` or any setup step to make a source work; a Storybook that won't serve

@@ -57,23 +57,50 @@ still catch a criterion nobody implemented.
    routes from the app-map (`test-browser` resolves selectors live).
 3. **Every scenario cites the AC it covers** (`covers: AC-2`). One AC may need
    several scenarios; one scenario may cover several AC.
-4. **Account for every AC — never silently drop one.** An AC you do not turn into a
+4. **Follow cross-app effects.** Read the app-map section for each surface an AC
+   touches. Where the map says the action has an effect in another app (a
+   "Cross-app" line or a pointer to another `app-map-<app>.md`), add a scenario that
+   checks the effect on the other side, under the **same AC** (`covers: AC-3`, name
+   suffixed `(cross-app)`) — e.g. an alert saved from the dashboard must appear on the
+   platform's Alerts page and preview correctly. Never invent a new AC for it. If the
+   diff touches a surface with a cross-app effect that no AC relates to, list it in the
+   scenario file as **not covered by any AC** (one line, no scenario) so the gap is
+   visible.
+5. **Account for every AC — never silently drop one.** An AC you do not turn into a
    scenario is listed as **declined** with a one-line reason (e.g. "AC-4: store-level
    logic, no UI surface — expect unit coverage"; "AC-6: perf feel, not
    machine-observable"). Declined AC go in the scenario file *and* the verdict, so a
    criterion no one covers is visible rather than lost between skills.
-5. If an AC is observable but you cannot construct a scenario because the UI for it
+6. If an AC is observable but you cannot construct a scenario because the UI for it
    does not appear to exist, that is **not** a decline — record it as a scenario that
    fails, because a missing implementation is exactly what the AC is there to catch.
-6. Write the set to the scenario file in the output dir and surface it so a human can
+7. Write the set to the scenario file in the output dir and surface it so a human can
    adjust before/after the run.
+
+### Test data and writes
+
+A scenario may need to change data — save, switch to an edit mode, create or copy
+something. **Don't decline or weaken a scenario just because it writes.** The
+app-map may declare a **sandbox** (e.g. a workspace prefix) and its write policy:
+
+- Inside the sandbox, do whatever the scenario needs (create, edit, save, toggle).
+  When the target lives outside it, work on a **copy in the sandbox** — the invoker
+  prepares it, or use the setup route the app-map names.
+- Outside the sandbox, stay read-only.
+- **Never delete** anything, sandbox included, unless the app-map explicitly allows
+  it.
+- No sandbox declared → read-only; an AC that can only be proven by a write is
+  **declined** with the reason "needs a write; no sandbox declared".
+
+Record what you created or changed (name + URL) in the scenario file.
 
 ### Proposing scenarios from a diff (fallback)
 
 For ad-hoc runs with no spec/AC to work from ("smoke-test the current changes"):
 1. Get the diff (`git diff` — branch/staged/PR per the caller).
 2. Map changed files → affected routes using the **file→route table in the
-   app-map** (`.test-browser/app-map.md`). Missing/rough table → note it; test the
+   app-map(s)** (`.test-browser/app-map*.md` — one per app; a row may name surfaces
+   in both apps). Missing/rough table → note it; test the
    obvious affected routes + homepage.
 3. Draft scenarios covering the changed routes' success criteria + the obvious
    regressions; behaviour-level steps with expected results (`test-browser`
