@@ -187,6 +187,7 @@ Read proposal + assets + discovery
 - **Medium/Complex:** Propose 2-3 structurally different approaches with trade-offs. Present options conversationally with your recommendation and reasoning. Lead with your recommended option and explain why. For each approach, include:
   - **Scope** — what areas/components it touches
   - **Hardest part** — the single riskiest or most complex piece
+  - **Reading path** — the files a reader opens to follow the main user question, as "today N → this approach M" against the discovery's *Reading path today* (a Flow map, see the `writing-plans` skill's `module-design.md`). It compares the approaches; it is not a target
 
   This helps the user gauge relative effort and compare options without needing deep technical knowledge.
 - **Simple:** State the single obvious approach that follows existing conventions. No comparison needed.
@@ -210,14 +211,15 @@ Read proposal + assets + discovery
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - **Stop mid-design only for a genuine fork** — two structurally different approaches that are comparable, where picking silently would commit the user to something they might not want. Otherwise state your choice and the reasoning, and keep going.
 - Cover: architecture, components, data flow, error handling, testing approach
-- **Testing approach default:** test the ComponentStore / service / util that holds the logic, not the component. Do not propose component unit tests — the user requests them explicitly when needed.
+- **Testing approach default:** test the owner (ComponentStore / service) through its public contract and check what its consumers see, not the component. Do not propose component unit tests — the user requests them explicitly when needed.
 - Be ready to go back and clarify if something doesn't make sense
 
-**Design for isolation and clarity:**
+**Design deep modules:**
 
-- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
-- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
-- Smaller, well-bounded units are easier to implement reliably
+- Design to the rules in the `writing-plans` skill's `module-design.md` — read it before presenting the design
+- For each behaviour, name its one owner (ComponentStore or service) and that owner's public contract; every input comes through the contract, never from globals or caller-set fields
+- Name the job's state as one value, and say how outcomes (refused, cancelled, failed) reach the caller
+- Utils only compute; a decision (mode, limit, message) stays with its owner
 
 **Working in existing codebases:**
 
