@@ -4,6 +4,7 @@ description: Format changed files with Prettier
 allowed_without_permission: true
 model: haiku
 effort: low
+context: fork
 ---
 
 # Formatting

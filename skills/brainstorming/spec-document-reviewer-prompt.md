@@ -6,8 +6,10 @@ Use this template when dispatching a spec document reviewer subagent.
 
 **Dispatch after:** Spec file is written to the ticket directory.
 
+**Model / effort:** `model: sonnet`, `effort: high` on the Agent call — a reviewer on a different model than the author doesn't share its blind spots, and checking a document for completeness and consistency doesn't need the session model.
+
 ```
-Agent tool (general-purpose):
+Agent tool (general-purpose, model: sonnet, effort: high):
   description: "Review spec document"
   prompt: |
     You are a spec document reviewer. Verify this spec is complete and ready for implementation.

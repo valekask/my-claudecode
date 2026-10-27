@@ -1,6 +1,7 @@
 ---
 name: open-pr
 description: Draft a pull request, show a preview (from → to, title, description), open it only after you approve — or unattended with `--agentic` — then create it via the Bitbucket Cloud REST API. Pushes the feature branch to a same-name remote branch, never to the base branch. Use when asked to "make a PR", "open a PR", "create a PR", or "raise a PR".
+model: sonnet
 ---
 
 # Open PR

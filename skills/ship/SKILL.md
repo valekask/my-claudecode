@@ -38,7 +38,7 @@ Confirm (or ask) that manual verification + smoke test have passed. If not, stop
 
 ### Step 2: Product summary (opt-in)
 
-Invoke the `writing-result-product` skill to produce `<task>-<slug>-result-product.md` **when the change is user-facing *and* the spec's complexity tier is `Medium` or `Complex`**. (That skill reads the spec + result file; it owns the format.)
+Invoke the `writing-result-product` skill **with the task name (`<task>-<slug>`) as its argument** — it runs in a forked subagent and sees nothing else — to produce `<task>-<slug>-result-product.md` **when the change is user-facing *and* the spec's complexity tier is `Medium` or `Complex`**. (That skill reads the spec + result file; it owns the format.)
 
 **Skip it for `Simple`-tier changes** — write one only if asked. A one-screen tweak doesn't need a stakeholder document, and a summary nobody reads costs the same attention as one they do. Skip pure internal refactors at every tier. When the tier isn't recorded anywhere (no spec, ad-hoc work), judge by the same bar: would a manager or PM actually need this described? If not, skip and say so in the report.
 

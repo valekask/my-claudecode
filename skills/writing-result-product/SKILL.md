@@ -1,6 +1,8 @@
 ---
 name: writing-result-product
 description: Write the product-facing summary of a completed change — a plain-language companion to the result file, for managers / PMs / stakeholders (no file paths, no code). Use when a user-facing change is done and you want a copy-paste-ready summary; typically invoked from the ship phase.
+model: sonnet
+context: fork
 ---
 
 # Writing a Product Summary
@@ -16,6 +18,8 @@ Produce a **product-facing** companion to the implementation result file, writte
 - **Skip** pure internal refactors and non-visual plumbing — a product summary adds noise there, not value
 
 ## Inputs
+
+Runs in a forked subagent, so it sees none of the caller's conversation: the task name (`<task>-<slug>`) arrives as its argument. With no argument, stop and report rather than guess the task.
 
 Read these first; don't re-derive intent you can read off the artifacts:
 

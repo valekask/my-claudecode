@@ -85,7 +85,7 @@ Forcing the block keeps the scan from being skipped and makes the result visible
 8. **Propose 2-3 approaches (Medium/Complex)** — with trade-offs and your recommendation. For Simple: state the single obvious approach.
 9. **Edge states (every tier)** — state how the new behaviour handles the edge states that apply (empty, error, loading, boundary values, filters, timezones), starting from the discovery's *Edge states today*. **Pre-mortem (Complex only)** — for each proposed approach, identify 3-5 failure modes: "How could this fail? What are the riskiest assumptions?"
 10. **Present design** — in sections scaled to complexity, get user approval after each section
-11. **Write spec file** — run the open-decisions audit first (see After the Design), then save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
+11. **Write spec file** — run the open-decisions audit first (see After the Design) and, for Medium/Complex, the advisor pre-mortem (see Consulting the advisor), then save to `<task>-<slug>-spec.md` in the same task directory. Max 7 phases — if more are needed, split into multiple specs.
 12. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
 13. **Final review** — walk user through a size-aware digest of the saved spec (size assessment → digest → menu: walk by section / save). See Final Review section.
 
@@ -199,6 +199,14 @@ Read proposal + assets + discovery
 - Focus on: integration risks, performance under load, edge cases, maintenance burden
 - Keep it lightweight — bullet points, not essays
 
+**Consulting the advisor:**
+
+- At a key moment, consult the `advisor` skill — a subagent on Opus at `max` effort that reads the evidence itself and returns a recommendation. Its `SKILL.md` holds the triggers, the brief and what to do with the answer; `advisor-prompt.md` is the dispatch template
+- **While designing**, the moment you hit one: a failure / invalid-input / state-lifecycle decision (above all a fallback that fails open); your own hedge ("known risk… if", "accepted", "no precedent"); an `unconfirmed` call on user-visible behaviour; a named risk the ACs cover only partly; a shared-library edit for one consumer
+- **Before the spec review loop (Medium/Complex)** — one pre-mortem consult: which decision fails worst, and do the ACs cover it?
+- Not for the approach choice when precedent, an ADR or a contract settles it, not for anything the code answers, and not for product/scope questions — those go to the user. Max 3 consults per run
+- Record the outcome on the decision's line in *Decisions*: "settled by: advisor", or `unconfirmed` plus the advisor's objection when you overrule it
+
 **Edge states (every tier):**
 
 - Whatever the tier, state how the new behaviour handles each edge state that applies — empty, error, loading, boundary values, filters / partial selections, timezones
@@ -311,7 +319,7 @@ The implementation agent discovers the *how* by searching the current codebase. 
 
 After writing the spec file:
 
-1. Dispatch spec-document-reviewer subagent (see `spec-document-reviewer-prompt.md` in this skill directory)
+1. Dispatch spec-document-reviewer subagent (see `spec-document-reviewer-prompt.md` in this skill directory) — `model: sonnet`, `effort: high` on the Agent call
 2. If Issues Found: fix, re-dispatch, repeat until Approved
 3. If loop exceeds 5 iterations, surface to human for guidance
 
