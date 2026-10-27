@@ -182,11 +182,20 @@ Expected: PASS
   - Every AC appears in exactly one of those two lists. An AC in neither is a gap in the plan.
 - **Cleanup after replacement** — when a plan replaces a function call with a new one, add a cleanup step: check if the old function has remaining callers; if not, remove it and update exports. Don't leave dead code behind.
 
+## Consulting the Advisor
+
+At a key moment, consult the `advisor` skill — a subagent on Opus at `max` effort that reads the evidence itself and returns a recommendation. Its `SKILL.md` holds the triggers, the brief and what to do with the answer; `advisor-prompt.md` is the dispatch template.
+
+- **While planning**, the moment you hit one: a failure / invalid-input / state-lifecycle decision the spec left to the plan (what creates and clears new state, how many places must reset it); your own hedge — about to write "known risk… if X then add Y", "accepted / not fixed", "no precedent in the repo"; a task that leaves part of a named risk uncovered; a shared-library edit for one consumer, or an abstraction added only for testability; a new user-facing AC or state that the spec doesn't have
+- **Before the plan review loop (Medium/Complex)** — one pre-mortem consult: which planned decision fails worst, and does a task or test cover it?
+- Not for decisions the spec already settled, not for anything the code answers, and not for product/scope questions — those go to the user. Max 3 consults per run
+- Record the outcome in the plan's decision line: "settled by: advisor", or `unconfirmed` plus the advisor's objection when you overrule it
+
 ## Plan Review Loop
 
 After writing the complete plan:
 
-1. Dispatch a single plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
+1. Dispatch a single plan-document-reviewer subagent (see plan-document-reviewer-prompt.md; `model: sonnet`, `effort: high` on the Agent call) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
    - Provide: path to the plan document, path to spec document, absolute path to this skill's `module-design.md`
 2. If ❌ Issues Found: fix the issues, re-dispatch reviewer for the whole plan
 3. If ✅ Approved: proceed to Final Review

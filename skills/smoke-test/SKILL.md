@@ -1,6 +1,8 @@
 ---
 name: smoke-test
 description: Verify a web app against a set of scenarios and emit a machine-readable pass/fail/blocked verdict. Drives the browser via the test-browser skill, judges expected vs actual per scenario, captures evidence on failure, and writes a verdict the caller (or an orchestrator) reads. Can propose scenarios from a diff via the app-map's file→route table. Verify-and-report ONLY — never fixes code, ships, or updates trackers. Use at a verify gate or standalone; scenarios + verdict live in the task dir (or `.test-browser/.temp/` for ad-hoc runs).
+model: sonnet
+effort: high
 ---
 
 # Smoke-test

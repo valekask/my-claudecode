@@ -110,6 +110,8 @@ Turns a proposal into an approved spec - a contract specifying **what + why** (g
 - **Size-aware digest** - skim-able sectioned summary grouped by natural seams (1-5 sections depending on spec size)
 - Five-option menu: walk by section / show full digest / approve / save / discuss
 - Approve hands off to `writing-plans` (fresh session recommended for clean context)
+- **Reviewer on another model** - the spec-document-reviewer runs on `sonnet` at `high` effort: a different model from the author doesn't share its blind spots
+- **Consults `advisor` at key moments** - failure/state-lifecycle decisions, its own hedges, user-visible `unconfirmed` calls, partly covered risks; plus one pre-mortem before the review loop (Medium/Complex)
 
 #### `writing-plans`
 
@@ -143,6 +145,17 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 - Same size-aware digest pattern as brainstorm - sectioned summary grouped by natural seams
 - Five-option menu: walk by section / show full digest / approve / save / discuss
 - **Approve routes** to `subagent-driven-development` - once a plan exists, that's the executor (no second menu). The inline lane is `executing-simple`, which skips planning entirely and works from the spec
+- **Reviewer on another model** - the plan-document-reviewer runs on `sonnet` at `high` effort
+- **Consults `advisor` at key moments** - same triggers as `brainstorming`, plus a new user-facing AC born at plan time; one pre-mortem before the review loop (Medium/Complex)
+
+#### `advisor`
+
+An **independent, deeper read on one hard decision** before the author commits to it. Dispatches a fresh subagent on **`opus` at `max` effort** with a short brief - the decision, options, leaning, the doubt, evidence *paths* and constraints, **never the author's reasoning** - so it reads the code and artifacts itself rather than agreeing with a framing.
+
+- **Triggers** (from a review of recent tasks where spec/plan decisions caused rework) - failure / invalid-input / state-lifecycle decisions (above all a fallback that fails open), the author's own hedge ("known risk… if", "accepted", "no precedent"), `unconfirmed` calls on user-visible behaviour, a named risk only partly covered, a shared-library edit for one consumer; plus one pre-mortem before the gate. **Not** the approach choice when precedent settles it - that never failed
+- **Returns** premise check, recommendation, confidence, as many cited reasons as needed, main risk, what was missed, needs-human. Max 3 consults per phase
+- **No artifact** - the answer goes back to the caller; its trace is "settled by: advisor" in the Decisions section, or `unconfirmed` + the objection when the author overrules it
+- Called by `brainstorming` and `writing-plans`; also directly as `/advisor <decision>`
 
 #### `subagent-driven-development`
 
@@ -201,6 +214,7 @@ Writes the **product-facing summary** (`<task>-<slug>-result-product.md`) - a pl
 
 - **Opt-in** - written for user-facing changes at `Medium` / `Complex` tier; **skipped for `Simple`-tier changes** (a one-screen tweak needs no stakeholder document) and for pure internal refactors at any tier. Always available on request
 - Invoked from `ship`; moved out of `subagent-driven-development` to keep execution lighter
+- Runs on `sonnet` in a **forked subagent** (`context: fork`) - a skill's `model:` lasts for the rest of the caller's turn, so the fork keeps `ship`'s ADR and commit on the session model. `ship` passes the task name as the argument
 
 ### Quality gates
 
@@ -249,6 +263,8 @@ Applies Prettier and code organization to locally modified files.
 
 - Run Prettier on all changed `.ts`, `.html`, `.scss` files
 
+Runs on `haiku` in a **forked subagent** (`context: fork`) - without the fork, its `model:` would hold for the rest of the caller's turn and `polish` would continue on Haiku.
+
 #### `polish`
 
 The **pre-verification quality pass** - the one phase that mutates code after execution. Runs after execution and _before_ manual verification, so verification happens on clean, gated code.
@@ -283,6 +299,7 @@ The **scenario-verification layer** for the Verify phase — judges a set of sce
 - **Scenarios derived from the spec's AC** - the primary source is the acceptance criteria, not the diff: each scenario cites the AC it `covers`, and any AC it **declines** is listed with a reason (so an AC that neither the plan nor the smoke run covers stays visible). Diff-mapping via the app-map's file→route table is the fallback for ad-hoc runs with no spec
 - **Verdict** - `pass` / `fail` / `blocked` rolled up over per-scenario ✅/❌/⚠️/⏭️, with screenshots + console capture on failure. **Two files only** - the scenario file annotated in place with actuals (that _is_ the human-readable record) plus a machine-readable `.json`. **Halts on non-`pass`**
 - **Augments the manual verify checkpoint** - gathers evidence and a verdict; the human still gives final sign-off. Scenarios + verdict live in the task dir (or `.test-browser/.temp/` for ad-hoc runs). Runs the same invoked by hand or driven by an external orchestrator
+- **Runs on `sonnet` at `high` effort** - browser driving is the token-heavy part; a false `pass` is the risk to watch, since the ship gate trusts the verdict
 
 ### Finishing
 
@@ -300,6 +317,7 @@ The **finalize phase**, run _after_ manual verification + smoke test pass. Docum
 
 Opens a pull request from the current branch. Drafts the PR, shows a **preview** (`from → base`, title, description), and waits for your **approval** before anything touches the remote - then pushes the branch and creates the PR via the **Bitbucket Cloud REST API** (`gh` has no Bitbucket equivalent).
 
+- **Runs on `sonnet`** - drafting a PR from the commits is mechanical; the model override ends with the turn, so your approval reply runs on the session model
 - **Preview-then-approve** - nothing is pushed or opened until you reply "approved" / "proceed"; that approval is the explicit, in-the-moment push authorization
 - **`--agentic`** - the flag supplies that authorization in advance, so the preview becomes a saved record instead of a gate. In exchange it adds a hard preflight (clean working tree, at least one commit ahead of the base, from-branch ≠ base, env vars present), refuses to guess a non-default base, and never retries a failed create. `BITBUCKET_REVIEWERS` is expected to hold **automation** accounts in this mode - a bot reviewer costs no human attention on an auto-opened PR. The same-name push guard is not relaxed by any flag
 - **Safe-push guard** - only ever pushes the current branch to a **same-name** remote branch (`git push -u origin HEAD`) and verifies the upstream afterwards; never pushes to, or tracks, the base branch (guards against the past "branch tracked the base, push landed on it" mistake)

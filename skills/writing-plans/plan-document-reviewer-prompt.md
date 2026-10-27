@@ -6,8 +6,10 @@ Use this template when dispatching a plan document reviewer subagent.
 
 **Dispatch after:** The complete plan is written.
 
+**Model / effort:** `model: sonnet`, `effort: high` on the Agent call — a reviewer on a different model than the author doesn't share its blind spots, and checking a plan against its spec doesn't need the session model.
+
 ```
-Task tool (general-purpose):
+Agent tool (general-purpose, model: sonnet, effort: high):
   description: "Review plan document"
   prompt: |
     You are a plan document reviewer. Verify this plan is complete and ready for implementation.
