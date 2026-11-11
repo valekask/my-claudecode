@@ -66,6 +66,23 @@ Build the draft from what's actually on the branch — do not invent scope:
 Draft:
 - **Title** — follow the commit header format `<task>: (<type>:<scope>) <subject>` (see the **Pull request convention** in `docs/CONTRIBUTING.md`), e.g. `FNA-16973: (feat:ilo) reorder timeline toolbar to group time-related controls`. Take `<task>` from the branch name; pick the `<type>` and `<scope>` that best summarize the whole PR. If `docs/CONTRIBUTING.md` is absent, the format still holds: `<type>` ∈ feat|fix|docs|style|refactor|perf|test|build, `<scope>` project-defined.
 - **Description** — a short summary of *what* changed and *why*, plus anything a reviewer needs (testing notes, edge cases). Keep it to what the branch actually contains. When the spec has an **Acceptance Criteria** section, list the AC — they tell the reviewer what should be true, which is the most useful thing the body can carry. List them as criteria only; don't append verification status (that's the verify gate's output, not the PR's).
+- **Description Markdown — Bitbucket's renderer is strict.** It does not start a list or a new line unless it is told to. Lines that touch each other merge into one paragraph, so a list glued to its label shows up as `**Label** - a - b - c`. So:
+  - put a **blank line before every list** — including right after a bold label such as `**What changed**` — and a blank line between paragraphs and sections
+  - indent nested list items by **4 spaces** (2 spaces flattens them)
+  - for a hard line break inside a paragraph, use a blank line instead; a single newline does not render as a break
+
+  ```
+  <one-paragraph summary>
+
+  **What changed**
+
+  - <change>
+  - <change>
+
+  **Acceptance criteria**
+
+  - AC-1: <criterion>
+  ```
 
 ### Step 3: Show the preview and ask for approval
 
