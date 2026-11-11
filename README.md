@@ -324,17 +324,6 @@ Opens a pull request from the current branch. Drafts the PR, shows a **preview**
 - **Derives** workspace + repo slug from `origin`; base branch defaults to the repo default (override with `--base`); title/body drafted from the branch's commits and any task artifacts
 - **Auth via env** - reads `BITBUCKET_EMAIL` + `BITBUCKET_API_TOKEN` (Basic auth uses the email, not the username); the token must belong to the identity with repo access. Never edits code, commits, amends, or force-pushes
 
-### Session mechanics
-
-#### `herdr`
-
-Spawns and drives **fresh Claude sessions in their own [Herdr](https://herdr.dev) tabs** - so surfacing a subtask and _starting_ it are one step instead of "now go open a tab by hand". Since the workflow runs each phase in a fresh session, this is the primitive that makes that automatable. **Carries no project knowledge**: which trees are off-limits, which command to run, and where to record the spawn are all caller-supplied policy.
-
-- **Fresh tab = fresh session = clean context** per unit of work; `./herdr-spawn.sh` wraps the one reliable recipe (`--cwd`, `--label`, `--prompt '/<skill>'`, `--no-focus`) and enforces the caller's guardrails
-- **Watch, read, close** - `herdr agent wait <pane>` settles on `idle`/`done`/`blocked` (**omit `--until`** - a finished turn reports `done`, so pinning `idle` times out), then `herdr pane read` picks up the worker's RESULT block; `blocked` means it's asking a human, not finished
-- **Phase boundaries via `/clear`** - a long-lived session can be driven through phases by prompting `/clear` between them; the new `agent_session.value` is the only reliable confirmation the clear landed, and the `agent_prompt_stalled` error it returns is a false failure for client-side slash commands
-- **Requires running inside a Herdr pane** (`HERDR_ENV=1`) - otherwise it stops and says so rather than guessing
-
 ## Artifacts
 
 All artifacts live in `.claude/temp/<task>-<slug>/` and are named `<task>-<slug>-<file-type>.md`, where:
