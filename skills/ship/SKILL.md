@@ -22,7 +22,7 @@ Invoked as `ship --agentic` (used by an orchestrator finalizing a change with li
 **In `--agentic` mode:**
 
 - **Read the verdict instead of asking (Step 1).** Take `smoke-test`'s verdict JSON from the task dir (`.claude/temp/<task>-<slug>/`) and proceed only on `"verdict": "pass"`. On `fail` / `blocked` — or when **no verdict file exists** — **stop and report**. An unattended ship must never assume a green change it cannot see; a `dogfood` report with every journey passing counts as the verdict.
-- **Decide the product summary and the ADR yourself (Steps 2-3)** by the criteria already documented there: user-facing change at `Medium`/`Complex` tier → write the product summary (`Simple` tier skips it); non-obvious constraints that won't be recoverable from the code → write the ADR. Don't offer, don't ask, and record the call plus its reasoning in the report. The ADR bar does not drop because nobody is watching — still no ADR for straightforward work.
+- **Decide the product summary and the ADR yourself (Steps 2-3)** by the criteria already documented there: user-facing change at `Medium`/`Complex` tier → write the product summary (`Simple` tier skips it); non-obvious constraints that won't be recoverable from the code → write the ADR (simple lane only; on the plan lane only check the existing one — see Step 3). Don't offer, don't ask, and record the call plus its reasoning in the report. The ADR bar does not drop because nobody is watching — still no ADR for straightforward work.
 - **Invoking the skill is the commit go-ahead (Step 4.4).** Still confirm the repo, still `git add` only what Step 4 lists, still show the proposed message in the report, still commit exactly once. The commit stays local and revertible — that is what makes it the one git write this flag may authorize.
 - **Chain or stop at Step 5, don't ask.** If the commit landed on a non-default branch, `origin` exists, and the caller asked for a PR, hand off to `open-pr --agentic`. Otherwise report the commit and stop.
 
@@ -43,6 +43,11 @@ Invoke the `writing-result-product` skill **with the task name (`<task>-<slug>`)
 **Skip it for `Simple`-tier changes** — write one only if asked. A one-screen tweak doesn't need a stakeholder document, and a summary nobody reads costs the same attention as one they do. Skip pure internal refactors at every tier. When the tier isn't recorded anywhere (no spec, ad-hoc work), judge by the same bar: would a manager or PM actually need this described? If not, skip and say so in the report.
 
 ### Step 3: ADR (only when warranted)
+
+**Which lane ran decides what ship does here** — a `<task>-<slug>-plan.md` in the task dir means the `subagent-driven-development` lane; a spec with no plan means `executing-simple`.
+
+- **Plan lane — check only, never write a new one.** The ADR was decided at the end of execution (the result file's `## ADR` line) and reviewed by polish. If one was written, compare it against the final diff: polish or verify fixes may have changed a guard, an edge case or a decision it describes. If it drifted, correct it in place (it is uncommitted, so it is not yet an immutable record) and say what changed in the report. If none was written, don't write one now.
+- **Simple lane (or no plan / ad-hoc work)** — decide as below.
 
 Invoke the `writing-adr` skill **only** when the change involved non-obvious constraints or edge cases that won't be recoverable from the code — costly-to-reverse decisions where genuine alternatives existed. This is opt-in judgment; never auto-write an ADR for straightforward work (noise erodes the ADR set). The result file's Decisions / Concerns and the actual code are the inputs.
 

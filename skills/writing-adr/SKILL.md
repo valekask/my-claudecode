@@ -21,6 +21,16 @@ ADRs are **never** generated automatically. Write one only when judgment says it
 
 When invoked at the end of an implementation, **offer** an ADR only if the work involved non-obvious constraints; let the user decide.
 
+### `--agentic` mode (dispatched by `subagent-driven-development`)
+
+Invoked as `writing-adr --agentic <task>-<slug>` by a fresh subagent at the end of a plan-lane execution. Nobody is there to answer, so it asks nothing:
+
+- **Apply the gate yourself.** All three criteria hold → write the ADR; any one missing → write nothing. The bar does not drop because nobody is watching.
+- **Feature-level only** — never write or edit a system-wide ADR unattended. If the change contradicts or should update a system-wide ADR, report that instead of editing it.
+- **Inputs** are the usual ones (spec, plan, the actual code, git diff) plus the Decisions / Concerns the dispatcher passes in its prompt — the result file does not exist yet at that point.
+- **Report** in one line, as the last thing: `ADR: written <path> — <one-line why>` or `ADR: skipped — <which criterion failed>`. Add `; system-wide ADR <path> may need an update: <what>` when it applies.
+- Never commit, never stage.
+
 ## Two types
 
 | | Feature-level | System-wide |

@@ -47,7 +47,7 @@ Read plan + spec → Extract all tasks → Create task tracking
     │
     ▼ (all tasks done)
     │
-Write result file → Present to user → hand off: run polish (fresh session)
+ADR subagent (writing-adr --agentic) → Write result file → Present to user → hand off: run polish (fresh session)
 ```
 
 ## Handling Implementer Status
@@ -225,15 +225,25 @@ Task 3: Dashboard integration
 
 ## Test Results
 [Summary of test runs]
+
+## ADR
+[The writing-adr subagent's one-line report, verbatim: `ADR: written <path> — …` or `ADR: skipped — …`]
 ```
 
 ## Hand off
 
 After the result file is written and presented, tell the user the next step: run `polish` in a **fresh session** before manual verification. SDD does not run polish, verify, or ship itself.
 
-## ADRs are captured later (in `ship`)
+## ADR — the last step before the result file
 
-Do **not** offer or write an ADR here. ADR creation belongs to the `ship` phase (after verification), which invokes `writing-adr` when a change warrants one. Your job is to make sure the inputs survive: when a task involved **non-obvious constraints or edge cases** that won't be recoverable from the code, record them in the result file's **Decisions Made** / **Concerns** sections so `ship` has what it needs.
+When all tasks are done and reviewed, and **before** writing the result file, dispatch **one fresh subagent** (never an implementer, never yourself) to run `writing-adr --agentic <task>-<slug>`. Writing the ADR here, not in `ship`, puts it in the change that `polish` reviews.
+
+- **Its prompt** carries the task name, the spec and plan paths, and the Decisions Made / Concerns you collected across tasks — they are its raw input, since the result file doesn't exist yet.
+- **`writing-adr` owns the decision** — its gate decides write or skip; don't pre-judge it and don't skip the dispatch because the change "looks simple".
+- **Record its one-line report** in the result file's `## ADR` section, verbatim.
+- **Order matters:** the result file is the "execution finished" signal an orchestrator watches, so it is written only after the ADR subagent has returned.
+
+This applies to `subagent-driven-development` only. The `executing-simple` lane writes no ADR here; `ship` decides for it.
 
 ## Red Flags
 
