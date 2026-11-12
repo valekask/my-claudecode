@@ -111,12 +111,15 @@ For each finding, classify:
 - **Fix** — the concrete change you propose (what, and where in words), one sentence. For an auto-fixed item: what you changed.
 - **Size** — small / medium / large.
 - **Recommend** — `fix now`, `later` (out of scope — a follow-up), or `skip` (not worth it), plus a few words why.
+- **Status** — the item's current state: `open` (surfaced, not decided), `fixed`, `later`, `skip` or `accepted`. An auto-fixed item starts as `fixed`; a surfaced one as `open`. Recommend is polish's opinion; Status is what actually happened, and only a fix or the user's reply changes it.
 
 **Bounded loop:** after applying fixes, re-run the relevant gate **and the build** (or re-check the specific findings) to confirm they're resolved and nothing regressed. Max **3** fix→recheck iterations per gate; if findings persist, stop and surface them — something needs human input.
 
 ### Step 6: Persist the full report
 
-Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (the prose list below) so the record on disk shows what ran and what was skipped, not just the findings. Number the Medium-and-above findings `1..n` in the same order and with the same numbers as the chat report (Step 7), and keep each gate's own id (`ST-3`, `CR-2`, …) and `file:line` next to it in the file — the file is the traceable record, the chat is the decision view. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
+Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (the prose list below) so the record on disk shows what ran and what was skipped, not just the findings. Number the Medium-and-above findings `1..n` in the same order and with the same numbers as the chat report (Step 7), and keep each gate's own id (`ST-3`, `CR-2`, …) and `file:line` next to it in the file — the file is the traceable record, the chat is the decision view.
+
+**Every Medium-and-above item carries a `**Status:**` line in `review.md`, and the file is updated in place, never appended to.** When a later round fixes or decides an item, change that item's Status (and, for a fix, its Changed line) where it is — don't add a "Fix round" section, a "Fixed after go-ahead" section, or a second review on top. One item, one place, one current Status. A one-line round log at the very end (`Round 2 — 2026-11-12: fixed 2, 3; build ✓; tests ✓`) records history; status lives only on the items. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
 
 **The review ledger (in the file)** — every gate listed in this order, each as a short prose line (not a table, so nothing interesting gets squeezed out): **status** + the info that matters for that gate. For a gate that ran, give its result — findings count, notable catches, what was auto-fixed vs surfaced. For a skipped gate, give the reason its trigger didn't fire. Every gate appears exactly once, even when skipped.
 
@@ -181,11 +184,12 @@ Rules for the report:
 - **Order:** `## ✅ Auto-fixed (n)`, then `## 🚩 Needs you (n)`, then the footer line, then `## Gates`, then the build/test line, then one closing line on what happens next.
 - **Items are a list, never a table.** Each item is a block: a bold `**<n>. <Kind> · <Severity>**` line, then one bold-labelled line per field — auto-fixed: `**Problem:**`, `**Changed:**`, `**Check:**` (what to look at during verify); needs-you: `**Problem:**`, `**Fix:**`, `**Size:**`, then the recommendation as its own bold label — `**Fix now:**`, `**Later:**` or `**Skip:**` — followed by the reason. A `---` line after every item.
 - **Numbering:** one plain sequence `1..n` across both sections, matching `review.md`, so the user can point at an item. Never gate ids (`ST-3`, `CR-2`, …), never `file:line` in chat.
+- **Needs you lists only items whose Status is `open`.** Items already decided (`fixed`, `later`, `skip`, `accepted`) stay in `review.md` and leave the chat report.
 - **Only Medium and above** appear as items; Low is a count in the footer. A `/simplify` proposal appears only when its recommendation is `Fix now`.
 - **Plain words:** the Problem says what goes wrong for the user and when, not which rule fired. Long is fine when the scenario needs it; jargon is not.
 - **Gates table:** one row per gate, every gate, in the ledger order; the primary-reviewer row names the reviewer that ran (and the built-in reviewer's effort level). `✓` ran, `–` skipped (reason in Result), `✗` failed to run (reason in Result). The build/test line reports only what polish actually ran.
 - An empty section keeps its heading with one line under it: `None.` / `None — ready to verify.`
-- Replies: `fix <numbers>` fixes those; `fix recommended` fixes every `Fix now` item; `accept` leaves them and records that in `review.md`. After any fix, re-run the build and the touched unit tests, then update `review.md` and re-emit the report.
+- Replies, and the Status each one sets in `review.md`: `fix <numbers>` → `fixed`; `fix recommended` → every `open` item recommended `Fix now` becomes `fixed`; `later <numbers>` → `later`; `skip <numbers>` → `skip`; `accept` → every remaining `open` item becomes `accepted`. After any fix, re-run the build and the touched unit tests, update the items' Status in place, and re-emit the report.
 
 End with the handoff: the change is ready for **manual verification + smoke test**; `ship` comes after.
 
