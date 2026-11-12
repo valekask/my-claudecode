@@ -29,7 +29,7 @@ Run the project's **full build** to verify the whole project still compiles/pack
 
 ### Step 3: Select gates (risk-proportional — announce your choice)
 
-Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run everything every time. State which gates you're running and why. You report the full **review ledger** at the end (Step 7) — every gate listed, ran or skipped — so each gate you skip needs a stated reason its trigger didn't fire. Silence is not an option.
+Inspect the diff (`git diff` / changed file types) and choose gates. Do NOT run everything every time. State which gates you're running and why. You report the full **review ledger** at the end (in `review.md`, Step 6, and as the Gates table in chat, Step 7) — every gate listed, ran or skipped — so each gate you skip needs a stated reason its trigger didn't fire. Silence is not an option.
 
 | Gate | Run when |
 |------|----------|
@@ -49,6 +49,8 @@ The primary reviewer is **configurable** — currently being evaluated. Two opti
 - **Built-in `/code-review`** — Claude-based, effort-tunable (low→max; pick by risk), broader scope (bugs + reuse/simplification), no external dependency. Invoke the **built-in** skill — not the plugin skill named `coderabbit:code-review`, which is a different reviewer despite the similar name.
 
 **Default:** CodeRabbit, unless the user specifies otherwise (e.g., `polish --reviewer=builtin`).
+
+**CodeRabbit must see new files.** Run it as `coderabbit review --agent --uncommitted --include-untracked`. Without `--include-untracked` it reviews tracked changes only, so every new file of the change — a new module, a new spec, the ADR — goes unreviewed while the ledger still reports "0 findings". Never `git add` to work around this; the flag is the fix.
 
 **Effort level (built-in reviewer only).** The built-in reviewer takes an effort level — `/code-review low` through `max`. **Judge the level from the diff, don't just count files.** The table is the starting point; risk overrides it.
 
@@ -101,15 +103,22 @@ For each finding, classify:
 - The fix needs design judgment, touches architecture, changes behavior, or reinterprets the spec
 - It is a **simplification proposal** from `/simplify` — these are always surfaced for human review, never auto-applied here (simplification is judgment-level)
 
+**Every finding at Medium or above — auto-fixed or surfaced — is written up so the user can decide without opening code or the app.** Confirm it by reading the code first; a finding you cannot confirm drops to Low, marked `unconfirmed`. Then give it:
+
+- **Kind** — `Bug` (wrong behaviour, crash, data loss, security, a broken AC) or `Improvement` (everything else: structure, reuse, simplification, style). `/simplify` proposals are always `Improvement`.
+- **Severity** — Critical / High / Medium.
+- **Problem** — what goes wrong for the user or the code, and when, in one plain sentence. No gate jargon, no checklist ids.
+- **Fix** — the concrete change you propose (what, and where in words), one sentence. For an auto-fixed item: what you changed.
+- **Size** — small / medium / large.
+- **Recommend** — `fix now`, `later` (out of scope — a follow-up), or `skip` (not worth it), plus a few words why.
+
 **Bounded loop:** after applying fixes, re-run the relevant gate **and the build** (or re-check the specific findings) to confirm they're resolved and nothing regressed. Max **3** fix→recheck iterations per gate; if findings persist, stop and surface them — something needs human input.
 
 ### Step 6: Persist the full report
 
-Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (Step 7) so the record on disk shows what ran and what was skipped, not just the findings. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
+Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (the prose list below) so the record on disk shows what ran and what was skipped, not just the findings. Number the Medium-and-above findings `1..n` in the same order and with the same numbers as the chat report (Step 7), and keep each gate's own id (`ST-3`, `CR-2`, …) and `file:line` next to it in the file — the file is the traceable record, the chat is the decision view. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
 
-### Step 7: Summarize and hand off
-
-Lead with the **review ledger** — every gate listed in this order, each as a short prose line (not a table, so nothing interesting gets squeezed out): **status** + the info that matters for that gate. For a gate that ran, give its result — findings count, notable catches, what was auto-fixed vs surfaced. For a skipped gate, give the reason its trigger didn't fire. Every gate appears exactly once, even when skipped.
+**The review ledger (in the file)** — every gate listed in this order, each as a short prose line (not a table, so nothing interesting gets squeezed out): **status** + the info that matters for that gate. For a gate that ran, give its result — findings count, notable catches, what was auto-fixed vs surfaced. For a skipped gate, give the reason its trigger didn't fire. Every gate appears exactly once, even when skipped.
 
 1. **Primary reviewer** — always runs; name which one actually ran per the chosen option (CodeRabbit by default, the built-in `/code-review` under `--reviewer=builtin`, or both under `--compare`) and report its findings and notable catches. When the built-in reviewer ran, state the **effort level** used and the reason for it — the level is part of the record, since it bounds how much the gate could have caught.
 2. **checklist-review** — ran (result) or skipped (why, e.g. small generic diff below the threshold).
@@ -118,10 +127,65 @@ Lead with the **review ledger** — every gate listed in this order, each as a s
 5. **`/security-review`** — ran (result) or skipped (why, e.g. no security-sensitive surface).
 6. **`/simplify`** — ran (result: simplification proposals surfaced) or skipped (why, e.g. trivial/config-only diff). Proposals are surfaced, never auto-applied.
 
-Then:
-- **Auto-fixed:** list each fix (file:line, what changed) — these need a fresh look during verification
-- **Needs your attention before verify:** surfaced findings that polish did not fix, with severity
-- Build/test status
+### Step 7: Report in chat and hand off
+
+The chat report is the **decision view**: the user reads it instead of `review.md`, so it must be enough to decide without opening code or the app. Emit exactly this shape, as the last thing in the turn, nothing before it:
+
+````markdown
+## ✅ Auto-fixed (1)
+
+**1. Bug · High**
+**Problem:** Spinner overlay stays on after an auto-refresh and blocks clicks.
+**Changed:** clear the loading flag when a normal reload starts.
+**Check:** auto-refresh on, then change page size.
+
+---
+
+## 🚩 Needs you (2)
+
+**2. Bug · Medium**
+**Problem:** With page size 5000, every refresh re-sends the rejected request and the loader flashes.
+**Fix:** skip the reload when only the time border changed.
+**Size:** small
+**Fix now:** breaks AC-10.
+
+---
+
+**3. Improvement · Medium**
+**Problem:** Row-limit helper duplicated in two components.
+**Fix:** move it into the shared utils file.
+**Size:** small
+**Later:** out of scope.
+
+---
+
++11 low in `<abs path to review.md>` · Reply `fix 2`, `fix recommended`, or `accept`.
+
+## Gates
+
+| Gate | Ran | Result |
+|---|---|---|
+| CodeRabbit | ✓ | 0 findings |
+| Checklist | ✓ | 1 high, 11 low |
+| Trace workflow | ✓ | 2 medium |
+| Trace dataflow | ✓ | 1 high (fixed), 2 medium |
+| Security | – | skipped: no auth / HTTP change |
+| Simplify | ✓ | 8 ideas, 1 recommended |
+
+Build ✓ · Unit tests ✓ 5120/5120
+
+Ready for verify once 2 is settled.
+````
+
+Rules for the report:
+- **Order:** `## ✅ Auto-fixed (n)`, then `## 🚩 Needs you (n)`, then the footer line, then `## Gates`, then the build/test line, then one closing line on what happens next.
+- **Items are a list, never a table.** Each item is a block: a bold `**<n>. <Kind> · <Severity>**` line, then one bold-labelled line per field — auto-fixed: `**Problem:**`, `**Changed:**`, `**Check:**` (what to look at during verify); needs-you: `**Problem:**`, `**Fix:**`, `**Size:**`, then the recommendation as its own bold label — `**Fix now:**`, `**Later:**` or `**Skip:**` — followed by the reason. A `---` line after every item.
+- **Numbering:** one plain sequence `1..n` across both sections, matching `review.md`, so the user can point at an item. Never gate ids (`ST-3`, `CR-2`, …), never `file:line` in chat.
+- **Only Medium and above** appear as items; Low is a count in the footer. A `/simplify` proposal appears only when its recommendation is `Fix now`.
+- **Plain words:** the Problem says what goes wrong for the user and when, not which rule fired. Long is fine when the scenario needs it; jargon is not.
+- **Gates table:** one row per gate, every gate, in the ledger order; the primary-reviewer row names the reviewer that ran (and the built-in reviewer's effort level). `✓` ran, `–` skipped (reason in Result), `✗` failed to run (reason in Result). The build/test line reports only what polish actually ran.
+- An empty section keeps its heading with one line under it: `None.` / `None — ready to verify.`
+- Replies: `fix <numbers>` fixes those; `fix recommended` fixes every `Fix now` item; `accept` leaves them and records that in `review.md`. After any fix, re-run the build and the touched unit tests, then update `review.md` and re-emit the report.
 
 End with the handoff: the change is ready for **manual verification + smoke test**; `ship` comes after.
 
@@ -134,5 +198,7 @@ End with the handoff: the change is ready for **manual verification + smoke test
 - Report only the gates that ran — every gate appears in the review ledger, skipped ones with a reason
 - Loop fix→recheck more than 3 times on one gate — escalate instead
 - Drop Low/Medium findings from the saved report
+- Surface a Medium-or-above finding without a confirmed Problem, a concrete Fix and a Recommend — the user should never have to open the code to decide
+- Put Low items, gate ids or `file:line` in the chat report
 - Perform any git operations (no add, no commit) — that's `ship`, and only after verification
 - Treat polish as the end — manual verification still happens after it
