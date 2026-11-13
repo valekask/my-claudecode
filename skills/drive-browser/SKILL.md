@@ -1,6 +1,6 @@
 ---
 name: drive-browser
-description: Drive a real web app in a browser — open pages, read the accessibility tree, click/fill/select, capture screenshots + console, reusing a persistent authenticated session to minimise logins. The mechanical primitive for browser interaction; it carries no scenarios, no verdict, and no git/diff knowledge. App context (base URL, credentials, login selectors, app-map) comes from the project's `.test-browser/` dir. Reused by `smoke-test` (scenario verification) and `dogfood` (end-to-end QA). Use when you need to operate a running app in a browser, or as the driving layer another skill calls.
+description: Drive a real web app in a browser — open pages, read the accessibility tree, click/fill/select, capture screenshots + console, reusing a persistent authenticated session to minimise logins. The mechanical primitive for browser interaction; it carries no scenarios, no verdict, and no git/diff knowledge. App context (base URL, credentials, login selectors, app-map) comes from the project's `.test-browser/` dir. Reused by `smoke-test` (scenario verification), `discover` (current behaviour) and `review-evidence` (reproducing findings). Use when you need to operate a running app in a browser, or as the driving layer another skill calls.
 ---
 
 # Drive-browser
@@ -14,9 +14,10 @@ discovers and reads.
 
 It deliberately does **one** thing — drive and observe. It does **not** own test
 scenarios, a pass/fail verdict, diff scoping, or any code changes. Those belong to
-its callers: **`smoke-test`** (verify specific scenarios → verdict) and
-**`dogfood`** (end-to-end QA + fixing). Both reuse this skill for the actual
-browser work so the driving knowledge lives in exactly one place.
+its callers: **`smoke-test`** (verify specific scenarios → verdict), **`discover`**
+(observe current behaviour, via its behaviour-checker subagent) and
+**`review-evidence`** (reproduce review findings). All reuse this skill for the
+actual browser work so the driving knowledge lives in exactly one place.
 
 **Announce at start:** "I'm using the drive-browser skill."
 
@@ -163,6 +164,13 @@ scripts/auth.sh <session> "$TEST_BROWSER_BASE_URL"   # prints REUSED | LOGGED_IN
 - **Act:** click/fill/select by the preferred selectors; on a miss, resolve live.
 - **Capture:** `screenshot` for evidence the caller will reference by path;
   `console` dump when something errors.
+- **Annotated screenshot** (when a caller asks for one — a failure, a warning):
+  copy `scripts/annotate.template.js` to a scratch path, fill its `CFG` (target
+  selector, `kind` fail/warn, one-line heading, expected, actual, output path), and
+  run `playwright-cli -s=<session> run-code --filename <copy>.js`. It frames the
+  element, adds an "Expected / Actual" callout with an arrow, saves the viewport, and
+  removes the overlay. Point the target at the element that *shows* the problem; the
+  callout places itself unless you pass `box`.
 - **Human-pause for unautomatable steps.** For flows that *cannot* be driven
   headlessly — real OAuth consent, a payment provider, an emailed/SMS code — **stop
   and ask the human to complete that step**, then continue. Never fake or skip it
@@ -184,4 +192,4 @@ scripts/auth.sh <session> "$TEST_BROWSER_BASE_URL"   # prints REUSED | LOGGED_IN
 This skill produces **evidence**, not verdicts: screenshots, console/request dumps,
 and live-fallback notes, written into the **output dir the caller supplies**
 (default for ad-hoc use: `<project>/.test-browser/.temp/`). The caller
-(`smoke-test` / `dogfood`) composes these into a report + verdict.
+(`smoke-test` / `discover` / `review-evidence`) composes these into its own report.

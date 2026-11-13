@@ -23,7 +23,7 @@ means*, never the driving mechanics.
 - **Verify + report only.** Run the scenarios, judge expected vs actual, save
   evidence, emit a verdict. **Never fix code, never ship, never push, never edit
   trackers/boards.** A `fail` is reported — the fix loop is orchestrated *outside*
-  this skill (that's `dogfood`'s job, or a human's).
+  this skill (a human's job, or the workflow's).
 - **Augments the human gate, doesn't replace it.** A `pass` gathers evidence; it
   does not auto-approve or auto-advance. **Halt on non-`pass`.**
 - **Driving belongs to `drive-browser`.** Don't re-implement navigation/auth/
@@ -125,6 +125,16 @@ For each scenario, in the same persistent session, using `drive-browser` to driv
 - Capture the actual result; compare to expected. Mark ✅ / ❌ / ⚠️ / ⏭️.
 - **Evidence:** screenshot on every ❌ and ⚠️; one final-state shot on ✅; dump
   `console` on every ❌.
+- **Annotated screenshot on every ❌ and ⚠️** — via `drive-browser`'s annotate
+  template: frame the element that shows the problem, heading = the problem in one
+  line, expected and actual from the scenario (`kind: fail` for ❌, `warn` for ⚠️).
+  Name it `assets/smoke/<id>-<what>-annotated.png` and list it **first** in the
+  scenario's `evidence`, so a reader sees the problem before the plain shots. If no
+  single element shows the problem (a blank page, a crash), frame the page's main
+  region and say so in the heading.
+- **Also noticed:** on each screen, note anything a user would find wrong or
+  confusing that no scenario checks (see *Also noticed* below). It never changes
+  the scenario's status.
 
 ### 2 — Verdict + evidence
 - **Per-scenario:** ✅ pass · ❌ fail · ⚠️ known (documented deviation) · ⏭️ skipped.
@@ -136,13 +146,31 @@ For each scenario, in the same persistent session, using `drive-browser` to driv
 - Write the outputs (below). **Halt on non-`pass`** — report and stop; never
   advance or ship.
 
+## Also noticed (outside the verdict)
+
+A short list of **paper cuts** — things on screen that pass every scenario (or no
+scenario covers) but look wrong or confusing to a user: a missing label, an
+ambiguous legend, a tooltip without context, two values that disagree. They give
+the human verify step an early look at what UAT would otherwise find after ship.
+
+- **Only screens the scenarios already visit.** Never navigate elsewhere to hunt
+  for them.
+- **Each note has a screenshot** (`assets/smoke/N<n>-<slug>.png`). No screenshot →
+  no note.
+- **Describe the screen, not a cause or a fix** — "with Last day + 1 day the axis
+  shows no date text", not "the template hides the tick row".
+- **At most 5 per run**, the most striking first. None → write `none`.
+- **Not a failure in disguise.** If an AC or a scenario covers it, it is ❌, not a
+  note.
+- **Never changes a scenario status, the counts or the verdict.**
+
 ## Outputs (into the invoker's output dir)
 
 | File | Content |
 |------|---------|
-| `<task>-<slug>-smoke.md` | scenarios + expected (input), with per-scenario ✅/❌/⚠️/⏭️ + actual filled in, the `covers: AC-n` mapping, and any **declined AC** with reasons |
+| `<task>-<slug>-smoke.md` | scenarios + expected (input), with per-scenario ✅/❌/⚠️/⏭️ + actual filled in, the `covers: AC-n` mapping, any **declined AC** with reasons, and an **Also noticed** section |
 | `<task>-<slug>-smoke-result.json` | **machine record** the orchestrator parses (shape below) |
-| `assets/smoke/*.png`, `*.log` | screenshots + console dumps, referenced by path |
+| `assets/smoke/*.png`, `*.log` | screenshots (`*-annotated.png` for ❌ / ⚠️) + console dumps, referenced by path |
 
 **Two files, no separate human report.** The annotated `<task>-<slug>-smoke.md` *is* the
 human-readable record — scenarios, expected, actual, evidence paths, verdict, all in
@@ -163,6 +191,10 @@ Verdict `.json` shape:
       "expected": "…", "actual": "…", "evidence": ["assets/smoke/S1.png"] }
   ],
   "declined_ac": [ { "id": "AC-4", "reason": "store-level logic, no UI surface" } ],
+  "also_noticed": [
+    { "id": "N1", "note": "…what the screen shows…", "where": "<route or scenario id>",
+      "evidence": ["assets/smoke/N1-<slug>.png"] }
+  ],
   "live_fallbacks": [ "…elements resolved live, not in the app-map…" ],
   "started": "ISO-8601", "finished": "ISO-8601"
 }
@@ -182,3 +214,5 @@ run artifacts (screenshots, console) sit under `.test-browser/.temp/`.
 - **Halt on non-`pass`** — report and stop; the fix loop lives outside this skill.
 - **Account for every acceptance criterion** — covered by a scenario or explicitly
   declined with a reason. An AC that appears in neither list is a bug in this run.
+- **Also noticed is informational** — at most 5 notes, each with a screenshot, from
+  screens the scenarios visit; `verdict` and `counts` ignore it.
