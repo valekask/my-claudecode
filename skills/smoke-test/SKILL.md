@@ -155,8 +155,10 @@ the human verify step an early look at what UAT would otherwise find after ship.
 
 - **Only screens the scenarios already visit.** Never navigate elsewhere to hunt
   for them.
-- **Each note has a screenshot** (`assets/smoke/N<n>-<slug>.png`). No screenshot →
-  no note.
+- **Each note has an annotated screenshot** (`assets/smoke/N<n>-<slug>-annotated.png`),
+  via `drive-browser`'s annotate template: frame the element that shows it,
+  `kind: note`, heading = the note in one line, `expected` and `actual` empty. List it
+  **first** in the note's `evidence`. No screenshot → no note.
 - **Describe the screen, not a cause or a fix** — "with Last day + 1 day the axis
   shows no date text", not "the template hides the tick row".
 - **At most 5 per run**, the most striking first. None → write `none`.
@@ -170,7 +172,7 @@ the human verify step an early look at what UAT would otherwise find after ship.
 |------|---------|
 | `<task>-<slug>-smoke.md` | scenarios + expected (input), with per-scenario ✅/❌/⚠️/⏭️ + actual filled in, the `covers: AC-n` mapping, any **declined AC** with reasons, and an **Also noticed** section |
 | `<task>-<slug>-smoke-result.json` | **machine record** the orchestrator parses (shape below) |
-| `assets/smoke/*.png`, `*.log` | screenshots (`*-annotated.png` for ❌ / ⚠️) + console dumps, referenced by path |
+| `assets/smoke/*.png`, `*.log` | screenshots (`*-annotated.png` for ❌ / ⚠️ and each Also noticed note) + console dumps, referenced by path |
 
 **Two files, no separate human report.** The annotated `<task>-<slug>-smoke.md` *is* the
 human-readable record — scenarios, expected, actual, evidence paths, verdict, all in
@@ -193,7 +195,7 @@ Verdict `.json` shape:
   "declined_ac": [ { "id": "AC-4", "reason": "store-level logic, no UI surface" } ],
   "also_noticed": [
     { "id": "N1", "note": "…what the screen shows…", "where": "<route or scenario id>",
-      "evidence": ["assets/smoke/N1-<slug>.png"] }
+      "evidence": ["assets/smoke/N1-<slug>-annotated.png"] }
   ],
   "live_fallbacks": [ "…elements resolved live, not in the app-map…" ],
   "started": "ISO-8601", "finished": "ISO-8601"
@@ -214,5 +216,5 @@ run artifacts (screenshots, console) sit under `.test-browser/.temp/`.
 - **Halt on non-`pass`** — report and stop; the fix loop lives outside this skill.
 - **Account for every acceptance criterion** — covered by a scenario or explicitly
   declined with a reason. An AC that appears in neither list is a bug in this run.
-- **Also noticed is informational** — at most 5 notes, each with a screenshot, from
+- **Also noticed is informational** — at most 5 notes, each with an annotated screenshot, from
   screens the scenarios visit; `verdict` and `counts` ignore it.

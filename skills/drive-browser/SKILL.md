@@ -164,11 +164,11 @@ scripts/auth.sh <session> "$TEST_BROWSER_BASE_URL"   # prints REUSED | LOGGED_IN
 - **Act:** click/fill/select by the preferred selectors; on a miss, resolve live.
 - **Capture:** `screenshot` for evidence the caller will reference by path;
   `console` dump when something errors.
-- **Annotated screenshot** (when a caller asks for one — a failure, a warning):
+- **Annotated screenshot** (when a caller asks for one — a failure, a warning, a note):
   copy `scripts/annotate.template.js` to a scratch path, fill its `CFG` (target
-  selector, `kind` fail/warn, one-line heading, expected, actual, output path), and
+  selector, `kind` fail/warn/note, one-line heading, expected, actual, output path), and
   run `playwright-cli -s=<session> run-code --filename <copy>.js`. It frames the
-  element, adds an "Expected / Actual" callout with an arrow, saves the viewport, and
+  element, adds a callout with an arrow ("Expected" / "Actual" lines only when set), saves the viewport, and
   removes the overlay. Point the target at the element that *shows* the problem; the
   callout places itself unless you pass `box`.
 - **Human-pause for unautomatable steps.** For flows that *cannot* be driven
