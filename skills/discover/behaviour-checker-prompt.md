@@ -24,7 +24,7 @@ Agent tool (general-purpose, model: sonnet, effort: medium):
 
     ## Process
 
-    1. Load the `test-browser` skill (Skill tool) and drive the app with it — its auth guard,
+    1. Load the `drive-browser` skill (Skill tool) and drive the app with it — its auth guard,
        persistent session and selector rules apply. Login fails or the app isn't reachable →
        every check is `not checked` with that reason; stop.
     2. For each target, first confirm it FITS: the page actually shows the widget, mode or state

@@ -1,9 +1,9 @@
 ---
-name: test-browser
+name: drive-browser
 description: Drive a real web app in a browser — open pages, read the accessibility tree, click/fill/select, capture screenshots + console, reusing a persistent authenticated session to minimise logins. The mechanical primitive for browser interaction; it carries no scenarios, no verdict, and no git/diff knowledge. App context (base URL, credentials, login selectors, app-map) comes from the project's `.test-browser/` dir. Reused by `smoke-test` (scenario verification) and `dogfood` (end-to-end QA). Use when you need to operate a running app in a browser, or as the driving layer another skill calls.
 ---
 
-# Test-browser
+# Drive-browser
 
 The **browser-driving primitive**: it knows *how to operate a running web app* —
 navigate, observe the DOM/accessibility tree, interact, capture evidence, and hold
@@ -18,7 +18,7 @@ its callers: **`smoke-test`** (verify specific scenarios → verdict) and
 **`dogfood`** (end-to-end QA + fixing). Both reuse this skill for the actual
 browser work so the driving knowledge lives in exactly one place.
 
-**Announce at start:** "I'm using the test-browser skill."
+**Announce at start:** "I'm using the drive-browser skill."
 
 ## Driver
 

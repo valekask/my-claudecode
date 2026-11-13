@@ -1,6 +1,6 @@
 ---
 name: dogfood
-description: End-to-end QA of the active change in a real browser — map the user journeys the diff touches, walk each as the product's personas judging function AND experience, fix small safe breakages in place (with a regression test), escalate the big/ambiguous ones, run the suite, and write a durable report. The quality-gate-with-autofix superset of smoke-test. Mutates code (fixes + tests) but does NOT auto-commit by default. Drives the browser via test-browser. Manual-invoke; use as an extra quality gate on a completed small/medium change before ship.
+description: End-to-end QA of the active change in a real browser — map the user journeys the diff touches, walk each as the product's personas judging function AND experience, fix small safe breakages in place (with a regression test), escalate the big/ambiguous ones, run the suite, and write a durable report. The quality-gate-with-autofix superset of smoke-test. Mutates code (fixes + tests) but does NOT auto-commit by default. Drives the browser via drive-browser. Manual-invoke; use as an extra quality gate on a completed small/medium change before ship.
 ---
 
 # Dogfood
@@ -12,7 +12,7 @@ both **correctness and experience**, **fix** the small safe breakages you find
 suite, and leave a **durable report**. It is the QA-with-autofix superset of
 `smoke-test` (which only verifies + reports).
 
-It **drives the browser via the `test-browser` skill** and is **diff-scoped** —
+It **drives the browser via the `drive-browser` skill** and is **diff-scoped** —
 proportional to the change, never a full-app sweep.
 
 **This skill modifies code** (fixes + regression tests). It is **manual-invoke
@@ -34,13 +34,13 @@ extra quality gate on a completed small/medium change, *before* ship.
   commit. (This respects a "commit only when asked" rule; a workflow that *wants*
   per-fix commits can opt in.)
 - **Never pushes, never touches external trackers.**
-- **Verify-only sub-work reuses `smoke-test`/`test-browser`** — don't
+- **Verify-only sub-work reuses `smoke-test`/`drive-browser`** — don't
   re-implement driving or verdict mechanics.
 
 ## Inputs
 
 - **The diff** — the active branch vs its base (or a named PR/branch).
-- **App context** — `test-browser` resolves it from `.test-browser/`.
+- **App context** — `drive-browser` resolves it from `.test-browser/`.
 - **Personas** — from the project's product/strategy/vision docs if present; else
   ask for (or infer) the 1–2 primary personas. Used to judge *experience*, not
   just function.
@@ -66,8 +66,8 @@ Ground each flow in the product's **personas**. You'll judge two things per step
 - **Experience** — friction a functional test misses. Record these as **"paper
   cuts"** (small frictions that pass functionally but degrade the experience).
 
-### 4 — Drive + judge (via test-browser)
-Walk each flow in the browser through `test-browser`. For every step, judge
+### 4 — Drive + judge (via drive-browser)
+Walk each flow in the browser through `drive-browser`. For every step, judge
 function **and** experience. Capture evidence (screenshots, console) on anything
 broken or rough.
 
@@ -113,7 +113,7 @@ record those; they don't block, but they surface.
 - The **verdict** reflects both the automated matrix and human escalations.
 
 ## Relationship to the other browser skills
-- **`test-browser`** — the driving primitive dogfood uses for all browser work.
+- **`drive-browser`** — the driving primitive dogfood uses for all browser work.
 - **`smoke-test`** — the verify-only floor (scenarios → verdict, no fixing).
   Dogfood is its superset: journeys + personas + fixing + suite + durable report.
   Use `smoke-test` for a quick change-verification gate; use `dogfood` for a
@@ -127,4 +127,4 @@ record those; they don't block, but they surface.
   behaviour-changing fix.
 - **Not "ready" until the browser matrix AND the automated suite (incl. new
   regression tests) pass.**
-- **Reuse `test-browser`** for driving; don't re-implement it.
+- **Reuse `drive-browser`** for driving; don't re-implement it.

@@ -41,7 +41,7 @@ orchestrator decides from file freshness, so a stray edit here re-triggers revie
      and the output. Then **delete it**, and paste its source into the evidence file: the fixer reuses
      it as the regression test.
    - **Browser check** — only when the finding is about what the user sees or does, and only when the
-     app is already served (the caller owns the serve; never start one). Drive it with `test-browser`
+     app is already served (the caller owns the serve; never start one). Drive it with `drive-browser`
      using the project's `.test-browser/` config; save screenshots and console lines to
      `.claude/temp/<task>-<slug>/assets/evidence/`. Not served → `could not check: app not served`.
    - Neither possible → `could not check` with the reason.
