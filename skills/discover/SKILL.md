@@ -9,7 +9,7 @@ effort: high
 The **current-state** phase. It answers one question — *what does the app do today, and is that
 intended?* — so the spec is built on facts, not on assumptions about existing behaviour.
 
-It **reuses the `test-browser` skill** for all browser work (navigation, auth, selectors,
+It **reuses the `drive-browser` skill** for all browser work (navigation, auth, selectors,
 evidence), through the behaviour-checker subagent — this skill owns only *what to check* and
 *what the facts are*, never the driving mechanics.
 
@@ -65,7 +65,7 @@ In `--fast`, almost every fact is single-source — that's expected, not a defec
 - **Verification targets** — the proposal's *Verification targets* section: app URLs/routes,
   Storybook stories, environments, each with what it's for.
 - **App context** — the project's `.test-browser/` dir (base URL, app-map, credentials), resolved by
-  `test-browser`. The app-map may also list default test targets and the Storybook command/port.
+  `drive-browser`. The app-map may also list default test targets and the Storybook command/port.
 - **Related repos** (full mode) — named in the project's `CLAUDE.md` / `CLAUDE.local.md` (e.g. a
   backend repo and its local clone path). No clone → the repo is *Not checked*; never infer the
   server's behaviour from the frontend alone.
@@ -208,6 +208,6 @@ they were considered.
 - **Every fact has evidence and a strength level**; no evidence → *Not checked*.
 - **Questions are intent-only** — a behaviour question is a check, not a question for the user.
 - **Never ask mid-run** — gaps become *Not checked* / *Targets needed*.
-- **Driving belongs to `test-browser`** (via the behaviour-checker subagent) — don't re-implement
+- **Driving belongs to `drive-browser`** (via the behaviour-checker subagent) — don't re-implement
   navigation, auth or selectors here.
 - **No git operations** — write the discovery file and screenshots only.
