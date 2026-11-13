@@ -1,6 +1,6 @@
 // Annotated screenshot: frames the element that shows the problem, draws a callout with
-// "Expected / Actual" and an arrow to the element, screenshots the viewport, then removes the
-// overlay (the page is left as it was).
+// "Expected / Actual" (each line only when set) and an arrow to the element, screenshots the
+// viewport, then removes the overlay (the page is left as it was).
 //
 // Copy this file to a scratch path, edit CFG, then run it in the live session:
 //   playwright-cli -s=<session> run-code --filename <copy>.js
@@ -8,10 +8,10 @@
 async page => {
     const CFG = {
         target: 'role=button[name="Undo"]', // element that shows the problem (same selector rules as the skill)
-        kind: 'fail', // 'fail' (red) or 'warn' (amber)
+        kind: 'fail', // 'fail' (red), 'warn' (amber) or 'note' (blue, a paper cut outside the verdict)
         heading: 'Undo is enabled right after opening', // the problem in one line
-        expected: 'Undo disabled (nothing was changed).',
-        actual: 'Undo enabled ~1 s after load.',
+        expected: 'Undo disabled (nothing was changed).', // '' = no Expected line (e.g. a note)
+        actual: 'Undo enabled ~1 s after load.', // '' = no Actual line
         note: '', // optional extra line (a question, a caveat)
         box: null, // optional callout position in viewport px, e.g. { x: 600, y: 440, w: 600 };
         //            null = placed automatically above or below the target
@@ -25,7 +25,7 @@ async page => {
         throw new Error('annotate: target not visible: ' + CFG.target);
     }
     await page.evaluate(({ r, c }) => {
-        const color = c.kind === 'warn' ? '#f59e0b' : '#e53935';
+        const color = c.kind === 'warn' ? '#f59e0b' : c.kind === 'note' ? '#1e88e5' : '#e53935';
         const esc = s => s.replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch]);
         const root = document.createElement('div');
         root.id = '__annot';
@@ -41,7 +41,8 @@ async page => {
             `border:2px solid ${color};border-radius:8px;padding:14px 20px;box-shadow:0 4px 14px rgba(0,0,0,.25);` +
             'font-size:15px;line-height:1.55;color:#222;box-sizing:border-box';
         box.innerHTML = `<div style="color:${color};font-weight:bold;font-size:19px;margin-bottom:6px">${esc(c.heading)}</div>` +
-            `<div><b>Expected:</b> ${esc(c.expected)}</div><div><b>Actual:</b> ${esc(c.actual)}</div>` +
+            (c.expected ? `<div><b>Expected:</b> ${esc(c.expected)}</div>` : '') +
+            (c.actual ? `<div><b>Actual:</b> ${esc(c.actual)}</div>` : '') +
             (c.note ? `<div>${esc(c.note)}</div>` : '');
         root.append(frame, box);
         document.body.append(root);
