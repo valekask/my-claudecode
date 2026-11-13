@@ -9,6 +9,10 @@ effort: high
 The **current-state** phase. It answers one question — *what does the app do today, and is that
 intended?* — so the spec is built on facts, not on assumptions about existing behaviour.
 
+It **reuses the `test-browser` skill** for all browser work (navigation, auth, selectors,
+evidence), through the behaviour-checker subagent — this skill owns only *what to check* and
+*what the facts are*, never the driving mechanics.
+
 **Announce at start:** "I'm using the discover skill."
 
 Where it sits:

@@ -66,13 +66,13 @@ Scaffolds what you're about to work on, in one of two modes. The mode is **state
 
 #### `discover`
 
-**Establishes how the app behaves today** in the area a proposal touches, so the spec is decided from facts rather than assumptions about existing behaviour. Writes `<task>-<slug>-discovery.md`. **Facts only** - no approaches, scope calls or AC; those are `brainstorming`'s.
+**Establishes how the app behaves today** in the area a proposal touches, so the spec is decided from facts rather than assumptions about existing behaviour. Writes `<task>-<slug>-discovery.md`. **Facts only** - no approaches, scope calls or AC; those are `brainstorming`'s. **Drives the browser via `test-browser`** (through the behaviour-checker subagent); owns only _what to check_ and _what the facts are_.
 
 - **Two modes** - **full** (default): observe in the running app and Storybook, then confirm against code, unit tests, ADRs, git lineage, past task artifacts and related repos (e.g. the backend). **`--fast`**: app + Storybook only, for simple tasks
 - **Targets** - the proposal's verification targets first, then ticket links, `.test-browser/` defaults and app-map navigation. A target that doesn't show the thing (a dashboard without the widget in question) is recorded as a mismatch, and a precise **Targets needed** entry asks for a better one - it never blocks or asks mid-run
 - **Every fact has evidence and a strength level** - `confirmed` (two sources agree), `single source` (the evidence line says which), or `conflict` (sources disagree - listed first, never decided silently downstream). No evidence → *Not checked*
 - **Read-only everywhere** - no code edits, no app/dashboard configuration changes, no git writes or branch switches, in any repo
-- **Browser observation runs in a behaviour-checker subagent** (`behaviour-checker-prompt.md`, dispatched on `sonnet` at `medium` effort - observation is mechanical, and every claim needs evidence). It drives `test-browser`, confirms each target actually shows the thing before trusting it, never saves settings or edits a dashboard, and reports symptoms only - no screenshot means `not checked`. `brainstorming` reuses the same template for a single behaviour nobody checked
+- **Browser observation runs in a behaviour-checker subagent** (`behaviour-checker-prompt.md`, dispatched on `sonnet` at `medium` effort - observation is mechanical, and every claim needs evidence). It confirms each target actually shows the thing before trusting it, never saves settings or edits a dashboard, and reports symptoms only - no screenshot means `not checked`. `brainstorming` reuses the same template for a single behaviour nobody checked
 
 Why it exists: in a review of past UAT rounds, most spec misses were knowable at spec time - an untested premise about existing behaviour, a screen that reads the changed value, a nearby UI pattern - and the verification links the user already supplied were only used at smoke-test time.
 
