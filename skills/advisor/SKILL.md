@@ -1,6 +1,6 @@
 ---
 name: advisor
-description: Get an independent, deeper read on ONE hard decision from a stronger model before committing to it — consulted by `brainstorming` and `writing-plans` at key moments (a failure/edge-state decision, the author's own hedge, a user-visible `unconfirmed` call, a named risk only partly covered, and a pre-mortem before the gate). Dispatches a fresh subagent on Opus at max effort with a short evidence brief — never the author's reasoning — and returns a recommendation to the caller. Read-only; writes nothing. Use when a skill says to consult the advisor, or directly as /advisor <decision>.
+description: Get an independent, deeper read on ONE hard decision from a stronger model before committing to it — consulted by `brainstorming` and `writing-plans` at key moments (a failure/edge-state decision, the author's own hedge, a user-visible `unconfirmed` call, a named risk only partly covered, and a pre-mortem before the gate). Dispatches the read-only `advisor` agent (Opus, max effort) with a short evidence brief — never the author's reasoning — and returns a recommendation to the caller. Read-only; writes nothing. Use when a skill says to consult the advisor, or directly as /advisor <decision>.
 ---
 
 # Advisor
@@ -50,8 +50,9 @@ surface that to the user instead.
 
 ## How to consult
 
-Dispatch one subagent with the template in `advisor-prompt.md`: **Agent tool, `general-purpose`,
-`model: opus`, `effort: max`** — set both on the call, never leave them to the session.
+Dispatch the `advisor` agent with the template in `advisor-prompt.md`: **Agent tool,
+`subagent_type: advisor`**. Do not set `model` or `effort` on the call — a value there overrides the
+agent file (`agents/advisor.md`), which sets Opus, `max` effort and read-only tools.
 
 The brief holds:
 
@@ -68,7 +69,7 @@ stated as a question.
 
 ## What comes back
 
-The format is fixed in `advisor-prompt.md`: recommendation, confidence, as many reasons as the decision
+The format is fixed in the agent file (`agents/advisor.md`): recommendation, confidence, as many reasons as the decision
 needs (often 1–2, each citing its source), the main risk, what the brief missed, and whether it needs a
 human.
 

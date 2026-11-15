@@ -150,12 +150,13 @@ Translates a spec into an implementation plan - the **how** for the spec's _what
 
 #### `advisor`
 
-An **independent, deeper read on one hard decision** before the author commits to it. Dispatches a fresh subagent on **`opus` at `max` effort** with a short brief - the decision, options, leaning, the doubt, evidence *paths* and constraints, **never the author's reasoning** - so it reads the code and artifacts itself rather than agreeing with a framing.
+An **independent, deeper read on one hard decision** before the author commits to it. Dispatches the **`advisor` agent** (`agents/advisor.md`: **`opus` at `max` effort**, read-only tools) with a short brief - the decision, options, leaning, the doubt, evidence *paths* and constraints, **never the author's reasoning** - so it reads the code and artifacts itself rather than agreeing with a framing.
 
 - **Triggers** (from a review of recent tasks where spec/plan decisions caused rework) - failure / invalid-input / state-lifecycle decisions (above all a fallback that fails open), the author's own hedge ("known risk… if", "accepted", "no precedent"), `unconfirmed` calls on user-visible behaviour, a named risk only partly covered, a shared-library edit for one consumer; plus one pre-mortem before the gate. **Not** the approach choice when precedent settles it - that never failed
 - **Returns** premise check, recommendation, confidence, as many cited reasons as needed, main risk, what was missed, needs-human. Max 3 consults per phase
 - **No artifact** - the answer goes back to the caller; its trace is "settled by: advisor" in the Decisions section, or `unconfirmed` + the objection when the author overrules it
 - Called by `brainstorming` and `writing-plans`; also directly as `/advisor <decision>`
+- **Split** - the skill holds the caller's side (triggers, brief, what to do with the answer); the agent holds the advisor's side (how to work, answer shape, model, effort, tools)
 
 #### `subagent-driven-development`
 
