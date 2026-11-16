@@ -22,7 +22,7 @@ Invoked as `writing-plans --agentic` (used by an orchestrator running tasks with
 
 **In `--agentic` mode:**
 
-- **Surface only these**, from the *Surface Decisions* scan below: **critical surface** (auth/permissions, migrations/persisted state, money math), **backend contract** change, a **genuine design fork** (two structurally different approaches that are actually comparable), a **spec gap** the plan cannot resolve without guessing, **scope growth** beyond the spec, or an **ADR conflict**.
+- **Surface only these**, from the *Surface Decisions* scan below: **critical surface** (auth/permissions, migrations/persisted state, money math), **backend contract** change, a **genuine design fork** (two structurally different approaches that are actually comparable), a **spec gap** the plan cannot resolve without guessing, **scope growth** beyond the spec, an **ADR conflict**, or an **advisor outcome that needs a human** — an objection you would overrule, a *Needs human* answer, or a consult that still failed after its one retry. Nothing reads an `unconfirmed` tag in a plan after it is saved, so in this mode these are asked, never only tagged.
 - **Decide everything else yourself** — reuse vs new, logic location, convention questions, simpler alternatives — and write the decision plus its reasoning into the relevant phase's rationale so it is reviewable after the fact rather than asked about beforehand.
 - **Skip the Final Review menu.** When nothing surfaced, save the plan and emit the handoff directly. If something did surface, ask about it, apply the answer, then save.
 - **Never skip** the *Scope Check*, the reuse/behaviour-confirmation reads, or the plan review loop. Autonomy is about who gets asked, not about doing less work.
@@ -189,7 +189,8 @@ At a key moment, consult the `advisor` skill — a subagent on Opus at `max` eff
 - **While planning**, the moment you hit one: a failure / invalid-input / state-lifecycle decision the spec left to the plan (what creates and clears new state, how many places must reset it); your own hedge — about to write "known risk… if X then add Y", "accepted / not fixed", "no precedent in the repo"; a task that leaves part of a named risk uncovered; a shared-library edit for one consumer, or an abstraction added only for testability; a new user-facing AC or state that the spec doesn't have
 - **Before the plan review loop (Medium/Complex)** — one pre-mortem consult: which planned decision fails worst, and does a task or test cover it?
 - Not for decisions the spec already settled, not for anything the code answers, and not for product/scope questions — those go to the user. Max 3 consults per run
-- Record the outcome in the plan's decision line: "settled by: advisor", or `unconfirmed` plus the advisor's objection when you overrule it
+- Record the outcome in the plan's decision line: "settled by: advisor", or `unconfirmed` plus the advisor's objection when you overrule it. In `--agentic`, an objection, a *Needs human* answer or a failed consult is asked instead (see `--agentic` mode)
+- A failed consult (error, empty or partial reply) follows the advisor skill's *When the consult fails* — never record it as "settled by: advisor"
 
 ## Plan Review Loop
 
