@@ -78,11 +78,30 @@ human.
 - **Agree** → decide, and add "settled by: advisor" to that line in the Decisions section.
 - **Disagree** → you may still decide your way, but tag the decision **`unconfirmed`** with one line on
   the advisor's objection, so it surfaces at the human gate. Never drop an objection silently.
-- **Needs human** → ask the user (interactive) or record it as `unconfirmed` (`--agentic`).
+  `writing-plans --agentic` has no human gate after the plan, so there you ask the user instead.
+- **Needs human** → ask the user (interactive, and `writing-plans --agentic`), or record it as
+  `unconfirmed` (`brainstorming --agentic` — its spec gate is always human).
 - **Premise wrong** (the advisor says the evidence doesn't support the brief) → re-read the evidence
   before deciding anything; the decision changes, not just its wording.
 
 No artifact is written: the answer is for the calling skill, and its trace is the Decisions line.
+
+## When the consult fails
+
+A consult **failed** when the Agent call errors, returns nothing, or returns a reply without all seven
+fields (Premise to Needs human). A failed consult settles nothing — never write "settled by: advisor"
+from it.
+
+1. **Retry once** after a generic API error, empty output or a partial reply. **Never retry** a usage or
+   rate limit — it fails the same way. A call and its retry count as **one** consult toward the cap.
+2. **Still failed** → per caller:
+   - interactive run, or `/advisor` invoked directly → tell the user and ask: decide without the advisor,
+     or wait and consult again;
+   - `brainstorming --agentic` → decide, and tag the line `unconfirmed — advisor unavailable` (the spec
+     gate shows it);
+   - `writing-plans --agentic` → stop and ask the user: no human gate reads the plan after it is saved.
+3. **A later consult on the same decision succeeds** → replace the `advisor unavailable` tag with its
+   outcome; never leave a stale tag.
 
 ## Invoked directly
 
