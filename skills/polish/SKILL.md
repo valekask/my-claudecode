@@ -119,6 +119,17 @@ For each finding, classify:
 
 Save **all** findings (every severity, fixed and surfaced) to `.claude/temp/<task>-<slug>/<task>-<slug>-review.md`, led by the **review ledger** (the prose list below) so the record on disk shows what ran and what was skipped, not just the findings. Number the Medium-and-above findings `1..n` in the same order and with the same numbers as the chat report (Step 7), and keep each gate's own id (`ST-3`, `CR-2`, …) and `file:line` next to it in the file — the file is the traceable record, the chat is the decision view.
 
+**Gate lines.** `review.md` starts with two lines, right after the title, in exactly this format:
+
+```
+**Build:** pass · `mvn package` · 2026-11-16 10:20
+**Unit tests:** pass 11331/11331 · `nx run-many -t test -p …`
+```
+
+- The value is `pass`, `fail` or `not run (<reason>)`. Then the command. The Build line ends with the local time the build finished.
+- Rewrite both lines in place on every run and after every fix round. Never add a second pair.
+- The ledger, the findings and the round log keep the detail. These two lines hold only the result.
+
 **Carry decisions forward.** When `review.md` already exists from an earlier run, read it before writing. A new finding that matches an earlier item (same problem at the same place) keeps that item's number and Status — a `later`, `skip` or `accepted` item is not reopened. The one exception: an item marked `fixed` that is found again is a regression — set it back to `open` and say "came back after its fix" in its Problem line. Findings with no match get new numbers after the highest existing one.
 
 **Every Medium-and-above item carries a `**Status:**` line in `review.md`, and the file is updated in place, never appended to.** When a later round fixes or decides an item, change that item's Status (and, for a fix, its Changed line) where it is — don't add a "Fix round" section, a "Fixed after go-ahead" section, or a second review on top. One item, one place, one current Status. A one-line round log at the very end (`Round 2 — 2026-11-12: fixed 2, 3; build ✓; tests ✓`) records history; status lives only on the items. This is the record you mine later to tune the reviewer's rules and the checklists — don't drop the Low/Medium items just because they weren't auto-fixed.
@@ -191,7 +202,7 @@ Rules for the report:
 - **Plain words:** the Problem says what goes wrong for the user and when, not which rule fired. Long is fine when the scenario needs it; jargon is not.
 - **Gates table:** one row per gate, every gate, in the ledger order; the primary-reviewer row names the reviewer that ran (and the built-in reviewer's effort level). `✓` ran, `–` skipped (reason in Result), `✗` failed to run (reason in Result). The build/test line reports only what polish actually ran.
 - An empty section keeps its heading with one line under it: `None.` / `None — ready to verify.`
-- Replies, and the Status each one sets in `review.md`: `fix <numbers>` → `fixed`; `fix recommended` → every `open` item recommended `Fix now` becomes `fixed`; `later <numbers>` → `later`; `skip <numbers>` → `skip`; `accept` → every remaining `open` item becomes `accepted`. After any fix, re-run the build and the touched unit tests, update the items' Status in place, and re-emit the report.
+- Replies, and the Status each one sets in `review.md`: `fix <numbers>` → `fixed`; `fix recommended` → every `open` item recommended `Fix now` becomes `fixed`; `later <numbers>` → `later`; `skip <numbers>` → `skip`; `accept` → every remaining `open` item becomes `accepted`. After any fix, re-run the build and the touched unit tests, update the items' Status and the gate lines in place, and re-emit the report.
 
 End with the handoff: the change is ready for **manual verification + smoke test**; `ship` comes after.
 
