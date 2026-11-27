@@ -1,6 +1,6 @@
 ---
 name: review-evidence
-description: Establish the facts behind open review findings before anyone decides on them — reproduce each one (a unit test or a browser check), collect the code, acceptance criteria and ADR guards it touches, and measure its blast radius — and write them to `<task>-<slug>-review-evidence.md`. Facts only: no opinions, no fixes, and the worktree is left exactly as found. Use after `polish` (or a failed verify) when findings are open, before deciding them — by hand, or as the first step of an orchestrator's post-review pipeline; `review-decide` reads its output.
+description: "Establish the facts behind open review findings before anyone decides on them — reproduce each one (a unit test or a browser check), collect the code, acceptance criteria and ADR guards it touches, and measure its blast radius — and write them to `<task>-<slug>-review-evidence.md`. Facts only: no opinions, no fixes, and the worktree is left exactly as found. Use after `polish` (or a failed verify) when findings are open, before deciding them — by hand, or as the first step of an orchestrator's post-review pipeline; `review-decide` reads its output."
 model: sonnet
 effort: high
 ---
